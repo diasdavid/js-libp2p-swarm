@@ -63,7 +63,9 @@ function Swarm (peerInfo) {
         self.peerInfo.multiaddrs.push(options.multiaddr)
       }
 
-      callback()
+      if (callback) {
+        callback()
+      }
     })
   }
 
