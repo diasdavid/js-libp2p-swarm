@@ -1,7 +1,12 @@
 'use strict'
 
+const debug = require('debug')
+
 const connHandler = require('./default-handler')
 const identify = require('./identify')
+
+const log = debug('libp2p:swarm:connection')
+log.error = debug('libp2p:swarm:connection:error')
 
 module.exports = function connection (swarm) {
   return {
@@ -35,26 +40,11 @@ module.exports = function connection (swarm) {
           connHandler(swarm.protocols, conn)
         })
 
-        // if identify is enabled, attempt to do it for muxer reuse
-        if (swarm.identify) {
-          identify.exec(conn, muxedConn, swarm._peerInfo, (err, pi) => {
-            if (err) {
-              return console.log('Identify exec failed', err)
-            }
-
-            peerIdForConn = pi.id
-            swarm.muxedConns[pi.id.toB58String()] = {}
-            swarm.muxedConns[pi.id.toB58String()].muxer = muxedConn
-            swarm.muxedConns[pi.id.toB58String()].conn = conn // to be able to extract addrs
-
-            swarm.emit('peer-mux-established', pi)
-
-            muxedConn.on('close', () => {
-              delete swarm.muxedConns[pi.id.toB58String()]
-              swarm.emit('peer-mux-closed', pi)
-            })
-          })
-        }
+        // in case identify is on
+        muxedConn.on('stream', (conn) => {
+          conn.peerId = peerIdForConn.id
+          connHandler(swarm.protocols, conn)
+        })
       })
     },
 

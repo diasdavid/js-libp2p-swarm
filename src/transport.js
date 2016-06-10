@@ -2,8 +2,11 @@
 
 const contains = require('lodash.contains')
 const Duplexify = require('duplexify')
+const debug = require('debug')
 
 const connHandler = require('./default-handler')
+
+const log = debug('libp2p:swarm:transport')
 
 module.exports = function (swarm) {
   return {
@@ -17,6 +20,8 @@ module.exports = function (swarm) {
       if (swarm.transports[key]) {
         throw new Error('There is already a transport with this key')
       }
+
+      log('adding %s', key)
       swarm.transports[key] = transport
       callback()
     },
@@ -31,14 +36,17 @@ module.exports = function (swarm) {
       // a) filter the multiaddrs that are actually valid for this transport (use a func from the transport itself) (maybe even make the transport do that)
       multiaddrs = dialables(t, multiaddrs)
 
+      log('dialing to %s', multiaddrs.map((m) => m.toString()))
       // b) if multiaddrs.length = 1, return the conn from the
       // transport, otherwise, create a passthrough
       if (multiaddrs.length === 1) {
-        const conn = t.dial(multiaddrs.shift(), {ready: () => {
-          const cb = callback
-          callback = noop // this is done to avoid connection drops as connect errors
-          cb(null, conn)
-        }})
+        const conn = t.dial(multiaddrs.shift(), {
+          ready: () => {
+            const cb = callback
+            callback = noop // this is done to avoid connection drops as connect errors
+            cb(null, conn)
+          }
+        })
         conn.once('error', () => {
           callback(new Error('failed to connect to every multiaddr'))
         })
@@ -78,6 +86,7 @@ module.exports = function (swarm) {
 
       const multiaddrs = dialables(swarm.transports[key], swarm._peerInfo.multiaddrs)
 
+      log('listening to %s', multiaddrs.map((m) => m.toString()))
       swarm.transports[key].createListener(multiaddrs, handler, (err, maUpdate) => {
         if (err) {
           return callback(err)
@@ -98,6 +107,7 @@ module.exports = function (swarm) {
         return callback(new Error(`Trying to close non existing transport: ${key}`))
       }
 
+      log('closing transport: %s', key)
       transport.close(callback)
     }
   }

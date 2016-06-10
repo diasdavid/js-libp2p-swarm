@@ -2,8 +2,12 @@
 
 const multistream = require('multistream-select')
 const Duplexify = require('duplexify')
+const debug = require('debug')
 
 const connHandler = require('./default-handler')
+const identify = require('./identify')
+
+const log = debug('libp2p:swarm:dial')
 
 module.exports = function dial (swarm) {
   return (pi, protocol, callback) => {
@@ -19,7 +23,7 @@ module.exports = function dial (swarm) {
     const pt = new Duplexify()
 
     const b58Id = pi.id.toB58String()
-
+    log('dialing to: %s', b58Id)
     if (!swarm.muxedConns[b58Id]) {
       if (!swarm.conns[b58Id]) {
         attemptDial(pi, (err, conn) => {
@@ -135,20 +139,41 @@ module.exports = function dial (swarm) {
             swarm.muxedConns[b58Id].muxer = muxedConn
             swarm.muxedConns[b58Id].conn = conn
 
+            log('peer-mux-established to: %s', pi.id.toB58String())
             swarm.emit('peer-mux-established', pi)
 
             muxedConn.once('close', () => {
               delete swarm.muxedConns[pi.id.toB58String()]
+              log('peer-mux-closed to: %s', pi.id.toB58String())
               swarm.emit('peer-mux-closed', pi)
             })
 
-            // in case identify is on
-            muxedConn.on('stream', (conn) => {
-              conn.peerId = pi.id
-              connHandler(swarm.protocols, conn)
-            })
+            // if identify is enabled, attempt to do it for muxer reuse
+            if (swarm.identify) {
+              identify.exec(conn, muxedConn, swarm._peerInfo, (err, pi) => {
+                if (err) {
+                  log.error('Identify exec failed', err)
+                  return callback(new Error('Identify exec failed'))
+                }
 
-            cb(null, muxedConn)
+                const peerIdForConn = pi.id
+                swarm.muxedConns[pi.id.toB58String()] = {}
+                swarm.muxedConns[pi.id.toB58String()].muxer = muxedConn
+                swarm.muxedConns[pi.id.toB58String()].conn = conn // to be able to extract addrs
+
+                log('peer-mux-established to: %s', pi.id.toB58String())
+                swarm.emit('peer-mux-established', pi)
+
+                muxedConn.on('close', () => {
+                  delete swarm.muxedConns[pi.id.toB58String()]
+                  log('peer-mux-closed to: %s', pi.id.toB58String())
+                  swarm.emit('peer-mux-closed', pi)
+                })
+                cb(null, muxedConn)
+              })
+            } else {
+              cb(null, muxedConn)
+            }
           })
         })
       }
@@ -164,6 +189,7 @@ module.exports = function dial (swarm) {
         if (err) {
           return callback(err)
         }
+        log('selecting: %s', protocol)
         ms.select(protocol, (err, conn) => {
           if (err) {
             return callback(err)
