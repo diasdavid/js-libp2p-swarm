@@ -4,11 +4,14 @@ const util = require('util')
 const EE = require('events').EventEmitter
 const parallel = require('run-parallel')
 const contains = require('lodash.contains')
+const debug = require('debug')
 
 const transport = require('./transport')
 const connection = require('./connection')
 const dial = require('./dial')
 const connHandler = require('./default-handler')
+
+const log = debug('libp2p:swarm')
 
 exports = module.exports = Swarm
 
@@ -89,6 +92,7 @@ function Swarm (peerInfo) {
   }
 
   this.handle = (protocol, handler) => {
+    log('attaching handler for: %s', protocol)
     this.protocols[protocol] = handler
   }
 
@@ -97,7 +101,8 @@ function Swarm (peerInfo) {
     connHandler(this.protocols, conn)
   })
 
-  this.unhandle = (protocol, handler) => {
+  this.unhandle = (protocol) => {
+    log('removing handler for: %s', protocol)
     if (this.protocols[protocol]) {
       delete this.protocols[protocol]
     }

@@ -2,7 +2,7 @@
   "name": "libp2p-swarm",
   "version": "0.20.0",
   "description": "libp2p swarm implementation in JavaScript",
-  "main": "lib/index.js",
+  "main": "src/index.js",
   "jsnext:main": "src/index.js",
   "scripts": {
     "lint": "gulp lint",
@@ -55,6 +55,7 @@
     "babel-runtime": "^6.6.1",
     "bl": "^1.1.2",
     "browserify-zlib": "github:ipfs/browserify-zlib",
+    "debug": "^2.2.0",
     "duplexify": "^3.4.3",
     "ip-address": "^5.8.0",
     "length-prefixed-stream": "^1.5.0",
