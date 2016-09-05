@@ -57,7 +57,7 @@
     "browserify-zlib": "github:ipfs/browserify-zlib",
     "debug": "^2.2.0",
     "duplexify": "^3.4.3",
-    "interface-connection": "^0.1.7",
+    "interface-connection": "^0.2.1",
     "ip-address": "^5.8.0",
     "length-prefixed-stream": "^1.5.0",
     "libp2p-identify": "^0.1.3",
