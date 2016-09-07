@@ -45,7 +45,7 @@
     "libp2p-multiplex": "^0.2.1",
     "libp2p-spdy": "^0.8.1",
     "libp2p-tcp": "^0.7.4",
-    "libp2p-webrtc-star": "^0.3.2",
+    "libp2p-webrtc-star": "^0.4.4",
     "libp2p-websockets": "^0.7.1",
     "pre-commit": "^1.1.2",
     "stream-pair": "^1.0.3",
