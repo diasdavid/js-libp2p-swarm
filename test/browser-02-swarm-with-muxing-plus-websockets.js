@@ -19,9 +19,14 @@ describe('high level API (swarm with spdy + websockets)', function () {
   var swarm
   var peerDst
 
-  before(() => {
-    const peerSrc = new PeerInfo()
-    swarm = new Swarm(peerSrc)
+  before((done) => {
+    PeerInfo.create((err, peerSrc) => {
+      if (err) {
+        return done(err)
+      }
+      swarm = new Swarm(peerSrc)
+      done()
+    })
   })
 
   it('add spdy', () => {
@@ -35,13 +40,13 @@ describe('high level API (swarm with spdy + websockets)', function () {
   })
 
   it('create Dst peer info', () => {
-    const id = PeerId.createFromJSON(
-        JSON.parse(
-          fs.readFileSync(
-            path.join(__dirname, './test-data/id-2.json'))))
+    const id = PeerId.createFromJSON(JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, './test-data/id-2.json')
+      )
+    ))
 
     peerDst = new PeerInfo(id)
-
     const ma = multiaddr('/ip4/127.0.0.1/tcp/9200/ws')
     peerDst.multiaddr.add(ma)
   })

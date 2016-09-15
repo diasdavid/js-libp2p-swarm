@@ -37,7 +37,7 @@
     "node": "^4.3.0"
   },
   "devDependencies": {
-    "aegir": "^8.0.0",
+    "aegir": "^8.1.0",
     "buffer-loader": "0.0.1",
     "chai": "^3.5.0",
     "gulp": "^3.9.1",
@@ -60,8 +60,8 @@
     "ip-address": "^5.8.2",
     "libp2p-identify": "^0.2.0",
     "lodash.includes": "^4.3.0",
-    "multiaddr": "^2.0.2",
-    "multistream-select": "^0.11.0",
+    "multiaddr": "^2.0.3",
+    "multistream-select": "^0.11.1",
     "peer-id": "^0.7.0",
     "peer-info": "^0.7.1",
     "protocol-buffers": "^3.1.6",
