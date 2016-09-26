@@ -39,16 +39,19 @@ describe('high level API (swarm with spdy + websockets)', function () {
     expect(Object.keys(swarm.transports).length).to.equal(1)
   })
 
-  it('create Dst peer info', () => {
-    const id = PeerId.createFromJSON(JSON.parse(
+  it('create Dst peer info', (done) => {
+    PeerId.createFromJSON(JSON.parse(
       fs.readFileSync(
         path.join(__dirname, './test-data/id-2.json')
       )
-    ))
+    ), (err, id) => {
+      expect(err).to.not.exist
 
-    peerDst = new PeerInfo(id)
-    const ma = multiaddr('/ip4/127.0.0.1/tcp/9200/ws')
-    peerDst.multiaddr.add(ma)
+      peerDst = new PeerInfo(id)
+      const ma = multiaddr('/ip4/127.0.0.1/tcp/9200/ws')
+      peerDst.multiaddr.add(ma)
+      done()
+    })
   })
 
   it('dial to warm a conn', (done) => {

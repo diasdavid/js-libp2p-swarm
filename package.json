@@ -7,12 +7,12 @@
   "scripts": {
     "lint": "gulp lint",
     "build": "gulp build",
-    "test": "gulp test",
+    "test": "PHANTOM=off gulp test",
     "test:node": "gulp test:node",
-    "test:browser": "gulp test:browser",
-    "release": "gulp release",
-    "release-minor": "gulp release --type minor",
-    "release-major": "gulp release --type major",
+    "test:browser": "PHANTOM=off gulp test:browser",
+    "release": "PHANTOM=off gulp release",
+    "release-minor": "PHANTOM=off gulp release --type minor",
+    "release-major": "PHANTOM=off gulp release --type major",
     "coverage": "gulp coverage",
     "coverage-publish": "aegir-coverage publish"
   },
