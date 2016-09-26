@@ -3,7 +3,7 @@
 
 const expect = require('chai').expect
 
-const parallel = require('run-parallel')
+const parallel = require('async/parallel')
 const multiaddr = require('multiaddr')
 const WebSockets = require('libp2p-websockets')
 const pull = require('pull-stream')

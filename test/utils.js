@@ -1,7 +1,7 @@
 'use strict'
 
 const PeerInfo = require('peer-info')
-const parallel = require('run-parallel')
+const parallel = require('async/parallel')
 
 exports.createInfos = (num, cb) => {
   const tasks = []

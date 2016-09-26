@@ -2,7 +2,7 @@
 'use strict'
 
 const expect = require('chai').expect
-const parallel = require('run-parallel')
+const parallel = require('async/parallel')
 const multiaddr = require('multiaddr')
 const TCP = require('libp2p-tcp')
 const pull = require('pull-stream')
