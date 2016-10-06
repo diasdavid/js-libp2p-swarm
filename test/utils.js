@@ -1,30 +1,30 @@
 'use strict'
 
 const PeerInfo = require('peer-info')
+const PeerId = require('peer-id')
 const parallel = require('async/parallel')
 
-exports.createInfos = (num, cb) => {
+const fixtures = require('./test-data/ids.json').infos
+
+exports.createInfos = (num, callback) => {
   const tasks = []
-  const infos = []
 
   for (let i = 0; i < num; i++) {
     tasks.push((cb) => {
-      PeerInfo.create((err, info) => {
-        if (err) {
-          return cb(err)
-        }
+      if (fixtures[i]) {
+        PeerId.createFromJSON(fixtures[i].id, (err, id) => {
+          if (err) {
+            return cb(err)
+          }
 
-        infos.push(info)
-        cb()
-      })
+          cb(null, new PeerInfo(id))
+        })
+        return
+      }
+
+      PeerInfo.create(cb)
     })
   }
 
-  parallel(tasks, (err) => {
-    if (err) {
-      return cb(err)
-    }
-
-    cb(null, infos)
-  })
+  parallel(tasks, callback)
 }
