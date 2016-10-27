@@ -2,17 +2,16 @@
   "name": "libp2p-swarm",
   "version": "0.23.0",
   "description": "libp2p swarm implementation in JavaScript",
-  "main": "lib/index.js",
-  "jsnext:main": "src/index.js",
-  "scripts": {
+  "main": "src/index.js",
+    "scripts": {
     "lint": "gulp lint",
     "build": "gulp build",
-    "test": "PHANTOM=off gulp test",
+    "test": "gulp test",
     "test:node": "gulp test:node",
-    "test:browser": "PHANTOM=off gulp test:browser",
-    "release": "PHANTOM=off gulp release",
-    "release-minor": "PHANTOM=off gulp release --type minor",
-    "release-major": "PHANTOM=off gulp release --type major",
+    "test:browser": "gulp test:browser",
+    "release": "gulp release",
+    "release-minor": "gulp release --type minor",
+    "release-major": "gulp release --type major",
     "coverage": "gulp coverage",
     "coverage-publish": "aegir-coverage publish"
   },
@@ -34,7 +33,7 @@
     "test"
   ],
   "engines": {
-    "node": "^4.3.0"
+    "node": ">=4.0.0"
   },
   "devDependencies": {
     "aegir": "^8.1.0",
@@ -54,7 +53,6 @@
   },
   "dependencies": {
     "async": "^2.0.1",
-    "babel-runtime": "^6.11.6",
     "browserify-zlib": "github:ipfs/browserify-zlib",
     "debug": "^2.2.0",
     "interface-connection": "^0.2.1",

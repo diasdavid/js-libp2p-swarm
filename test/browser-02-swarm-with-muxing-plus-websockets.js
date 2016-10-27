@@ -7,8 +7,6 @@ const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const WebSockets = require('libp2p-websockets')
 const spdy = require('libp2p-spdy')
-const fs = require('fs')
-const path = require('path')
 const pull = require('pull-stream')
 
 const Swarm = require('../src')
@@ -40,11 +38,7 @@ describe('high level API (swarm with spdy + websockets)', function () {
   })
 
   it('create Dst peer info', (done) => {
-    PeerId.createFromJSON(JSON.parse(
-      fs.readFileSync(
-        path.join(__dirname, './test-data/id-2.json')
-      )
-    ), (err, id) => {
+    PeerId.createFromJSON(require('./test-data/id-2.json'), (err, id) => {
       expect(err).to.not.exist
 
       peerDst = new PeerInfo(id)
