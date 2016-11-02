@@ -11,8 +11,7 @@ libp2p-swarm JavaScript implementation
 ![](https://img.shields.io/badge/npm-%3E%3D3.0.0-orange.svg?style=flat-square)
 ![](https://img.shields.io/badge/Node.js-%3E%3D4.0.0-orange.svg?style=flat-square)
 
-[![Sauce Test Status](https://saucelabs.com/browser-matrix/js-libp2p-swarm.svg)](https://saucelabs.com/u/js-l
-ibp2p-swarm)
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/libp2p-js-swarm.svg)](https://saucelabs.com/u/libp2p-js-swarm)
 
 > libp2p swarm implementation in JavaScript.
 
