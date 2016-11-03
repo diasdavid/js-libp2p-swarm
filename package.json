@@ -63,7 +63,7 @@
     "multistream-select": "^0.13.0",
     "peer-id": "^0.8.0",
     "peer-info": "^0.8.0",
-    "protocol-buffers": "^3.1.6"
+    "protocol-buffers": "^3.1.7"
   },
   "contributors": [
     "David Dias <daviddias.p@gmail.com>",
