@@ -84,6 +84,7 @@ module.exports = function (swarm) {
           listener.once('error', cb)
 
           listener.listen(ma, () => {
+            listener.removeListener('error', cb)
             listener.getAddrs((err, addrs) => {
               if (err) {
                 return cb(err)
