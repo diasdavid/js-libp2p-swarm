@@ -81,7 +81,7 @@ module.exports = function (swarm) {
         return (cb) => {
           const listener = transport.createListener(handler)
 
-          listener.on('error', cb)
+          listener.once('error', cb)
 
           listener.listen(ma, () => {
             listener.getAddrs((err, addrs) => {
