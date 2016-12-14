@@ -62,6 +62,7 @@
     "lodash.includes": "^4.3.0",
     "multiaddr": "^2.1.1",
     "multistream-select": "^0.13.0",
+    "once": "^1.4.0",
     "peer-id": "^0.8.0",
     "peer-info": "^0.8.1",
     "protocol-buffers": "^3.1.8"
