@@ -2,7 +2,7 @@
 
 const Connection = require('interface-connection').Connection
 const parallel = require('async/parallel')
-const once = reuqire('once')
+const once = require('once')
 const debug = require('debug')
 const log = debug('libp2p:swarm:transport')
 
