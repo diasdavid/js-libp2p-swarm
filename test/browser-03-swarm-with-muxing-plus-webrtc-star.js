@@ -135,15 +135,15 @@ describe('high level API (swarm with spdy + webrtc-star)', () => {
           expect(Object.keys(swarm2.muxedConns).length).to.equal(2)
           expect(Object.keys(swarm3.muxedConns).length).to.equal(2)
           swarm3.close(done)
-        }, 8000)
+        }, 5000)
       })
     })
   })
 
   it('close', (done) => {
     parallel([
-      swarm1.close,
-      swarm2.close
+      (cb) => swarm1.close(cb),
+      (cb) => swarm2.close(cb)
     ], done)
   })
 })
