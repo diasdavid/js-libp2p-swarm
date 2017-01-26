@@ -31,15 +31,28 @@ module.exports = function connection (swarm) {
         //   3. add this conn to the pool
         if (swarm.identify) {
           // overload peerInfo to use Identify instead
+          console.log('-> swarm.identify')
           conn.getPeerInfo = (cb) => {
+            console.log('-> getPeerInfo gets called')
             const conn = muxedConn.newStream()
             const ms = new multistream.Dialer()
 
+            console.log('waterfall')
             waterfall([
-              (cb) => ms.handle(conn, cb),
-              (cb) => ms.select(identify.multicodec, cb),
-              (conn, cb) => identify.dialer(conn, cb),
+              (cb) => {
+                console.log('ms-handle')
+                ms.handle(conn, cb)
+              },
+              (cb) => {
+                console.log('ms-select identify')
+                ms.select(identify.multicodec, cb)
+              },
+              (conn, cb) => {
+                console.log('ms-select identify just fine')
+                identify.dialer(conn, cb)
+              },
               (peerInfo, observedAddrs, cb) => {
+                console.log('identify worked')
                 observedAddrs.forEach((oa) => {
                   swarm._peerInfo.multiaddr.addSafe(oa)
                 })
@@ -71,6 +84,7 @@ module.exports = function connection (swarm) {
     reuse () {
       swarm.identify = true
       swarm.handle(identify.multicodec, (protocol, conn) => {
+        console.log('received identify request')
         identify.listener(conn, swarm._peerInfo)
       })
     },

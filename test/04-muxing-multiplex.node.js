@@ -111,13 +111,13 @@ describe('stream muxing with multiplex (on TCP)', () => {
     swarmA.connection.reuse()
     swarmC.connection.reuse()
 
-    swarmC.dial(peerA, (err) => {
+    swarmC.dial(peerA, (err, conn) => {
       expect(err).to.not.exist
       setTimeout(() => {
         expect(Object.keys(swarmC.muxedConns).length).to.equal(1)
         expect(Object.keys(swarmA.muxedConns).length).to.equal(2)
         done()
-      }, 500)
+      }, 6000)
     })
   })
 
