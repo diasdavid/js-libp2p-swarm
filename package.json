@@ -58,7 +58,7 @@
   "dependencies": {
     "async": "^2.1.4",
     "browserify-zlib-next": "^1.0.1",
-    "debug": "^2.6.1",
+    "debug": "^2.6.3",
     "interface-connection": "~0.3.1",
     "ip-address": "^5.8.6",
     "libp2p-identify": "~0.3.2",
