@@ -2,6 +2,7 @@
 
 const Connection = require('interface-connection').Connection
 const parallel = require('async/parallel')
+const each = require('async/each')
 const once = require('once')
 const debug = require('debug')
 const log = debug('libp2p:swarm:transport')
@@ -53,11 +54,18 @@ module.exports = function (swarm) {
       // specific for the transport we are using
       const proxyConn = new Connection()
 
-      next(multiaddrs.shift())
+      each(multiaddrs, next)
 
-      // TODO improve in the future to make all the dials in paralell
+      var success = false
       function next (multiaddr) {
+        if (success) {
+          return;
+        }
         const conn = t.dial(multiaddr, () => {
+          if (success) {
+            return;
+          }
+          success = true;
           proxyConn.setInnerConn(conn)
           callback(null, proxyConn)
         })
