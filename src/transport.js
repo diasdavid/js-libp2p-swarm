@@ -15,11 +15,9 @@ const protocolMuxer = require('./protocol-muxer')
 const defaultPerPeerRateLimit = 1 // 8, currently one to avoid https://github.com/libp2p/js-libp2p-swarm/pull/195#issuecomment-289497688
 
 // the amount of time a single dial has to succeed
-const dialTimeout = 10 * 10000
+const dialTimeout = 10 * 1000
 
 module.exports = function (swarm) {
-  const queues = new Map()
-
   return {
     add (key, transport, options, callback) {
       if (typeof options === 'function') {
@@ -51,75 +49,65 @@ module.exports = function (swarm) {
       multiaddrs = dialables(t, multiaddrs)
 
       // create dial queue if non exists
-      let q
-      if (queues.has(key)) {
-        log('reusing queue')
-        q = queues.get(key)
-      } else {
-        log('setting up new queue')
-        q = queue((multiaddr, cb) => {
-          dialWithTimeout(t, multiaddr, dialTimeout, (err, conn) => {
-            if (err) {
-              log('dial err', err)
-              return cb(err)
+      let q = queue((multiaddr, cb) => {
+        dialWithTimeout(t, multiaddr, dialTimeout, (err, conn) => {
+          if (err) {
+            log('dial err', err)
+            return cb(err)
+          }
+
+          if (q.canceled) {
+            log('dial canceled: %s', multiaddr.toString())
+            // clean up already done dials
+            if (conn) {
+              pull(
+                pull.empty(),
+                conn
+              )
+
+              // conn.close()
             }
+            return cb()
+          }
 
-            if (q.canceled) {
-              log('dial canceled: %s', multiaddr.toString())
-              // clean up already done dials
-              if (conn) {
-                pull(
-                  pull.empty(),
-                  conn
-                )
+          // one is enough
+          log('dial success: %s', multiaddr.toString())
+          q.kill()
+          q.canceled = true
 
-                // conn.close()
-              }
-              return cb()
-            }
+          q.finish(null, conn)
+        })
+      }, defaultPerPeerRateLimit)
 
-            // one is enough
-            log('dial success: %s', multiaddr.toString())
-            q.kill() // why kill here?
-            q.canceled = true
+      q.errors = []
+      q.finishCbs = []
 
-            q.finish(null, conn)
-          })
-        }, defaultPerPeerRateLimit)
+      // handle finish
+      q.finish = (err, conn) => {
+        log('queue finish')
 
+        q.finishCbs.forEach((next) => {
+          if (err) {
+            return next(err)
+          }
+
+          const proxyConn = new Connection()
+          proxyConn.setInnerConn(conn)
+
+          next(null, proxyConn)
+        })
+      }
+
+      // collect errors
+      q.error = (err) => q.errors.push(err)
+
+      // no more addresses and all failed
+      q.drain = () => {
+        log('queue drain')
+        const err = new Error('Could not dial any address')
+        err.errors = q.errors
         q.errors = []
-        q.finishCbs = []
-
-        // handle finish
-        q.finish = (err, conn) => {
-          log('queue finish')
-          queues.delete(key)
-
-          q.finishCbs.forEach((next) => {
-            if (err) {
-              return next(err)
-            }
-
-            const proxyConn = new Connection()
-            proxyConn.setInnerConn(conn)
-
-            next(null, proxyConn)
-          })
-        }
-
-        // collect errors
-        q.error = (err) => q.errors.push(err)
-
-        // no more addresses and all failed
-        q.drain = () => {
-          log('queue drain')
-          const err = new Error('Could not dial any address')
-          err.errors = q.errors
-          q.errors = []
-          q.finish(err)
-        }
-
-        queues.set(key, q)
+        q.finish(err)
       }
 
       q.push(multiaddrs)
