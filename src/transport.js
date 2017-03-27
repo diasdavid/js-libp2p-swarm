@@ -4,6 +4,7 @@ const Connection = require('interface-connection').Connection
 const parallel = require('async/parallel')
 const queue = require('async/queue')
 const once = require('once')
+const pull = require('pull-stream')
 const debug = require('debug')
 const log = debug('libp2p:swarm:transport')
 
@@ -61,7 +62,7 @@ module.exports = function (swarm) {
             if (q.canceled) {
               log('dial canceled: %s', multiaddr.toString())
               // clean up already done dials
-
+              pull(pull.empty(), conn)
               return cb()
             }
             // one is enough
