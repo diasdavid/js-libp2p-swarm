@@ -3,8 +3,8 @@
 const Connection = require('interface-connection').Connection
 const parallel = require('async/parallel')
 const queue = require('async/queue')
+const timeout = require('async/timeout')
 const once = require('once')
-const pull = require('pull-stream')
 const debug = require('debug')
 const log = debug('libp2p:swarm:transport')
 
@@ -12,6 +12,9 @@ const protocolMuxer = require('./protocol-muxer')
 
 // number of concurrent outbound dials to make per peer, same as go-libp2p-swarm
 const defaultPerPeerRateLimit = 8
+
+// the amount of time a single dial has to succeed
+const dialTimeout = 10 * 1000
 
 module.exports = function (swarm) {
   const queues = new Map()
@@ -54,17 +57,21 @@ module.exports = function (swarm) {
       } else {
         log('setting up new queue')
         q = queue((multiaddr, cb) => {
-          const conn = t.dial(multiaddr, (err) => {
+          dialWithTimeout(t, multiaddr, dialTimeout, (err, conn) => {
             if (err) {
-              log('dial failed: %s', multiaddr.toString())
+              log('dial err', err)
               return cb(err)
             }
+
             if (q.canceled) {
               log('dial canceled: %s', multiaddr.toString())
               // clean up already done dials
-              pull(pull.empty(), conn)
+              if (conn) {
+                conn.close()
+              }
               return cb()
             }
+
             // one is enough
             log('dial success: %s', multiaddr.toString())
             q.kill()
@@ -84,13 +91,13 @@ module.exports = function (swarm) {
 
           q.finishCbs.forEach((next) => {
             if (err) {
-              next(err)
-            } else {
-              const proxyConn = new Connection()
-              proxyConn.setInnerConn(conn)
-
-              next(null, proxyConn)
+              return next(err)
             }
+
+            const proxyConn = new Connection()
+            proxyConn.setInnerConn(conn)
+
+            next(null, proxyConn)
           })
         }
 
@@ -183,6 +190,16 @@ module.exports = function (swarm) {
 
 function dialables (tp, multiaddrs) {
   return tp.filter(multiaddrs)
+}
+
+function dialWithTimeout (transport, multiaddr, maxTimeout, callback) {
+  timeout((cb) => {
+    const conn = transport.dial(multiaddr, (err) => {
+      log('dialed')
+      // TODO: fix me, websockets are opening before they error out
+      cb(err, conn)
+    })
+  }, maxTimeout)(callback)
 }
 
 function noop () {}
