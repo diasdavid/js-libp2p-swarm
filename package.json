@@ -50,7 +50,7 @@
     "libp2p-spdy": "~0.10.6",
     "libp2p-tcp": "~0.9.4",
     "libp2p-webrtc-star": "~0.8.10",
-    "libp2p-websockets": "~0.9.4",
+    "libp2p-websockets": "~0.10.0",
     "pre-commit": "^1.2.2",
     "pull-goodbye": "0.0.1",
     "pull-stream": "^3.5.0",
