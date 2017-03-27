@@ -196,7 +196,6 @@ function dialWithTimeout (transport, multiaddr, maxTimeout, callback) {
   timeout((cb) => {
     const conn = transport.dial(multiaddr, (err) => {
       log('dialed')
-      // TODO: fix me, websockets are opening before they error out
       cb(err, conn)
     })
   }, maxTimeout)(callback)
