@@ -80,7 +80,7 @@ module.exports = function (swarm) {
 
             // one is enough
             log('dial success: %s', multiaddr.toString())
-            q.kill()
+            q.kill() // why kill here?
             q.canceled = true
 
             q.finish(null, conn)
