@@ -6,6 +6,7 @@ const each = require('async/each')
 const series = require('async/series')
 const transport = require('./transport')
 const connection = require('./connection')
+const handler = require('./handler')
 const dial = require('./dial')
 const protocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
@@ -56,6 +57,7 @@ function Swarm (peerInfo, peerBook) {
 
   this.transport = transport(this)
   this.connection = connection(this)
+  this.connHandler = handler(this)
 
   this.availableTransports = (pi) => {
     const myAddrs = pi.multiaddrs.toArray()
