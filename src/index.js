@@ -6,6 +6,7 @@ const each = require('async/each')
 const series = require('async/series')
 const transport = require('./transport')
 const connection = require('./connection')
+const handler = require('./handler')
 const getPeerInfo = require('./get-peer-info')
 const dial = require('./dial')
 const protocolMuxer = require('./protocol-muxer')
@@ -52,11 +53,15 @@ function Swarm (peerInfo, peerBook) {
   // is the Identify protocol enabled?
   this.identify = false
 
+  // is relay enabled?
+  this.relay = false
+
   // Crypto details
   this.crypto = plaintext
 
   this.transport = transport(this)
   this.connection = connection(this)
+  this.connHandler = handler(this)
 
   this.availableTransports = (pi) => {
     const myAddrs = pi.multiaddrs.toArray()
@@ -74,7 +79,16 @@ function Swarm (peerInfo, peerBook) {
     each(this.availableTransports(peerInfo), (ts, cb) => {
       // Listen on the given transport
       this.transport.listen(ts, {}, null, cb)
-    }, callback)
+    }, (err) => {
+      // TODO: it would be nice to define swarm events such as
+      // listening, error, handler adder/removed, etc...
+      if (err) {
+        this.emit('error', err)
+        callback(err)
+      }
+      this.emit('listening')
+      callback()
+    })
   }
 
   this.handle = (protocol, handlerFunc, matchFunc) => {
