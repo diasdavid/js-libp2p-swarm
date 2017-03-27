@@ -15,18 +15,20 @@ const utils = require('./utils')
 const Swarm = require('../src')
 
 describe('transport - websockets', function () {
-  var swarmA
-  var swarmB
-  var peerA
-  var peerB
+  let swarmA
+  let swarmB
+  let peerA
+  let peerB
+  let peerC
 
   before((done) => {
-    utils.createInfos(2, (err, infos) => {
+    utils.createInfos(3, (err, infos) => {
       if (err) {
         return done(err)
       }
       peerA = infos[0]
       peerB = infos[1]
+      peerC = infos[2]
 
       peerA.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9888/ws'))
       peerB.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9999/ws/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC'))
@@ -71,7 +73,9 @@ describe('transport - websockets', function () {
   })
 
   it('dial', (done) => {
-    const conn = swarmA.transport.dial('ws', multiaddr('/ip4/127.0.0.1/tcp/9999/ws'), (err, conn) => {
+    peerC.multiadddrs = []
+    peerC.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9999/ws'))
+    const conn = swarmA.transport.dial('ws', peerC, (err, conn) => {
       expect(err).to.not.exist()
     })
 
@@ -87,7 +91,9 @@ describe('transport - websockets', function () {
   })
 
   it('dial (conn from callback)', (done) => {
-    swarmA.transport.dial('ws', multiaddr('/ip4/127.0.0.1/tcp/9999/ws'), (err, conn) => {
+    peerC.multiadddrs = []
+    peerC.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9999/ws'))
+    swarmA.transport.dial('ws', peerC, (err, conn) => {
       expect(err).to.not.exist()
 
       const s = goodbye({
@@ -103,10 +109,11 @@ describe('transport - websockets', function () {
   })
 
   it('dial to set of multiaddr, none is available', (done) => {
-    swarmA.transport.dial('ws', [
-      multiaddr('/ip4/127.0.0.1/tcp/9320/ws'),
-      multiaddr('/ip4/127.0.0.1/tcp/9359/ws')
-    ], (err, conn) => {
+    peerC.multiadddrs = []
+    peerC.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9320/ws'))
+    peerC.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9359/ws'))
+
+    swarmA.transport.dial('ws', peerC, (err, conn) => {
       expect(err).to.exist()
       expect(err.errors).to.have.length(2)
       expect(conn).to.not.exist()
