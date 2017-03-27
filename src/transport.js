@@ -2,6 +2,7 @@
 
 const Connection = require('interface-connection').Connection
 const parallel = require('async/parallel')
+const pull = require('pull-stream')
 const queue = require('async/queue')
 const timeout = require('async/timeout')
 const once = require('once')
@@ -11,10 +12,10 @@ const log = debug('libp2p:swarm:transport')
 const protocolMuxer = require('./protocol-muxer')
 
 // number of concurrent outbound dials to make per peer, same as go-libp2p-swarm
-const defaultPerPeerRateLimit = 8
+const defaultPerPeerRateLimit = 1 // 8, currently one to avoid https://github.com/libp2p/js-libp2p-swarm/pull/195#issuecomment-289497688
 
 // the amount of time a single dial has to succeed
-const dialTimeout = 10 * 1000
+const dialTimeout = 10 * 10000
 
 module.exports = function (swarm) {
   const queues = new Map()
@@ -67,7 +68,12 @@ module.exports = function (swarm) {
               log('dial canceled: %s', multiaddr.toString())
               // clean up already done dials
               if (conn) {
-                conn.close()
+                pull(
+                  pull.empty(),
+                  conn
+                )
+
+                // conn.close()
               }
               return cb()
             }
@@ -102,9 +108,7 @@ module.exports = function (swarm) {
         }
 
         // collect errors
-        q.error = (err) => {
-          q.errors.push(err)
-        }
+        q.error = (err) => q.errors.push(err)
 
         // no more addresses and all failed
         q.drain = () => {
