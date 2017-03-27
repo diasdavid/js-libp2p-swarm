@@ -45,7 +45,8 @@ module.exports = function (swarm) {
         multiaddrs = [multiaddrs]
       }
       log('dialing %s', key, multiaddrs.map((m) => m.toString()))
-      // filter the multiaddrs that are actually valid for this transport (use a func from the transport itself) (maybe even make the transport do that)
+      // filter the multiaddrs that are actually valid for this transport
+      // (use a func from the transport itself) (maybe even make the transport do that)
       multiaddrs = dialables(t, multiaddrs)
 
       // create dial queue if non exists
@@ -75,28 +76,13 @@ module.exports = function (swarm) {
           q.kill()
           q.canceled = true
 
-          q.finish(null, conn)
+          const proxyConn = new Connection()
+          proxyConn.setInnerConn(conn)
+          callback(null, proxyConn)
         })
       }, defaultPerPeerRateLimit)
 
       q.errors = []
-      q.finishCbs = []
-
-      // handle finish
-      q.finish = (err, conn) => {
-        log('queue finish')
-
-        q.finishCbs.forEach((next) => {
-          if (err) {
-            return next(err)
-          }
-
-          const proxyConn = new Connection()
-          proxyConn.setInnerConn(conn)
-
-          next(null, proxyConn)
-        })
-      }
 
       // collect errors
       q.error = (err) => q.errors.push(err)
@@ -106,12 +92,10 @@ module.exports = function (swarm) {
         log('queue drain')
         const err = new Error('Could not dial any address')
         err.errors = q.errors
-        q.errors = []
-        q.finish(err)
+        callback(err)
       }
 
       q.push(multiaddrs)
-      q.finishCbs.push(callback)
     },
 
     listen (key, options, handler, callback) {
