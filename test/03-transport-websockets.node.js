@@ -19,16 +19,16 @@ describe('transport - websockets', function () {
   let swarmB
   let peerA
   let peerB
-  let peerC
+  let dialPeers
 
   before((done) => {
-    utils.createInfos(3, (err, infos) => {
+    utils.createInfos(5, (err, infos) => {
       if (err) {
         return done(err)
       }
       peerA = infos[0]
       peerB = infos[1]
-      peerC = infos[2]
+      dialPeers = infos.slice(2)
 
       peerA.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9888/ws'))
       peerB.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9999/ws/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC'))
@@ -73,9 +73,8 @@ describe('transport - websockets', function () {
   })
 
   it('dial', (done) => {
-    peerC.multiadddrs = []
-    peerC.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9999/ws'))
-    const conn = swarmA.transport.dial('ws', peerC, (err, conn) => {
+    dialPeers[0].multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9999/ws'))
+    const conn = swarmA.transport.dial('ws', dialPeers[0], (err, conn) => {
       expect(err).to.not.exist()
     })
 
@@ -91,9 +90,8 @@ describe('transport - websockets', function () {
   })
 
   it('dial (conn from callback)', (done) => {
-    peerC.multiadddrs = []
-    peerC.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9999/ws'))
-    swarmA.transport.dial('ws', peerC, (err, conn) => {
+    dialPeers[1].multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9999/ws'))
+    swarmA.transport.dial('ws', dialPeers[1], (err, conn) => {
       expect(err).to.not.exist()
 
       const s = goodbye({
@@ -109,11 +107,10 @@ describe('transport - websockets', function () {
   })
 
   it('dial to set of multiaddr, none is available', (done) => {
-    peerC.multiadddrs = []
-    peerC.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9320/ws'))
-    peerC.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9359/ws'))
+    dialPeers[2].multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9320/ws'))
+    dialPeers[2].multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9359/ws'))
 
-    swarmA.transport.dial('ws', peerC, (err, conn) => {
+    swarmA.transport.dial('ws', dialPeers[2], (err, conn) => {
       expect(err).to.exist()
       expect(err.errors).to.have.length(2)
       expect(conn).to.not.exist()
