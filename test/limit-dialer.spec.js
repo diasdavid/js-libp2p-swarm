@@ -8,10 +8,10 @@ const multiaddr = require('multiaddr')
 const pull = require('pull-stream')
 const setImmediate = require('async/setImmediate')
 
-const Dialer = require('../src/dialer')
+const LimitDialer = require('../src/limit-dialer')
 const utils = require('./utils')
 
-describe('Dialer', () => {
+describe('LimitDialer', () => {
   let peers
 
   before((done) => {
@@ -37,7 +37,7 @@ describe('Dialer', () => {
   })
 
   it('all failing', (done) => {
-    const dialer = new Dialer(2, 10)
+    const dialer = new LimitDialer(2, 10)
 
     // mock transport
     const t1 = {
@@ -59,7 +59,7 @@ describe('Dialer', () => {
   })
 
   it('two success', (done) => {
-    const dialer = new Dialer(2, 10)
+    const dialer = new LimitDialer(2, 10)
 
     // mock transport
     const t1 = {

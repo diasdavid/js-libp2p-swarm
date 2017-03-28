@@ -6,7 +6,7 @@ const debug = require('debug')
 const log = debug('libp2p:swarm:transport')
 
 const protocolMuxer = require('./protocol-muxer')
-const Dialer = require('./dialer')
+const LimitDialer = require('./limit-dialer')
 
 // number of concurrent outbound dials to make per peer, same as go-libp2p-swarm
 const defaultPerPeerRateLimit = 8
@@ -15,7 +15,7 @@ const defaultPerPeerRateLimit = 8
 const dialTimeout = 10 * 1000
 
 module.exports = function (swarm) {
-  const dialer = new Dialer(defaultPerPeerRateLimit, dialTimeout)
+  const dialer = new LimitDialer(defaultPerPeerRateLimit, dialTimeout)
 
   return {
     add (key, transport, options, callback) {
