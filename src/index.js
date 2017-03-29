@@ -4,7 +4,6 @@ const util = require('util')
 const EE = require('events').EventEmitter
 const each = require('async/each')
 const series = require('async/series')
-const includes = require('lodash.includes')
 
 const transport = require('./transport')
 const connection = require('./connection')
@@ -59,25 +58,11 @@ function Swarm (peerInfo) {
   this.connection = connection(this)
 
   this.availableTransports = (pi) => {
-    const addrs = pi.multiaddrs
+    const myAddrs = pi.multiaddrs
+    const myTransports = Object.keys(this.transports)
 
     // Only listen on transports we actually have addresses for
-    return Object.keys(this.transports).filter((ts) => {
-      // ipfs multiaddrs are not dialable so we drop them here
-      let dialable = addrs.map((addr) => {
-        // webrtc-star needs the /ipfs/QmHash
-        if (addr.toString().indexOf('webrtc-star') > 0) {
-          return addr
-        }
-
-        if (includes(addr.protoNames(), 'ipfs')) {
-          return addr.decapsulate('ipfs')
-        }
-        return addr
-      })
-
-      return this.transports[ts].filter(dialable).length > 0
-    })
+    return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
   }
 
   // higher level (public) API

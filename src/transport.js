@@ -24,7 +24,8 @@ module.exports = function (swarm) {
         options = {}
       }
 
-      if (!callback) { callback = noop }
+      callback = callback || noop
+
       log('adding %s', key)
       if (swarm.transports[key]) {
         throw new Error('There is already a transport with this key')
