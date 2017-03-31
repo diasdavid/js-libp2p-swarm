@@ -6,9 +6,8 @@ const dirtyChai = require('dirty-chai')
 const expect = chai.expect
 chai.use(dirtyChai)
 
-const multiaddr = require('multiaddr')
-const Id = require('peer-id')
-const Peer = require('peer-info')
+const PeerId = require('peer-id')
+const PeerInfo = require('peer-info')
 const WebSockets = require('libp2p-websockets')
 const pull = require('pull-stream')
 
@@ -21,11 +20,11 @@ describe('transport - websockets', () => {
   before((done) => {
     const b58IdSrc = 'QmYzgdesgjdvD3okTPGZT9NPmh1BuH5FfTVNKjsvaAprhb'
     // use a pre generated Id to save time
-    const idSrc = Id.createFromB58String(b58IdSrc)
-    const peerSrc = Peer(idSrc)
+    const idSrc = PeerId.createFromB58String(b58IdSrc)
+    const peerSrc = new PeerInfo(idSrc)
     swarm = new Swarm(peerSrc)
 
-    Peer.create((err, p) => {
+    PeerInfo.create((err, p) => {
       if (err) {
         return done(err)
       }
@@ -42,8 +41,8 @@ describe('transport - websockets', () => {
   })
 
   it('dial', (done) => {
-    peer.multiaddrs = []
-    peer.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/9100/ws'))
+    peer.multiaddrs.clear()
+    peer.multiaddrs.add('/ip4/127.0.0.1/tcp/9100/ws')
 
     const conn = swarm.transport.dial('ws', peer, (err, conn) => {
       expect(err).to.not.exist()

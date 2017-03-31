@@ -41,7 +41,7 @@ module.exports = function connection (swarm) {
               (conn, cb) => identify.dialer(conn, cb),
               (peerInfo, observedAddrs, cb) => {
                 observedAddrs.forEach((oa) => {
-                  swarm._peerInfo.multiaddr.addSafe(oa)
+                  swarm._peerInfo.multiaddrs.addSafe(oa)
                 })
                 cb(null, peerInfo)
               }

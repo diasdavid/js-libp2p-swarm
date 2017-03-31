@@ -6,7 +6,6 @@ const dirtyChai = require('dirty-chai')
 const expect = chai.expect
 chai.use(dirtyChai)
 
-const multiaddr = require('multiaddr')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const WebSockets = require('libp2p-websockets')
@@ -15,11 +14,9 @@ const pull = require('pull-stream')
 
 const Swarm = require('../src')
 
-describe('high level API (swarm with spdy + websockets)', function () {
-  this.timeout(60 * 1000)
-
-  var swarm
-  var peerDst
+describe('high level API (swarm with spdy + websockets)', () => {
+  let swarm
+  let peerDst
 
   before((done) => {
     PeerInfo.create((err, peerSrc) => {
@@ -46,17 +43,14 @@ describe('high level API (swarm with spdy + websockets)', function () {
       expect(err).to.not.exist()
 
       peerDst = new PeerInfo(id)
-      const ma = multiaddr('/ip4/127.0.0.1/tcp/9200/ws')
-      peerDst.multiaddr.add(ma)
+      const ma = '/ip4/127.0.0.1/tcp/9200/ws'
+      peerDst.multiaddrs.add(ma)
       done()
     })
   })
 
   it('dial to warm a conn', (done) => {
-    swarm.dial(peerDst, (err) => {
-      expect(err).to.not.exist()
-      done()
-    })
+    swarm.dial(peerDst, done)
   })
 
   it('dial on protocol, use warmed conn', (done) => {
@@ -72,12 +66,6 @@ describe('high level API (swarm with spdy + websockets)', function () {
 
   it('close', (done) => {
     // cause CI is slow
-    setTimeout(() => {
-      swarm.close(done)
-    }, 1000)
+    setTimeout(() => swarm.close(done), 1000)
   })
-
-  // TODO - test that the listener (node.js peer) can dial back
-  // do that by dialing on a protocol to activate that behaviour
-  // like libp2p-spdy tests
 })

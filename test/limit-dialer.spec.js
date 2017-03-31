@@ -22,15 +22,9 @@ describe('LimitDialer', () => {
       peers = infos
 
       peers.forEach((peer, i) => {
-        peer.multiaddr.add(
-          multiaddr(`/ip4/191.0.0.1/tcp/123${i}`)
-        )
-        peer.multiaddr.add(
-          multiaddr(`/ip4/192.168.0.1/tcp/923${i}`)
-        )
-        peer.multiaddr.add(
-          multiaddr(`/ip4/193.168.0.99/tcp/923${i}`)
-        )
+        peer.multiaddrs.add(multiaddr(`/ip4/191.0.0.1/tcp/123${i}`))
+        peer.multiaddrs.add(multiaddr(`/ip4/192.168.0.1/tcp/923${i}`))
+        peer.multiaddrs.add(multiaddr(`/ip4/193.168.0.99/tcp/923${i}`))
       })
       done()
     })
@@ -42,14 +36,12 @@ describe('LimitDialer', () => {
     // mock transport
     const t1 = {
       dial (addr, cb) {
-        setTimeout(() => {
-          cb(new Error('fail'))
-        }, 1)
+        setTimeout(() => cb(new Error('fail')), 1)
         return {}
       }
     }
 
-    dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs, (err, conn) => {
+    dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs.toArray(), (err, conn) => {
       expect(err).to.exist()
       expect(err.errors).to.have.length(3)
       expect(err.errors[0].message).to.eql('fail')
@@ -84,7 +76,7 @@ describe('LimitDialer', () => {
       }
     }
 
-    dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs, (err, conn) => {
+    dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs.toArray(), (err, conn) => {
       expect(err).to.not.exist()
       pull(
         conn,

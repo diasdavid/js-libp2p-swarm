@@ -40,7 +40,7 @@ module.exports = function (swarm) {
 
     dial (key, pi, callback) {
       const t = swarm.transports[key]
-      let multiaddrs = pi.multiaddrs.slice()
+      let multiaddrs = pi.multiaddrs.toArray()
 
       if (!Array.isArray(multiaddrs)) {
         multiaddrs = [multiaddrs]
@@ -58,7 +58,7 @@ module.exports = function (swarm) {
         handler = protocolMuxer.bind(null, swarm.protocols)
       }
 
-      const multiaddrs = dialables(swarm.transports[key], swarm._peerInfo.distinctMultiaddr())
+      const multiaddrs = dialables(swarm.transports[key], swarm._peerInfo.multiaddrs.distinct())
 
       const transport = swarm.transports[key]
 
@@ -97,7 +97,7 @@ module.exports = function (swarm) {
         }
 
         // cause we can listen on port 0 or 0.0.0.0
-        swarm._peerInfo.multiaddr.replace(multiaddrs, freshMultiaddrs)
+        swarm._peerInfo.multiaddrs.replace(multiaddrs, freshMultiaddrs)
         callback()
       })
     },

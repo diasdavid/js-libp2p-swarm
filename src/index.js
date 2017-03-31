@@ -58,7 +58,7 @@ function Swarm (peerInfo) {
   this.connection = connection(this)
 
   this.availableTransports = (pi) => {
-    const myAddrs = pi.multiaddrs
+    const myAddrs = pi.multiaddrs.toArray()
     const myTransports = Object.keys(this.transports)
 
     // Only listen on transports we actually have addresses for

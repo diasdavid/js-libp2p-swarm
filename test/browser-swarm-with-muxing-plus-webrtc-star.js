@@ -6,7 +6,6 @@ const dirtyChai = require('dirty-chai')
 const expect = chai.expect
 chai.use(dirtyChai)
 
-const multiaddr = require('multiaddr')
 const peerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const WebRTCStar = require('libp2p-webrtc-star')
@@ -31,15 +30,17 @@ describe('high level API (swarm with spdy + webrtc-star)', () => {
       (cb) => peerId.create((err, id1) => {
         expect(err).to.not.exist()
         peer1 = new PeerInfo(id1)
-        const mh1 = multiaddr('/libp2p-webrtc-star/ip4/127.0.0.1/tcp/15555/ws/ipfs/' + id1.toB58String())
-        peer1.multiaddr.add(mh1)
+        const mh1 = '/libp2p-webrtc-star/ip4/127.0.0.1/tcp/15555/ws/ipfs/' +
+          id1.toB58String()
+        peer1.multiaddrs.add(mh1)
         cb()
       }),
       (cb) => peerId.create((err, id2) => {
         expect(err).to.not.exist()
         peer2 = new PeerInfo(id2)
-        const mh2 = multiaddr('/libp2p-webrtc-star/ip4/127.0.0.1/tcp/15555/ws/ipfs/' + id2.toB58String())
-        peer2.multiaddr.add(mh2)
+        const mh2 = '/libp2p-webrtc-star/ip4/127.0.0.1/tcp/15555/ws/ipfs/' +
+          id2.toB58String()
+        peer2.multiaddrs.add(mh2)
         cb()
       })
     ], (err) => {
@@ -130,8 +131,8 @@ describe('high level API (swarm with spdy + webrtc-star)', () => {
       expect(err).to.not.exist()
 
       const peer3 = new PeerInfo(id3)
-      const mh3 = multiaddr('/libp2p-webrtc-star/ip4/127.0.0.1/tcp/15555/ws/ipfs/' + id3.toB58String())
-      peer3.multiaddr.add(mh3)
+      const mh3 = '/libp2p-webrtc-star/ip4/127.0.0.1/tcp/15555/ws/ipfs/' + id3.toB58String()
+      peer3.multiaddrs.add(mh3)
 
       swarm3 = new Swarm(peer3)
       const wstar3 = new WebRTCStar()
