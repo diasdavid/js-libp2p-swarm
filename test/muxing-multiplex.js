@@ -11,6 +11,7 @@ const TCP = require('libp2p-tcp')
 const multiplex = require('libp2p-multiplex')
 const pull = require('pull-stream')
 const utils = require('./utils')
+const PeerBook = require('peer-book')
 
 const Swarm = require('../src')
 
@@ -36,9 +37,9 @@ describe('stream muxing with multiplex (on TCP)', () => {
       peerB.multiaddrs.add('/ip4/127.0.0.1/tcp/9002')
       peerC.multiaddrs.add('/ip4/127.0.0.1/tcp/9003')
 
-      swarmA = new Swarm(peerA)
-      swarmB = new Swarm(peerB)
-      swarmC = new Swarm(peerC)
+      swarmA = new Swarm(peerA, new PeerBook())
+      swarmB = new Swarm(peerB, new PeerBook())
+      swarmC = new Swarm(peerC, new PeerBook())
 
       swarmA.transport.add('tcp', new TCP())
       swarmB.transport.add('tcp', new TCP())

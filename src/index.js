@@ -4,12 +4,12 @@ const util = require('util')
 const EE = require('events').EventEmitter
 const each = require('async/each')
 const series = require('async/series')
-const PeerBook = require('peer-book')
 const transport = require('./transport')
 const connection = require('./connection')
 const dial = require('./dial')
 const protocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
+const assert = require('assert')
 
 exports = module.exports = Swarm
 
@@ -20,12 +20,11 @@ function Swarm (peerInfo, peerBook) {
     return new Swarm(peerInfo)
   }
 
-  if (!peerInfo) {
-    throw new Error('You must provide a value for `peerInfo`')
-  }
+  assert(peerInfo, 'You must provide a `peerInfo`')
+  assert(peerBook, 'You must provide a `peerBook`')
 
   this._peerInfo = peerInfo
-  this._peerBook = peerBook || new PeerBook()
+  this._peerBook = peerBook
 
   // transports --
   // { key: transport }; e.g { tcp: <tcp> }

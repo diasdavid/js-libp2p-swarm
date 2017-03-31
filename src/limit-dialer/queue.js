@@ -38,10 +38,7 @@ class DialQueue {
    */
   _doWork (transport, addr, token, callback) {
     log('work')
-    this._dialWithTimeout(
-      transport,
-      addr,
-      (err, conn) => {
+    this._dialWithTimeout(transport, addr, (err, conn) => {
         if (err) {
           log('work:error')
           return callback(null, {error: err})

@@ -11,6 +11,7 @@ const TCP = require('libp2p-tcp')
 const WebSockets = require('libp2p-websockets')
 const spdy = require('libp2p-spdy')
 const pull = require('pull-stream')
+const PeerBook = require('peer-book')
 
 const utils = require('./utils')
 const Swarm = require('../src')
@@ -39,11 +40,11 @@ describe('high level API - with everything mixed all together!', () => {
       peerD = infos[3]
       peerE = infos[4]
 
-      swarmA = new Swarm(peerA)
-      swarmB = new Swarm(peerB)
-      swarmC = new Swarm(peerC)
-      swarmD = new Swarm(peerD)
-      swarmE = new Swarm(peerE)
+      swarmA = new Swarm(peerA, new PeerBook())
+      swarmB = new Swarm(peerB, new PeerBook())
+      swarmC = new Swarm(peerC, new PeerBook())
+      swarmD = new Swarm(peerD, new PeerBook())
+      swarmE = new Swarm(peerE, new PeerBook())
 
       done()
     })

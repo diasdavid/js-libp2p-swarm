@@ -9,6 +9,7 @@ const parallel = require('async/parallel')
 const Peer = require('peer-info')
 const TCP = require('libp2p-tcp')
 const pull = require('pull-stream')
+const PeerBook = require('peer-book')
 
 const utils = require('./utils')
 const Swarm = require('../src')
@@ -31,8 +32,8 @@ describe('transport - tcp', () => {
 
       peerA.multiaddrs.add('/ip4/127.0.0.1/tcp/9888')
       peerB.multiaddrs.add('/ip4/127.0.0.1/tcp/9999')
-      swarmA = new Swarm(peerA)
-      swarmB = new Swarm(peerB)
+      swarmA = new Swarm(peerA, new PeerBook())
+      swarmB = new Swarm(peerB, new PeerBook())
       done()
     })
   })
@@ -133,7 +134,7 @@ describe('transport - tcp', () => {
     let swarm
     peer.multiaddrs.add(ma)
 
-    swarm = new Swarm(peer)
+    swarm = new Swarm(peer, new PeerBook())
 
     swarm.transport.add('tcp', new TCP())
     swarm.transport.listen('tcp', {}, (conn) => pull(conn, conn), ready)
@@ -150,7 +151,7 @@ describe('transport - tcp', () => {
     const ma = '/ip4/0.0.0.0/tcp/9050'
     let swarm
     peer.multiaddrs.add(ma)
-    swarm = new Swarm(peer)
+    swarm = new Swarm(peer, new PeerBook())
     swarm.transport.add('tcp', new TCP())
     swarm.transport.listen('tcp', {}, (conn) => pull(conn, conn), ready)
 
@@ -166,7 +167,7 @@ describe('transport - tcp', () => {
     let swarm
     peer.multiaddrs.add(ma)
 
-    swarm = new Swarm(peer)
+    swarm = new Swarm(peer, new PeerBook())
     swarm.transport.add('tcp', new TCP())
     swarm.transport.listen('tcp', {}, (conn) => pull(conn, conn), ready)
 
@@ -183,7 +184,7 @@ describe('transport - tcp', () => {
     peer.multiaddrs.add('/ip4/127.0.0.1/tcp/9002')
     peer.multiaddrs.add('/ip4/127.0.0.1/tcp/9003')
 
-    swarm = new Swarm(peer)
+    swarm = new Swarm(peer, new PeerBook())
     swarm.transport.add('tcp', new TCP())
     swarm.transport.listen('tcp', {}, (conn) => pull(conn, conn), ready)
 
@@ -194,7 +195,7 @@ describe('transport - tcp', () => {
   })
 
   it('handles EADDRINUSE error when trying to listen', (done) => {
-    const swarm1 = new Swarm(peerA)
+    const swarm1 = new Swarm(peerA, new PeerBook())
     let swarm2
 
     swarm1.transport.add('tcp', new TCP())
@@ -202,7 +203,7 @@ describe('transport - tcp', () => {
       // Add in-use (peerA) address to peerB
       peerB.multiaddrs.add('/ip4/127.0.0.1/tcp/9888')
 
-      swarm2 = new Swarm(peerB)
+      swarm2 = new Swarm(peerB, new PeerBook())
       swarm2.transport.add('tcp', new TCP())
       swarm2.transport.listen('tcp', {}, (conn) => pull(conn, conn), ready)
     })

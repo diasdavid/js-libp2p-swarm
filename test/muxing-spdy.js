@@ -12,6 +12,7 @@ const TCP = require('libp2p-tcp')
 const WebSockets = require('libp2p-websockets')
 const pull = require('pull-stream')
 const spdy = require('libp2p-spdy')
+const PeerBook = require('peer-book')
 
 const utils = require('./utils')
 const Swarm = require('../src')
@@ -42,10 +43,10 @@ describe('stream muxing with spdy (on TCP)', () => {
       peerC.multiaddrs.add('/ip4/127.0.0.1/tcp/9003')
       peerD.multiaddrs.add('/ip4/127.0.0.1/tcp/9004')
 
-      swarmA = new Swarm(peerA)
-      swarmB = new Swarm(peerB)
-      swarmC = new Swarm(peerC)
-      swarmD = new Swarm(peerD)
+      swarmA = new Swarm(peerA, new PeerBook())
+      swarmB = new Swarm(peerB, new PeerBook())
+      swarmC = new Swarm(peerC, new PeerBook())
+      swarmD = new Swarm(peerD, new PeerBook())
 
       swarmA.transport.add('tcp', new TCP())
       swarmB.transport.add('tcp', new TCP())
@@ -194,8 +195,8 @@ describe('stream muxing with spdy (on TCP)', () => {
     peerE.multiaddrs.add('/ip4/127.0.0.1/tcp/9110/ws')
     peerF.multiaddrs.add('/ip4/127.0.0.1/tcp/9120/ws')
 
-    swarmE = new Swarm(peerE)
-    swarmF = new Swarm(peerF)
+    swarmE = new Swarm(peerE, new PeerBook())
+    swarmF = new Swarm(peerF, new PeerBook())
 
     swarmE.transport.add('ws', new WebSockets())
     swarmF.transport.add('ws', new WebSockets())

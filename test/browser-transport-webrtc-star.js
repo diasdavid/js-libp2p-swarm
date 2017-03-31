@@ -10,6 +10,7 @@ const PeerInfo = require('peer-info')
 const WebRTCStar = require('libp2p-webrtc-star')
 const parallel = require('async/parallel')
 const pull = require('pull-stream')
+const PeerBook = require('peer-book')
 
 const Swarm = require('../src')
 
@@ -31,8 +32,8 @@ describe('transport - webrtc-star', () => {
     const mh2 = '/libp2p-webrtc-star/ip4/127.0.0.1/tcp/15555/ws/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooooB'
     peer2.multiaddrs.add(mh2)
 
-    swarm1 = new Swarm(peer1)
-    swarm2 = new Swarm(peer2)
+    swarm1 = new Swarm(peer1, new PeerBook())
+    swarm2 = new Swarm(peer2, new PeerBook())
   })
 
   it('add WebRTCStar transport to swarm 1', (done) => {

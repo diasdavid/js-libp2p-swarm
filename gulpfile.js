@@ -5,6 +5,7 @@ const PeerInfo = require('peer-info')
 const PeerId = require('peer-id')
 const WebSockets = require('libp2p-websockets')
 const pull = require('pull-stream')
+const PeerBook = require('peer-book')
 
 const Swarm = require('./src')
 const spdy = require('libp2p-spdy')
@@ -37,7 +38,7 @@ gulp.task('test:browser:before', (done) => {
         const maA = '/ip4/127.0.0.1/tcp/9100/ws'
 
         peerA.multiaddrs.add(maA)
-        swarmA = new Swarm(peerA)
+        swarmA = new Swarm(peerA, new PeerBook())
 
         swarmA.transport.add('ws', new WebSockets())
         swarmA.transport.listen('ws', {}, echo, cb)
@@ -58,7 +59,7 @@ gulp.task('test:browser:before', (done) => {
         const maB = '/ip4/127.0.0.1/tcp/9200/ws'
 
         peerB.multiaddrs.add(maB)
-        swarmB = new Swarm(peerB)
+        swarmB = new Swarm(peerB, new PeerBook())
 
         swarmB.transport.add('ws', new WebSockets())
         swarmB.connection.addStreamMuxer(spdy)

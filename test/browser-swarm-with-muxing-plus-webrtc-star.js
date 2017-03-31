@@ -13,6 +13,7 @@ const spdy = require('libp2p-spdy')
 const parallel = require('async/parallel')
 const series = require('async/series')
 const pull = require('pull-stream')
+const PeerBook = require('peer-book')
 
 const Swarm = require('../src')
 
@@ -46,8 +47,8 @@ describe('high level API (swarm with spdy + webrtc-star)', () => {
     ], (err) => {
       expect(err).to.not.exist()
 
-      swarm1 = new Swarm(peer1)
-      swarm2 = new Swarm(peer2)
+      swarm1 = new Swarm(peer1, new PeerBook())
+      swarm2 = new Swarm(peer2, new PeerBook())
       done()
     })
   })
@@ -134,7 +135,7 @@ describe('high level API (swarm with spdy + webrtc-star)', () => {
       const mh3 = '/libp2p-webrtc-star/ip4/127.0.0.1/tcp/15555/ws/ipfs/' + id3.toB58String()
       peer3.multiaddrs.add(mh3)
 
-      swarm3 = new Swarm(peer3)
+      swarm3 = new Swarm(peer3, new PeerBook())
       const wstar3 = new WebRTCStar()
       swarm3.transport.add('wstar', wstar3)
       swarm3.connection.addStreamMuxer(spdy)

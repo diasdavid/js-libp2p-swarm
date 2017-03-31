@@ -67,13 +67,13 @@ module.exports = function connection (swarm) {
               // no addr, use just their IPFS id
               peerInfo.connect(`/ipfs/${b58Str}`)
             }
-            swarm._peerBook.put(peerInfo)
+            peerInfo = swarm._peerBook.put(peerInfo)
 
             swarm.emit('peer-mux-established', peerInfo)
             muxedConn.on('close', () => {
               delete swarm.muxedConns[b58Str]
               peerInfo.disconnect()
-              swarm._peerBook.get(b58Str).disconnect()
+              peerInfo = swarm._peerBook.put(peerInfo)
               swarm.emit('peer-mux-closed', peerInfo)
             })
           })

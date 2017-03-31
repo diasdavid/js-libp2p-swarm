@@ -11,6 +11,7 @@ const TCP = require('libp2p-tcp')
 const multiplex = require('libp2p-spdy')
 const pull = require('pull-stream')
 const secio = require('libp2p-secio')
+const PeerBook = require('peer-book')
 
 const utils = require('./utils')
 const Swarm = require('../src')
@@ -37,9 +38,9 @@ describe('secio conn upgrade (on TCP)', () => {
       peerB.multiaddrs.add('/ip4/127.0.0.1/tcp/9002')
       peerC.multiaddrs.add('/ip4/127.0.0.1/tcp/9003')
 
-      swarmA = new Swarm(peerA)
-      swarmB = new Swarm(peerB)
-      swarmC = new Swarm(peerC)
+      swarmA = new Swarm(peerA, new PeerBook())
+      swarmB = new Swarm(peerB, new PeerBook())
+      swarmC = new Swarm(peerC, new PeerBook())
 
       swarmA.connection.crypto(secio.tag, secio.encrypt)
       swarmB.connection.crypto(secio.tag, secio.encrypt)

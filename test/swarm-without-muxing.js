@@ -9,6 +9,7 @@ chai.use(dirtyChai)
 const parallel = require('async/parallel')
 const TCP = require('libp2p-tcp')
 const pull = require('pull-stream')
+const PeerBook = require('peer-book')
 
 const utils = require('./utils')
 const Swarm = require('../src')
@@ -31,8 +32,8 @@ describe('high level API - 1st without stream multiplexing (on TCP)', () => {
       peerA.multiaddrs.add('/ip4/127.0.0.1/tcp/9001')
       peerB.multiaddrs.add('/ip4/127.0.0.1/tcp/9002/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC')
 
-      swarmA = new Swarm(peerA)
-      swarmB = new Swarm(peerB)
+      swarmA = new Swarm(peerA, new PeerBook())
+      swarmB = new Swarm(peerB, new PeerBook())
 
       swarmA.transport.add('tcp', new TCP())
       swarmB.transport.add('tcp', new TCP())

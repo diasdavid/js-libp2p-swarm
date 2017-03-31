@@ -11,6 +11,7 @@ const PeerInfo = require('peer-info')
 const WebSockets = require('libp2p-websockets')
 const spdy = require('libp2p-spdy')
 const pull = require('pull-stream')
+const PeerBook = require('peer-book')
 
 const Swarm = require('../src')
 
@@ -23,7 +24,7 @@ describe('high level API (swarm with spdy + websockets)', () => {
       if (err) {
         return done(err)
       }
-      swarm = new Swarm(peerSrc)
+      swarm = new Swarm(peerSrc, new PeerBook())
       done()
     })
   })

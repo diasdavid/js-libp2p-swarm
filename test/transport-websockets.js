@@ -10,6 +10,7 @@ const multiaddr = require('multiaddr')
 const WebSockets = require('libp2p-websockets')
 const pull = require('pull-stream')
 const goodbye = require('pull-goodbye')
+const PeerBook = require('peer-book')
 
 const utils = require('./utils')
 const Swarm = require('../src')
@@ -33,8 +34,8 @@ describe('transport - websockets', function () {
       peerA.multiaddrs.add('/ip4/127.0.0.1/tcp/9888/ws')
       peerB.multiaddrs.add('/ip4/127.0.0.1/tcp/9999/ws/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC')
 
-      swarmA = new Swarm(peerA)
-      swarmB = new Swarm(peerB)
+      swarmA = new Swarm(peerA, new PeerBook())
+      swarmB = new Swarm(peerB, new PeerBook())
       done()
     })
   })

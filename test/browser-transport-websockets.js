@@ -10,6 +10,7 @@ const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const WebSockets = require('libp2p-websockets')
 const pull = require('pull-stream')
+const PeerBook = require('peer-book')
 
 const Swarm = require('../src')
 
@@ -22,7 +23,7 @@ describe('transport - websockets', () => {
     // use a pre generated Id to save time
     const idSrc = PeerId.createFromB58String(b58IdSrc)
     const peerSrc = new PeerInfo(idSrc)
-    swarm = new Swarm(peerSrc)
+    swarm = new Swarm(peerSrc, new PeerBook())
 
     PeerInfo.create((err, p) => {
       if (err) {
