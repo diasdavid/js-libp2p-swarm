@@ -4,7 +4,7 @@ const util = require('util')
 const EE = require('events').EventEmitter
 const each = require('async/each')
 const series = require('async/series')
-
+const PeerBook = require('peer-book')
 const transport = require('./transport')
 const connection = require('./connection')
 const dial = require('./dial')
@@ -15,7 +15,7 @@ exports = module.exports = Swarm
 
 util.inherits(Swarm, EE)
 
-function Swarm (peerInfo) {
+function Swarm (peerInfo, peerBook) {
   if (!(this instanceof Swarm)) {
     return new Swarm(peerInfo)
   }
@@ -25,6 +25,7 @@ function Swarm (peerInfo) {
   }
 
   this._peerInfo = peerInfo
+  this._peerBook = peerBook || new PeerBook()
 
   // transports --
   // { key: transport }; e.g { tcp: <tcp> }

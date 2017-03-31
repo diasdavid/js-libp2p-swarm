@@ -229,6 +229,9 @@ describe('high level API - with everything mixed all together!', () => {
       })
       expect(Object.keys(swarmA.muxedConns).length).to.equal(2)
 
+      expect(peerC.isConnected).to.exist()
+      expect(peerA.isConnected).to.exist()
+
       pull(
         pull.empty(),
         conn,
@@ -243,11 +246,13 @@ describe('high level API - with everything mixed all together!', () => {
 
     swarmB.once('peer-mux-closed', (peerInfo) => {
       expect(Object.keys(swarmB.muxedConns).length).to.equal(0)
+      expect(peerB.isConnected()).to.not.exist()
       ready()
     })
 
     swarmA.once('peer-mux-closed', (peerInfo) => {
       expect(Object.keys(swarmA.muxedConns).length).to.equal(1)
+      expect(peerA.isConnected()).to.not.exist()
       ready()
     })
 

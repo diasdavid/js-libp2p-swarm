@@ -49,7 +49,15 @@ module.exports = function (swarm) {
       // filter the multiaddrs that are actually valid for this transport (use a func from the transport itself) (maybe even make the transport do that)
       multiaddrs = dialables(t, multiaddrs)
 
-      dialer.dialMany(pi.id, t, multiaddrs, callback)
+      dialer.dialMany(pi.id, t, multiaddrs, (err, success) => {
+        if (err) {
+          return callback(err)
+        }
+
+        pi.connect(success.multiaddr)
+        swarm._peerBook.put(pi)
+        callback(null, success.conn)
+      })
     },
 
     listen (key, options, handler, callback) {

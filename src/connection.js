@@ -52,13 +52,28 @@ module.exports = function connection (swarm) {
             if (err) {
               return log('Identify not successful')
             }
-            swarm.muxedConns[peerInfo.id.toB58String()] = {
-              muxer: muxedConn
+            const b58Str = peerInfo.id.toB58String()
+
+            swarm.muxedConns[b58Str] = { muxer: muxedConn }
+
+            if (peerInfo.multiaddrs.size > 0) {
+              // with incomming conn and through identify, going to pick one
+              // of the available multiaddrs from the other peer as the one
+              // I'm connected to as we really can't be sure at the moment
+              // TODO add this consideration to the connection abstraction!
+              peerInfo.connect(peerInfo.multiaddrs.toArray()[0])
+            } else {
+              // for the case of websockets in the browser, where peers have
+              // no addr, use just their IPFS id
+              peerInfo.connect(`/ipfs/${b58Str}`)
             }
+            swarm._peerBook.put(peerInfo)
 
             swarm.emit('peer-mux-established', peerInfo)
             muxedConn.on('close', () => {
-              delete swarm.muxedConns[peerInfo.id.toB58String()]
+              delete swarm.muxedConns[b58Str]
+              peerInfo.disconnect()
+              swarm._peerBook.get(b58Str).disconnect()
               swarm.emit('peer-mux-closed', peerInfo)
             })
           })

@@ -63,7 +63,7 @@ class DialQueue {
 
         const proxyConn = new Connection()
         proxyConn.setInnerConn(conn)
-        callback(null, {conn})
+        callback(null, { multiaddr: addr, conn: conn })
       }
     )
   }

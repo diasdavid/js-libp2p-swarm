@@ -76,7 +76,8 @@ describe('LimitDialer', () => {
       }
     }
 
-    dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs.toArray(), (err, conn) => {
+    dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs.toArray(), (err, success) => {
+      const conn = success.conn
       expect(err).to.not.exist()
       pull(
         conn,
