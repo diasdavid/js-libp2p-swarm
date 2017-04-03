@@ -63,6 +63,15 @@ function Swarm (peerInfo, peerBook) {
 
     // Only listen on transports we actually have addresses for
     return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
+      .sort((a, b) => {
+        if ((this.transports[a] && this.transports[b]) &&
+          (this.transports[a].priority && this.transports[b].priority)) {
+          return this.transports[a].priority - this.transports[b].priority
+        }
+
+        return 0
+      })
+
   }
 
   // higher level (public) API
