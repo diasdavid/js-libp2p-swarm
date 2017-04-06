@@ -155,8 +155,6 @@ module.exports = function dial (swarm) {
           swarm.muxedConns[b58Id].muxer = muxedConn
           // should not be needed anymore - swarm.muxedConns[b58Id].conn = conn
 
-          swarm.emit('peer-mux-established', pi)
-
           muxedConn.once('close', () => {
             const b58Str = pi.id.toB58String()
             delete swarm.muxedConns[b58Str]
@@ -169,6 +167,8 @@ module.exports = function dial (swarm) {
           muxedConn.on('stream', (conn) => {
             protocolMuxer(swarm.protocols, conn)
           })
+
+          swarm.emit('peer-mux-established', pi)
 
           cb(null, muxedConn)
         })

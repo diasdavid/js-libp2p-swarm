@@ -69,13 +69,14 @@ module.exports = function connection (swarm) {
             }
             peerInfo = swarm._peerBook.put(peerInfo)
 
-            swarm.emit('peer-mux-established', peerInfo)
             muxedConn.on('close', () => {
               delete swarm.muxedConns[b58Str]
               peerInfo.disconnect()
               peerInfo = swarm._peerBook.put(peerInfo)
               swarm.emit('peer-mux-closed', peerInfo)
             })
+
+            swarm.emit('peer-mux-established', peerInfo)
           })
         }
 
