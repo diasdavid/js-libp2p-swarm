@@ -4,6 +4,7 @@ const multistream = require('multistream-select')
 const Connection = require('interface-connection').Connection
 const debug = require('debug')
 const log = debug('libp2p:swarm:dial')
+const setImmediate = require('async/setImmediate')
 
 const protocolMuxer = require('./protocol-muxer')
 
@@ -160,7 +161,7 @@ module.exports = function dial (swarm) {
             delete swarm.muxedConns[b58Str]
             pi.disconnect()
             swarm._peerBook.get(b58Str).disconnect()
-            swarm.emit('peer-mux-closed', pi)
+            setImmediate(() => swarm.emit('peer-mux-closed', pi))
           })
 
           // For incoming streams, in case identify is on
@@ -168,7 +169,7 @@ module.exports = function dial (swarm) {
             protocolMuxer(swarm.protocols, conn)
           })
 
-          swarm.emit('peer-mux-established', pi)
+          setImmediate(() => swarm.emit('peer-mux-established', pi))
 
           cb(null, muxedConn)
         })

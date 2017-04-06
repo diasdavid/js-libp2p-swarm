@@ -5,6 +5,7 @@ const multistream = require('multistream-select')
 const waterfall = require('async/waterfall')
 const debug = require('debug')
 const log = debug('libp2p:swarm:connection')
+const setImmediate = require('async/setImmediate')
 
 const protocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
@@ -73,10 +74,10 @@ module.exports = function connection (swarm) {
               delete swarm.muxedConns[b58Str]
               peerInfo.disconnect()
               peerInfo = swarm._peerBook.put(peerInfo)
-              swarm.emit('peer-mux-closed', peerInfo)
+              setImmediate(() => swarm.emit('peer-mux-closed', peerInfo))
             })
 
-            swarm.emit('peer-mux-established', peerInfo)
+            setImmediate(() => swarm.emit('peer-mux-established', peerInfo))
           })
         }
 
