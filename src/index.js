@@ -11,6 +11,8 @@ const protocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
 const assert = require('assert')
 
+const DEFAULT_TRANSPORT_PRIORITY = 1
+
 exports = module.exports = Swarm
 
 util.inherits(Swarm, EE)
@@ -64,14 +66,11 @@ function Swarm (peerInfo, peerBook) {
     // Only listen on transports we actually have addresses for
     return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
       .sort((a, b) => {
-        if ((this.transports[a] && this.transports[b]) &&
-          (this.transports[a].priority && this.transports[b].priority)) {
-          return this.transports[a].priority - this.transports[b].priority
-        }
+        let pRa = a.priority || DEFAULT_TRANSPORT_PRIORITY
+        let pRb = b.priority || DEFAULT_TRANSPORT_PRIORITY
 
-        return 0
+        return pRa - pRb
       })
-
   }
 
   // higher level (public) API
