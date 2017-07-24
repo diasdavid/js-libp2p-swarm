@@ -95,6 +95,13 @@ module.exports = function connection (swarm) {
     },
 
     enableRelayDialing (config) {
+      config = config ||
+        {
+          circuit: {
+            enabled: false
+          }
+        }
+
       swarm.relay = true
       swarm.transport.add(Circuit.tag, new Circuit.Dialer(swarm, config))
     },

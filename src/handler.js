@@ -10,8 +10,8 @@ module.exports = function process (swarm) {
   return (pi, protocol, proxyConn) => {
     const b58Id = pi.id.toB58String()
 
+    const ms = new multistream.Dialer()
     function cryptoDial (conn, cb) {
-      const ms = new multistream.Dialer()
       ms.handle(conn, (err) => {
         if (err) {
           return cb(err)
