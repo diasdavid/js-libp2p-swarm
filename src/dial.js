@@ -3,9 +3,6 @@
 const Connection = require('interface-connection').Connection
 const debug = require('debug')
 const log = debug('libp2p:swarm:dial')
-const setImmediate = require('async/setImmediate')
-
-const protocolMuxer = require('./protocol-muxer')
 
 module.exports = function dial (swarm) {
   return (pi, protocol, callback) => {

@@ -7,8 +7,6 @@ const debug = require('debug')
 const log = debug('libp2p:swarm:connection')
 const setImmediate = require('async/setImmediate')
 
-const Circuit = require('libp2p-circuit')
-
 const protocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
 
@@ -92,18 +90,6 @@ module.exports = function connection (swarm) {
       swarm.handle(identify.multicodec, (protocol, conn) => {
         identify.listener(conn, swarm._peerInfo)
       })
-    },
-
-    enableRelayDialing (config) {
-      config = config ||
-        {
-          circuit: {
-            enabled: false
-          }
-        }
-
-      swarm.relay = true
-      swarm.transport.add(Circuit.tag, new Circuit.Dialer(swarm, config))
     },
 
     crypto (tag, encrypt) {
