@@ -62,6 +62,7 @@
     "debug": "^2.6.8",
     "interface-connection": "~0.3.2",
     "ip-address": "^5.8.8",
+    "libp2p-circuit": "0.0.3",
     "libp2p-identify": "~0.5.0",
     "lodash.includes": "^4.3.0",
     "multiaddr": "^2.3.0",
