@@ -65,6 +65,10 @@ function Swarm (peerInfo, peerBook) {
 
     // Only listen on transports we actually have addresses for
     return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
+      // push Circuit to be the last proto to be dialed
+      .sort((a) => {
+        return a.tag && a.tag === 'Circuit' ? -1 : 1
+      })
   }
 
   // higher level (public) API
