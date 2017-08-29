@@ -102,7 +102,6 @@ module.exports = function connection (swarm) {
           }
         }
 
-      swarm.relay = true // flag to signal if relay has been enaled for dialing
       swarm.transport.add(Circuit.tag, new Circuit(swarm, config))
     },
 
