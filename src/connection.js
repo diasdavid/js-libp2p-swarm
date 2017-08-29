@@ -95,12 +95,10 @@ module.exports = function connection (swarm) {
     },
 
     enableCircuitRelay (config) {
-      config = config ||
-        {
-          circuit: {
-            enabled: false
-          }
-        }
+      config = config || {}
+      if (!config.circuit) {
+        Object.assign(config, { circuit: { enabled: false, active: false } })
+      }
 
       swarm.transport.add(Circuit.tag, new Circuit(swarm, config))
     },
@@ -119,7 +117,7 @@ module.exports = function connection (swarm) {
         protocolMuxer(swarm.protocols, secure)
       })
 
-      swarm.crypto = {tag, encrypt}
+      swarm.crypto = { tag, encrypt }
     }
   }
 }
