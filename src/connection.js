@@ -96,11 +96,15 @@ module.exports = function connection (swarm) {
 
     enableCircuitRelay (config) {
       config = config || {}
-      if (!config.circuit) {
-        Object.assign(config, { circuit: { enabled: false, active: false } })
-      }
 
-      swarm.transport.add(Circuit.tag, new Circuit(swarm, config))
+      if (config.enabled) {
+        if (!config.hop) {
+          Object.assign(config, { hop: { enabled: false, active: false } })
+        }
+
+        // TODO: should we enable circuit listener and dialer by default?
+        swarm.transport.add(Circuit.tag, new Circuit(swarm, config))
+      }
     },
 
     crypto (tag, encrypt) {
@@ -117,7 +121,7 @@ module.exports = function connection (swarm) {
         protocolMuxer(swarm.protocols, secure)
       })
 
-      swarm.crypto = { tag, encrypt }
+      swarm.crypto = {tag, encrypt}
     }
   }
 }

@@ -59,10 +59,14 @@ describe(`circuit`, function () {
   })
 
   it(`.enableCircuitRelay - should enable circuit transport`, function () {
-    swarmA.connection.enableCircuitRelay()
+    swarmA.connection.enableCircuitRelay({
+      enabled: true
+    })
     expect(Object.keys(swarmA.transports).length).to.equal(3)
 
-    swarmB.connection.enableCircuitRelay()
+    swarmB.connection.enableCircuitRelay({
+      enabled: true
+    })
     expect(Object.keys(swarmB.transports).length).to.equal(2)
   })
 
