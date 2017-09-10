@@ -53,6 +53,7 @@
     "libp2p-websockets": "~0.10.1",
     "pre-commit": "^1.2.2",
     "pull-goodbye": "0.0.2",
+    "peer-book": "~0.5.1",
     "sinon": "^3.2.1",
     "peer-book": "~0.5.1",
     "webrtcsupport": "^2.2.0"
