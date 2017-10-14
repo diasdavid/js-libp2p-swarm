@@ -8,7 +8,7 @@ const multiaddr = require('multiaddr')
  * Helper method to check the data type of peer and convert it to PeerInfo
  */
 function getPeerInfo (peer, peerBook) {
-  let p
+  var p
 
   // PeerInfo
   if (PeerInfo.isPeerInfo(peer)) {
