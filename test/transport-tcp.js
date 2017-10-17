@@ -122,7 +122,8 @@ describe('transport - tcp', () => {
     })
   })
 
-  it('.close', (done) => {
+  it('.close', function (done) {
+    this.timeout(2500)
     parallel([
       (cb) => swarmA.transport.close('tcp', cb),
       (cb) => swarmB.transport.close('tcp', cb)
