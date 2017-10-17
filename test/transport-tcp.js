@@ -127,7 +127,7 @@ describe('transport - tcp', () => {
       (cb) => swarmA.transport.close('tcp', cb),
       (cb) => swarmB.transport.close('tcp', cb)
     ], done)
-  }).timeout(2500)
+  })
 
   it('support port 0', (done) => {
     const ma = '/ip4/127.0.0.1/tcp/0'

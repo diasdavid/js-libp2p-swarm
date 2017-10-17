@@ -268,5 +268,5 @@ describe('high level API - with everything mixed all together!', () => {
       (cb) => swarmC.close(cb),
       (cb) => swarmA.once('peer-mux-closed', (peerInfo) => cb())
     ], done)
-  }).timeout(2500)
+  })
 })

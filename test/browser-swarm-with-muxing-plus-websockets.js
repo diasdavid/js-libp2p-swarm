@@ -58,7 +58,7 @@ describe('high level API (swarm with spdy + websockets)', () => {
     swarm.dial(peerDst, '/echo/1.0.0', (err, conn) => {
       expect(err).to.not.exist()
       pull(
-        pull.values([Buffer('hello')]),
+        pull.values([Buffer.from('hello')]),
         conn,
         pull.onEnd(done)
       )
