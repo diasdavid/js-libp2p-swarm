@@ -50,7 +50,8 @@ describe('high level API - with everything mixed all together!', () => {
     })
   })
 
-  after((done) => {
+  after(function (done) {
+    this.timeout(3000)
     parallel([
       (cb) => swarmA.close(cb),
       (cb) => swarmB.close(cb),

@@ -39,7 +39,8 @@ describe('transport - tcp', () => {
   })
 
   let peer
-  beforeEach((done) => {
+  beforeEach(function (done) {
+    this.timeout(10000) // hook fails with timeout for a number of tests
     Peer.create((err, info) => {
       if (err) {
         return done(err)

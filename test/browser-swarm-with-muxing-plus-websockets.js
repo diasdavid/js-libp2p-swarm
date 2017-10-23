@@ -15,7 +15,7 @@ const PeerBook = require('peer-book')
 
 const Swarm = require('../src')
 
-describe('high level API (swarm with spdy + websockets)', () => {
+describe.skip('high level API (swarm with spdy + websockets)', () => {
   let swarm
   let peerDst
 
