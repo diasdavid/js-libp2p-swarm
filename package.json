@@ -67,8 +67,7 @@
     "once": "^1.4.0",
     "peer-id": "~0.10.3",
     "peer-info": "~0.11.3",
-    "pull-stream": "^3.6.1",
-    "pump": "^2.0.0"
+    "pull-stream": "^3.6.1"
   },
   "contributors": [
     "Arnaud <arnaud.valensi@gmail.com>",
