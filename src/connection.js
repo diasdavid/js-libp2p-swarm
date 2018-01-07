@@ -115,10 +115,12 @@ module.exports = function connection (swarm) {
 
       swarm.unhandle(swarm.crypto.tag)
       swarm.handle(tag, (protocol, conn) => {
-        const id = swarm._peerInfo.id
-        const secure = encrypt(id, id.privKey, conn)
+        const myId = swarm._peerInfo.id
+        const secure = encrypt(myId, conn, undefined, (err) => {
+          if (err) {} // ignore in receiving end
 
-        protocolMuxer(swarm.protocols, secure)
+          protocolMuxer(swarm.protocols, secure)
+        })
       })
 
       swarm.crypto = {tag, encrypt}
