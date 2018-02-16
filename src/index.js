@@ -7,8 +7,9 @@ const transport = require('./transport')
 const connection = require('./connection')
 const getPeerInfo = require('./get-peer-info')
 const dial = require('./dial')
-const protocolMuxer = require('./protocol-muxer')
+const ProtocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
+const Observer = require('./observer')
 const assert = require('assert')
 
 class Switch extends EE {
@@ -69,10 +70,13 @@ class Switch extends EE {
         })
     }
 
+    this.observer = Observer()
+    this.protocolMuxer = ProtocolMuxer(this.protocols, this.observer)
+
     this.handle(this.crypto.tag, (protocol, conn) => {
       const peerId = this._peerInfo.id
       const wrapped = this.crypto.encrypt(peerId, conn, undefined, () => {})
-      return protocolMuxer(this.protocols, wrapped)
+      return this.protocolMuxer(wrapped)
     })
 
     // higher level (public) API

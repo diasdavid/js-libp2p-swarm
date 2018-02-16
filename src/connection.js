@@ -10,7 +10,6 @@ const setImmediate = require('async/setImmediate')
 
 const Circuit = require('libp2p-circuit')
 
-const protocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
 
 module.exports = function connection (swarm) {
@@ -25,9 +24,7 @@ module.exports = function connection (swarm) {
       swarm.handle(muxer.multicodec, (protocol, conn) => {
         const muxedConn = muxer.listener(conn)
 
-        muxedConn.on('stream', (conn) => {
-          protocolMuxer(swarm.protocols, conn)
-        })
+        muxedConn.on('stream', swarm.protocolMuxer)
 
         // If identify is enabled
         //   1. overload getPeerInfo
@@ -120,7 +117,7 @@ module.exports = function connection (swarm) {
       swarm.handle(tag, (protocol, conn) => {
         const myId = swarm._peerInfo.id
         const secure = encrypt(myId, conn, undefined, () => {
-          protocolMuxer(swarm.protocols, secure)
+          swarm.protocolMuxer(secure)
         })
       })
 

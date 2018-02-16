@@ -5,7 +5,6 @@ const once = require('once')
 const debug = require('debug')
 const log = debug('libp2p:swarm:transport')
 
-const protocolMuxer = require('./protocol-muxer')
 const LimitDialer = require('./limit-dialer')
 
 // number of concurrent outbound dials to make per peer, same as go-libp2p-swarm
@@ -58,7 +57,7 @@ module.exports = function (swarm) {
     listen (key, options, handler, callback) {
       // if no handler is passed, we pass conns to protocolMuxer
       if (!handler) {
-        handler = protocolMuxer.bind(null, swarm.protocols)
+        handler = swarm.protocolMuxer
       }
 
       const multiaddrs = dialables(swarm.transports[key], swarm._peerInfo.multiaddrs.distinct())

@@ -9,8 +9,6 @@ const Circuit = require('libp2p-circuit')
 const debug = require('debug')
 const log = debug('libp2p:swarm:dial')
 
-const protocolMuxer = require('./protocol-muxer')
-
 function dial (swarm) {
   return (peer, protocol, callback) => {
     if (typeof protocol === 'function') {
@@ -189,7 +187,7 @@ function dial (swarm) {
 
           // For incoming streams, in case identify is on
           muxedConn.on('stream', (conn) => {
-            protocolMuxer(swarm.protocols, conn)
+            swarm.protocolMuxer(conn)
           })
 
           setImmediate(() => swarm.emit('peer-mux-established', pi))
