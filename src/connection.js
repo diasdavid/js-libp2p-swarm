@@ -24,7 +24,7 @@ module.exports = function connection (swarm) {
       swarm.handle(muxer.multicodec, (protocol, conn) => {
         const muxedConn = muxer.listener(conn)
 
-        muxedConn.on('stream', swarm.protocolMuxer)
+        muxedConn.on('stream', swarm.protocolMuxer(protocol))
 
         // If identify is enabled
         //   1. overload getPeerInfo
@@ -117,7 +117,7 @@ module.exports = function connection (swarm) {
       swarm.handle(tag, (protocol, conn) => {
         const myId = swarm._peerInfo.id
         const secure = encrypt(myId, conn, undefined, () => {
-          swarm.protocolMuxer(secure)
+          swarm.protocolMuxer(tag)(secure)
         })
       })
 

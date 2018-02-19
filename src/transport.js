@@ -57,7 +57,7 @@ module.exports = function (swarm) {
     listen (key, options, handler, callback) {
       // if no handler is passed, we pass conns to protocolMuxer
       if (!handler) {
-        handler = swarm.protocolMuxer
+        handler = swarm.protocolMuxer(key)
       }
 
       const multiaddrs = dialables(swarm.transports[key], swarm._peerInfo.multiaddrs.distinct())

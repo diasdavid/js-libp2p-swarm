@@ -78,7 +78,7 @@ class Switch extends EE {
     this.handle(this.crypto.tag, (protocol, conn) => {
       const peerId = this._peerInfo.id
       const wrapped = this.crypto.encrypt(peerId, conn, undefined, () => {})
-      return this.protocolMuxer(wrapped)
+      return this.protocolMuxer(this.crypto.tag)(wrapped)
     })
 
     // higher level (public) API

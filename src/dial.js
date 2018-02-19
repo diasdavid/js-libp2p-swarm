@@ -187,7 +187,7 @@ function dial (swarm) {
 
           // For incoming streams, in case identify is on
           muxedConn.on('stream', (conn) => {
-            swarm.protocolMuxer(conn)
+            swarm.protocolMuxer(key)(conn)
           })
 
           setImmediate(() => swarm.emit('peer-mux-established', pi))

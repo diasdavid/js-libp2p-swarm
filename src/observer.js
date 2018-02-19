@@ -20,16 +20,16 @@ module.exports = (swarm) => {
   return observer
 
   function observe (direction) {
-    return (protocol, peerInfo) => {
+    return (transport, protocol, peerInfo) => {
       const peerId = peerInfo && peerInfo.id.toB58String()
       return pull.map((buffer) => {
-        willObserve(peerId, protocol, direction, buffer.length)
+        willObserve(peerId, transport, protocol, direction, buffer.length)
         return buffer
       })
     }
   }
 
-  function willObserve (peerId, protocol, direction, bufferLength) {
-    setImmediate(() => observer.emit('message', peerId, protocol, direction, bufferLength))
+  function willObserve (peerId, transport, protocol, direction, bufferLength) {
+    setImmediate(() => observer.emit('message', peerId, transport, protocol, direction, bufferLength))
   }
 }

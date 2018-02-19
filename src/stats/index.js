@@ -29,8 +29,8 @@ module.exports = (observer, _options) => {
   const globalStats = new Stat(initialCounters, options)
   const peerStats = new Map()
 
-  observer.on('message', (peerId, protocol, direction, bufferLength) => {
-    console.log('m', peerId, protocol, direction, bufferLength)
+  observer.on('message', (peerId, transport, protocol, direction, bufferLength) => {
+    console.log('m', peerId, transport, protocol, direction, bufferLength)
     const event = directionToEvent[direction]
 
     // global stats
