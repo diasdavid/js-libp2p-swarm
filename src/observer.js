@@ -29,11 +29,7 @@ module.exports = (swarm) => {
   }
 
   function willObserve (peerInfo, transport, protocol, direction, bufferLength) {
-    // if (!peerId) {
-    //   throw new Error('observation should have peer id')
-    // }
     peerInfo.then((pi) => {
-      console.log('GOT PEER INFI', pi)
       const peerId = pi.id.toB58String()
       setImmediate(() => observer.emit('message', peerId, transport, protocol, direction, bufferLength))
     })

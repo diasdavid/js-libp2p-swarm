@@ -32,6 +32,7 @@ module.exports = function connection (swarm) {
         //   3. add this conn to the pool
         if (swarm.identify) {
           // overload peerInfo to use Identify instead
+          const setPeerInfo = conn.setPeerInfo
           conn.getPeerInfo = (cb) => {
             const conn = muxedConn.newStream()
             const ms = new multistream.Dialer()
@@ -47,7 +48,10 @@ module.exports = function connection (swarm) {
                 })
                 cb(null, peerInfo)
               }
-            ], cb)
+            ], (err, pi) => {
+              setPeerInfo.call(conn, pi)
+              cb(err, pi)
+            })
           }
 
           conn.getPeerInfo((err, peerInfo) => {

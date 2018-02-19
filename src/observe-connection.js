@@ -6,23 +6,23 @@ const pull = require('pull-stream')
 module.exports = (transport, protocol, _conn, observer) => {
   const peerInfo = new Promise((resolve, reject) => {
     if (_conn.peerInfo) {
-      conn.setPeerInfo(_conn.peerInfo)
       return resolve(_conn.peerInfo)
     }
 
+    const setPeerInfo = _conn.setPeerInfo
     _conn.setPeerInfo = (pi) => {
-      conn.setPeerInfo(pi)
+      setPeerInfo.call(_conn, pi)
       resolve(pi)
     }
   })
 
-  const conn = new Connection()
-
   const stream = {
-    source: pull(_conn.source, observer.incoming(transport, protocol, peerInfo)),
-    sink: pull(observer.outgoing(transport, protocol, peerInfo), _conn.sink)
+    source: pull(
+      _conn,
+      observer.incoming(transport, protocol, peerInfo)),
+    sink: pull(
+      observer.outgoing(transport, protocol, peerInfo),
+      _conn)
   }
-  conn.setInnerConn(stream, _conn.info)
-
-  return conn
+  return new Connection(stream, _conn)
 }
