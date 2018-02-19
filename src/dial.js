@@ -20,6 +20,7 @@ function dial (swarm) {
     const pi = getPeerInfo(peer, swarm._peerBook)
 
     const proxyConn = new Connection()
+    proxyConn.setPeerInfo(pi)
 
     const b58Id = pi.id.toB58String()
     log('dialing %s', b58Id)
@@ -131,6 +132,7 @@ function dial (swarm) {
                   if (err) {
                     return cb(err)
                   }
+                  wrapped.setPeerInfo(pi)
                   cb(null, wrapped)
                 })
               })
@@ -212,6 +214,7 @@ function dial (swarm) {
           if (err) {
             return cb(err)
           }
+          proxyConn.setPeerInfo(pi)
           proxyConn.setInnerConn(conn)
           cb(null, proxyConn)
         })

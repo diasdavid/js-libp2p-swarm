@@ -4,18 +4,23 @@ const Connection = require('interface-connection').Connection
 const pull = require('pull-stream')
 
 module.exports = (transport, protocol, _conn, observer) => {
-  const conn = new Connection()
-  if (_conn.peerInfo) {
-    conn.setPeerInfo(_conn.peerInfo)
-  }
+  const peerInfo = new Promise((resolve, reject) => {
+    if (_conn.peerInfo) {
+      conn.setPeerInfo(_conn.peerInfo)
+      return resolve(_conn.peerInfo)
+    }
 
-  _conn.setPeerInfo = (pi) => {
-    conn.setPeerInfo(pi)
-  }
+    _conn.setPeerInfo = (pi) => {
+      conn.setPeerInfo(pi)
+      resolve(pi)
+    }
+  })
+
+  const conn = new Connection()
 
   const stream = {
-    source: pull(_conn.source, observer.incoming(transport, protocol, _conn.peerInfo)),
-    sink: pull(observer.outgoing(transport, protocol, _conn.peerInfo), _conn.sink)
+    source: pull(_conn.source, observer.incoming(transport, protocol, peerInfo)),
+    sink: pull(observer.outgoing(transport, protocol, peerInfo), _conn.sink)
   }
   conn.setInnerConn(stream, _conn.info)
 
