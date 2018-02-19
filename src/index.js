@@ -10,6 +10,7 @@ const dial = require('./dial')
 const ProtocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
 const Observer = require('./observer')
+const Stats = require('./stats')
 const assert = require('assert')
 
 class Switch extends EE {
@@ -70,8 +71,9 @@ class Switch extends EE {
         })
     }
 
-    this.observer = Observer()
-    this.protocolMuxer = ProtocolMuxer(this.protocols, this.observer)
+    const observer = Observer(this)
+    this.stats = Stats(observer)
+    this.protocolMuxer = ProtocolMuxer(this.protocols, observer)
 
     this.handle(this.crypto.tag, (protocol, conn) => {
       const peerId = this._peerInfo.id
