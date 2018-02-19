@@ -187,6 +187,7 @@ function dial (swarm) {
 
           // For incoming streams, in case identify is on
           muxedConn.on('stream', (conn) => {
+            conn.setPeerInfo(pi)
             swarm.protocolMuxer(key)(conn)
           })
 

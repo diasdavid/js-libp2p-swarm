@@ -15,8 +15,7 @@ const defaultOptions = {
 
 const initialCounters = [
   'dataReceived',
-  'dataSent',
-  'peerCount'
+  'dataSent'
 ]
 
 const directionToEvent = {
@@ -54,19 +53,26 @@ module.exports = (observer, _options) => {
     transport.push(event, bufferLength)
   })
 
-  observer.on('peer:connected', (peerId) => {
-    // TODO: count
-  })
-
   observer.on('peer:closed', (peerId) => {
     peerStats.delete(peerId)
   })
 
   return {
+    stop: stop,
     global: globalStats,
     peers: Array.from(peerStats.keys()),
     forPeer: (peerId) => peerStats.get(peerId),
     transports: Array.from(transportStats.keys()),
     forTransport: (transport) => transportStats.get(transport)
+  }
+
+  function stop () {
+    globalStats.stop()
+    for (let peerStat of peerStats.values()) {
+      peerStat.stop()
+    }
+    for (let transportStat of transportStats.values()) {
+      transportStat.stop()
+    }
   }
 }

@@ -94,6 +94,7 @@ class Switch extends EE {
   }
 
   stop (callback) {
+    this.stats.stop()
     series([
       (cb) => each(this.muxedConns, (conn, cb) => {
         conn.muxer.end((err) => {
