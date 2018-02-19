@@ -28,9 +28,10 @@ module.exports = (observer, _options) => {
   const options = Object.assign({}, defaultOptions, _options)
   const globalStats = new Stat(initialCounters, options)
   const peerStats = new Map()
+  const transportStats = new Map()
 
-  observer.on('message', (peerId, transport, protocol, direction, bufferLength) => {
-    console.log('m', peerId, transport, protocol, direction, bufferLength)
+  observer.on('message', (peerId, transportTag, protocol, direction, bufferLength) => {
+    console.log('m', peerId, transportTag, protocol, direction, bufferLength)
     const event = directionToEvent[direction]
 
     // global stats
@@ -43,6 +44,18 @@ module.exports = (observer, _options) => {
       peerStats.set(peerId, peer)
     }
     peer.push(event, bufferLength)
+
+    // transport stats
+    let transport = transportStats.get(transportTag)
+    if (!transport) {
+      transport = new Stat(initialCounters, options)
+      transportStats.set(transportTag, transport)
+    }
+    transport.push(event, bufferLength)
+  })
+
+  observer.on('peer:connected', (peerId) => {
+    // TODO: count
   })
 
   observer.on('peer:closed', (peerId) => {
@@ -51,6 +64,9 @@ module.exports = (observer, _options) => {
 
   return {
     global: globalStats,
-    forPeer: (peerId) => peerStats.get(peerId)
+    peers: Array.from(peerStats.keys()),
+    forPeer: (peerId) => peerStats.get(peerId),
+    transports: Array.from(transportStats.keys()),
+    forTransport: (transport) => transportStats.get(transport)
   }
 }
