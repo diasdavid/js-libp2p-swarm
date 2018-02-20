@@ -30,6 +30,7 @@ libp2p-switch is used by [libp2p](https://github.com/libp2p/js-libp2p) but it ca
   - [`switch.stop(callback)`](#swarmclosecallback)
   - [`switch.connection`](#connection)
   - [Internal Transports API](#transports)
+  - [`switch.stats`](#stats-api)
 - [Design Notes](#designnotes)
   - [Multitransport](#multitransport)
   - [Connection upgrades](#connection-upgrades)
@@ -51,7 +52,7 @@ libp2p-switch is used by [libp2p](https://github.com/libp2p/js-libp2p) but it ca
 ```JavaScript
 const switch = require('libp2p-switch')
 
-const sw = new switch(peerInfo [, peerBook])
+const sw = new switch(peerInfo [, peerBook [, options]])
 ```
 
 ## API
@@ -222,6 +223,106 @@ To avoid the confusion between connection, stream, transport, and other names th
 
 - connection - something that implements the transversal expectations of a stream between two peers, including the benefits of using a stream plus having a way to do half duplex, full duplex
 - transport - something that as a dial/listen interface and return objs that implement a connection interface
+
+### Stats API
+
+#### Global stats
+
+##### `switch.stats.global.snapshot`
+
+Should return a stats snapshot, which is an object containing the following keys and respective values:
+
+* dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
+* dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
+
+##### `switch.stats.global.movingAverages`
+
+Returns an object containing the following keys:
+
+* dataSent
+* dataReceived
+
+Each one of them contains an object that has a key for each interval (`60000`, `300000` and `900000` miliseconds).
+
+Each one of these values is [an exponential moving-average instance](https://github.com/pgte/moving-average#readme).
+
+#### Per-transport stats
+
+##### `switch.stats.transports()`
+
+Returns an array containing the tags (string) for each observed transport.
+
+##### `switch.stats.forTransports(transportTag).snapshot`
+
+Should return a stats snapshot, which is an object containing the following keys and respective values:
+
+* dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
+* dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
+
+##### `switch.stats.forTransports(transportTag).movingAverages`
+
+Returns an object containing the following keys:
+
+* dataSent
+* dataReceived
+
+Each one of them contains an object that has a key for each interval (`60000`, `300000` and `900000` miliseconds).
+
+Each one of these values is [an exponential moving-average instance](https://github.com/pgte/moving-average#readme).
+
+#### Per-protocol stats
+
+##### `switch.stats.protocols()`
+
+Returns an array containing the tags (string) for each observed protocol.
+
+##### `switch.stats.forProtocol(protocolTag).snapshot`
+
+Should return a stats snapshot, which is an object containing the following keys and respective values:
+
+* dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
+* dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
+
+
+##### `switch.stats.forProtocol(protocolTag).movingAverages`
+
+Returns an object containing the following keys:
+
+* dataSent
+* dataReceived
+
+Each one of them contains an object that has a key for each interval (`60000`, `300000` and `900000` miliseconds).
+
+Each one of these values is [an exponential moving-average instance](https://github.com/pgte/moving-average#readme).
+
+#### Per-peer stats
+
+##### `switch.stats.peers()`
+
+Returns an array containing the peerIDs (B58-encoded string) for each observed peer.
+
+##### `switch.stats.forPeer(peerId:String).snapshot`
+
+Should return a stats snapshot, which is an object containing the following keys and respective values:
+
+* dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
+* dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
+
+
+##### `switch.stats.forPeer(peerId:String).movingAverages`
+
+Returns an object containing the following keys:
+
+* dataSent
+* dataReceived
+
+Each one of them contains an object that has a key for each interval (`60000`, `300000` and `900000` miliseconds).
+
+Each one of these values is [an exponential moving-average instance](https://github.com/pgte/moving-average#readme).
+
+#### Stats update interval
+
+Stats are not updated in real-time. Instead, measurements are buffered and stats are updated at an interval. The maximum interval can be defined through the `Switch` constructor option `stats.computeThrottleTimeout`, defined in miliseconds.
 
 ### This module uses `pull-streams`
 
