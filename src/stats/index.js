@@ -31,10 +31,6 @@ module.exports = (observer, _options) => {
   const protocolStats = new Map()
 
   observer.on('message', (peerId, transportTag, protocolTag, direction, bufferLength) => {
-    // if (!peerId) {
-    //   throw new Error('message should have peer id')
-    // }
-    console.log('m', peerId, transportTag, protocolTag, direction, bufferLength)
     const event = directionToEvent[direction]
 
     // global stats
