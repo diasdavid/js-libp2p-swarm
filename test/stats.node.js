@@ -68,21 +68,23 @@ describe('Stats', () => {
     switchA.handle('/echo/1.0.0', echo)
   })
 
-  it('dial A -> B', (done) => {
+  before((done) => {
+    // dial A -> B
     switchA.dial(switchB._peerInfo, '/echo/1.0.0', (err, conn) => {
       expect(err).to.not.exist()
       tryEcho(conn, done)
     })
   })
 
-  it('dial B -> A', (done) => {
+  before((done) => {
+    // dial B -> A
     switchB.dial(switchA._peerInfo, '/echo/1.0.0', (err, conn) => {
       expect(err).to.not.exist()
       tryEcho(conn, done)
     })
   })
 
-  it('waits a bit', (done) => setTimeout(done, 1000))
+  before((done) => setTimeout(done, 1000))
 
   it('both nodes have some global stats', () => {
     let snapshot = switchA.stats.global.snapshot
@@ -124,5 +126,14 @@ describe('Stats', () => {
     snapshot = switchB.stats.forTransport('/secio/1.0.0').snapshot
     expect(snapshot.dataReceived.toFixed()).to.equal('92')
     expect(snapshot.dataSent.toFixed()).to.equal('90')
+  })
+
+  it('both have protocol-specific stats', () => {
+    let snapshot = switchA.stats.forProtocol('/echo/1.0.0').snapshot
+    expect(snapshot.dataReceived.toFixed()).to.equal('4')
+    expect(snapshot.dataSent.toFixed()).to.equal('8')
+    snapshot = switchB.stats.forProtocol('/echo/1.0.0').snapshot
+    expect(snapshot.dataReceived.toFixed()).to.equal('4')
+    expect(snapshot.dataSent.toFixed()).to.equal('8')
   })
 })
