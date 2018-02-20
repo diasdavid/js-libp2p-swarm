@@ -49,7 +49,9 @@ module.exports = function connection (swarm) {
                 cb(null, peerInfo)
               }
             ], (err, pi) => {
-              setPeerInfo.call(conn, pi)
+              if (pi) {
+                setPeerInfo.call(conn, pi)
+              }
               cb(err, pi)
             })
           }
