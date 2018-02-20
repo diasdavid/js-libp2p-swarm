@@ -116,4 +116,13 @@ describe('Stats', () => {
     expect(switchA.stats.peers().sort()).to.deep.equal([switchB._peerInfo.id.toB58String()])
     expect(switchB.stats.peers().sort()).to.deep.equal([switchA._peerInfo.id.toB58String()])
   })
+
+  it('both have transport-specific stats', () => {
+    let snapshot = switchA.stats.forTransport('/secio/1.0.0').snapshot
+    expect(snapshot.dataReceived.toFixed()).to.equal('92')
+    expect(snapshot.dataSent.toFixed()).to.equal('90')
+    snapshot = switchB.stats.forTransport('/secio/1.0.0').snapshot
+    expect(snapshot.dataReceived.toFixed()).to.equal('92')
+    expect(snapshot.dataSent.toFixed()).to.equal('90')
+  })
 })
