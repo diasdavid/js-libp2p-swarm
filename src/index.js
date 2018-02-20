@@ -14,13 +14,14 @@ const Stats = require('./stats')
 const assert = require('assert')
 
 class Switch extends EE {
-  constructor (peerInfo, peerBook) {
+  constructor (peerInfo, peerBook, options) {
     super()
     assert(peerInfo, 'You must provide a `peerInfo`')
     assert(peerBook, 'You must provide a `peerBook`')
 
     this._peerInfo = peerInfo
     this._peerBook = peerBook
+    this._options = options || {}
 
     this.setMaxListeners(Infinity)
     // transports --
@@ -72,7 +73,7 @@ class Switch extends EE {
     }
 
     const observer = Observer(this)
-    this.stats = Stats(observer)
+    this.stats = Stats(observer, this._options.stats)
     this.protocolMuxer = ProtocolMuxer(this.protocols, observer)
 
     this.handle(this.crypto.tag, (protocol, conn) => {

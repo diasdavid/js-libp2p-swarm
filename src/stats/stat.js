@@ -26,16 +26,6 @@ class Stats extends EventEmitter {
         ma.push(this._frequencyLastTime, 0)
       })
     })
-
-    this._enabled = this._options.enabled
-  }
-
-  enable () {
-    this._enabled = true
-  }
-
-  disable () {
-    this._disabled = true
   }
 
   stop () {
@@ -53,10 +43,8 @@ class Stats extends EventEmitter {
   }
 
   push (counter, inc) {
-    if (this._enabled) {
-      this._queue.push([counter, inc, Date.now()])
-      this._resetComputeTimeout()
-    }
+    this._queue.push([counter, inc, Date.now()])
+    this._resetComputeTimeout()
   }
 
   _resetComputeTimeout () {
@@ -69,7 +57,8 @@ class Stats extends EventEmitter {
   _nextTimeout () {
     // calculate the need for an update, depending on the queue length
     const urgency = this._queue.length / this._options.computeThrottleMaxQueueSize
-    return Math.max(this._options.computeThrottleTimeout * (1 - urgency), 0)
+    const timeout = Math.max(this._options.computeThrottleTimeout * (1 - urgency), 0)
+    return timeout
   }
 
   _update () {

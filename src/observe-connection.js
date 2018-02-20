@@ -5,15 +5,18 @@ const pull = require('pull-stream')
 
 module.exports = (transport, protocol, _conn, observer) => {
   const peerInfo = new Promise((resolve, reject) => {
-    if (_conn.peerInfo) {
-      return resolve(_conn.peerInfo)
-    }
+    _conn.getPeerInfo((err, peerInfo) => {
+      if (!err && peerInfo) {
+        resolve(peerInfo)
+        return
+      }
 
-    const setPeerInfo = _conn.setPeerInfo
-    _conn.setPeerInfo = (pi) => {
-      setPeerInfo.call(_conn, pi)
-      resolve(pi)
-    }
+      const setPeerInfo = _conn.setPeerInfo
+      _conn.setPeerInfo = (pi) => {
+        setPeerInfo.call(_conn, pi)
+        resolve(pi)
+      }
+    })
   })
 
   const stream = {
