@@ -136,4 +136,13 @@ describe('Stats', () => {
     expect(snapshot.dataReceived.toFixed()).to.equal('4')
     expect(snapshot.dataSent.toFixed()).to.equal('8')
   })
+
+  it('both have peer-specific stats', () => {
+    let snapshot = switchA.stats.forPeer(switchB._peerInfo.id.toB58String()).snapshot
+    expect(snapshot.dataReceived.toFixed()).to.equal('51')
+    expect(snapshot.dataSent.toFixed()).to.equal('49')
+    snapshot = switchB.stats.forPeer(switchA._peerInfo.id.toB58String()).snapshot
+    expect(snapshot.dataReceived.toFixed()).to.equal('51')
+    expect(snapshot.dataSent.toFixed()).to.equal('49')
+  })
 })
