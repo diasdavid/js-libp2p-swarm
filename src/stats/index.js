@@ -28,12 +28,13 @@ module.exports = (observer, _options) => {
   const globalStats = new Stat(initialCounters, options)
   const peerStats = new Map()
   const transportStats = new Map()
+  const protocolStats = new Map()
 
-  observer.on('message', (peerId, transportTag, protocol, direction, bufferLength) => {
+  observer.on('message', (peerId, transportTag, protocolTag, direction, bufferLength) => {
     // if (!peerId) {
     //   throw new Error('message should have peer id')
     // }
-    console.log('m', peerId, transportTag, protocol, direction, bufferLength)
+    console.log('m', peerId, transportTag, protocolTag, direction, bufferLength)
     const event = directionToEvent[direction]
 
     // global stats
@@ -54,6 +55,14 @@ module.exports = (observer, _options) => {
       transportStats.set(transportTag, transport)
     }
     transport.push(event, bufferLength)
+
+    // protocol stats
+    let protocol = protocolStats.get(protocolTag)
+    if (!protocol) {
+      protocol = new Stat(initialCounters, options)
+      protocolStats.set(protocolTag, transport)
+    }
+    protocol.push(event, bufferLength)
   })
 
   observer.on('peer:closed', (peerId) => {
@@ -63,10 +72,12 @@ module.exports = (observer, _options) => {
   return {
     stop: stop,
     global: globalStats,
-    peers: Array.from(peerStats.keys()),
+    peers: () => Array.from(peerStats.keys()),
     forPeer: (peerId) => peerStats.get(peerId),
-    transports: Array.from(transportStats.keys()),
-    forTransport: (transport) => transportStats.get(transport)
+    transports: () => Array.from(transportStats.keys()),
+    forTransport: (transport) => transportStats.get(transport),
+    protocols: () => Array.from(protocolStats.keys()),
+    forProtocol: (protocol) => protocolStats.get(protocol)
   }
 
   function stop () {

@@ -82,19 +82,38 @@ describe('Stats', () => {
     })
   })
 
-  it('waits a bit', (done) => setTimeout(done, 1900))
+  it('waits a bit', (done) => setTimeout(done, 1000))
 
-  it('A has some stats', () => {
-    const snapshot = switchA.stats.global.snapshot
-    console.log('%j', snapshot)
+  it('both nodes have some global stats', () => {
+    let snapshot = switchA.stats.global.snapshot
+    expect(snapshot.dataReceived.toFixed()).to.equal('51')
+    expect(snapshot.dataSent.toFixed()).to.equal('49')
+
+    snapshot = switchB.stats.global.snapshot
     expect(snapshot.dataReceived.toFixed()).to.equal('51')
     expect(snapshot.dataSent.toFixed()).to.equal('49')
   })
 
-  it('B has some stats', () => {
-    const snapshot = switchB.stats.global.snapshot
-    console.log('%j', snapshot)
-    expect(snapshot.dataReceived.toFixed()).to.equal('51')
-    expect(snapshot.dataSent.toFixed()).to.equal('49')
+  it('both nodes know some transports', () => {
+    const expectedTransports = [
+      '/mplex/6.7.0',
+      '/secio/1.0.0'
+    ]
+    expect(switchA.stats.transports().sort()).to.deep.equal(expectedTransports)
+    expect(switchB.stats.transports().sort()).to.deep.equal(expectedTransports)
+  })
+
+  it('both nodes know some protocols', () => {
+    const expectedProtocols = [
+      '/echo/1.0.0',
+      '/mplex/6.7.0'
+    ]
+    expect(switchA.stats.protocols().sort()).to.deep.equal(expectedProtocols)
+    expect(switchB.stats.protocols().sort()).to.deep.equal(expectedProtocols)
+  })
+
+  it('both nodes know about each other', () => {
+    expect(switchA.stats.peers().sort()).to.deep.equal([switchB._peerInfo.id.toB58String()])
+    expect(switchB.stats.peers().sort()).to.deep.equal([switchA._peerInfo.id.toB58String()])
   })
 })
