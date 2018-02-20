@@ -32,8 +32,8 @@ describe('Stats', () => {
       const peerA = infos[0]
       const peerB = infos[1]
 
-      peerA.multiaddrs.add('/ip4/127.0.0.1/tcp/9001')
-      peerB.multiaddrs.add('/ip4/127.0.0.1/tcp/9002')
+      peerA.multiaddrs.add('/ip4/127.0.0.1/tcp/0')
+      peerB.multiaddrs.add('/ip4/127.0.0.1/tcp/0')
 
       const switchA = new Switch(peerA, new PeerBook(), options)
       const switchB = new Switch(peerB, new PeerBook(), options)
