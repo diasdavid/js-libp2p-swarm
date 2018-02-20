@@ -191,7 +191,6 @@ describe('Stats', () => {
         const intervals = [60000, 300000, 900000]
         intervals.forEach((interval) => {
           const average = ma.dataReceived[interval].movingAverage()
-          console.log(average)
           expect(average).to.be.above(0).below(1)
         })
       })
