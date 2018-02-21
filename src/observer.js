@@ -3,17 +3,17 @@
 const pull = require('pull-stream')
 const EventEmitter = require('events')
 
-module.exports = (swarm) => {
+module.exports = (swtch) => {
   const observer = Object.assign(new EventEmitter(), {
     incoming: observe('in'),
     outgoing: observe('out')
   })
 
-  swarm.on('peer-mux-established', (peerInfo) => {
+  swtch.on('peer-mux-established', (peerInfo) => {
     observer.emit('peer:connected', peerInfo.id.toB58String())
   })
 
-  swarm.on('peer-mux-closed', (peerInfo) => {
+  swtch.on('peer-mux-closed', (peerInfo) => {
     observer.emit('peer:closed', peerInfo.id.toB58String())
   })
 

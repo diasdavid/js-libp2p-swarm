@@ -7,9 +7,9 @@ const getPeerInfo = require('./get-peer-info')
 const Circuit = require('libp2p-circuit')
 
 const debug = require('debug')
-const log = debug('libp2p:swarm:dial')
+const log = debug('libp2p:switch:dial')
 
-function dial (swarm) {
+function dial (swtch) {
   return (peer, protocol, callback) => {
     if (typeof protocol === 'function') {
       callback = protocol
@@ -17,7 +17,7 @@ function dial (swarm) {
     }
 
     callback = callback || function noop () {}
-    const pi = getPeerInfo(peer, swarm._peerBook)
+    const pi = getPeerInfo(peer, swtch._peerBook)
 
     const proxyConn = new Connection()
     proxyConn.setPeerInfo(pi)
@@ -25,8 +25,8 @@ function dial (swarm) {
     const b58Id = pi.id.toB58String()
     log('dialing %s', b58Id)
 
-    if (!swarm.muxedConns[b58Id]) {
-      if (!swarm.conns[b58Id]) {
+    if (!swtch.muxedConns[b58Id]) {
+      if (!swtch.conns[b58Id]) {
         attemptDial(pi, (err, conn) => {
           if (err) {
             return callback(err)
@@ -34,15 +34,15 @@ function dial (swarm) {
           gotWarmedUpConn(conn)
         })
       } else {
-        const conn = swarm.conns[b58Id]
-        swarm.conns[b58Id] = undefined
+        const conn = swtch.conns[b58Id]
+        swtch.conns[b58Id] = undefined
         gotWarmedUpConn(conn)
       }
     } else {
       if (!protocol) {
         return callback()
       }
-      gotMuxer(swarm.muxedConns[b58Id].muxer)
+      gotMuxer(swtch.muxedConns[b58Id].muxer)
     }
 
     return proxyConn
@@ -53,7 +53,7 @@ function dial (swarm) {
       attemptMuxerUpgrade(conn, (err, muxer) => {
         if (!protocol) {
           if (err) {
-            swarm.conns[b58Id] = conn
+            swtch.conns[b58Id] = conn
           }
           return callback()
         }
@@ -68,7 +68,7 @@ function dial (swarm) {
     }
 
     function gotMuxer (muxer) {
-      if (swarm.identify) {
+      if (swtch.identify) {
         // TODO: Consider:
         // 1. overload getPeerInfo
         // 2. exec identify (through getPeerInfo)
@@ -81,11 +81,11 @@ function dial (swarm) {
     }
 
     function attemptDial (pi, cb) {
-      if (!swarm.hasTransports()) {
+      if (!swtch.hasTransports()) {
         return cb(new Error('No transports registered, dial not possible'))
       }
 
-      const tKeys = swarm.availableTransports(pi)
+      const tKeys = swtch.availableTransports(pi)
 
       let circuitTried = false
       nextTransport(tKeys.shift())
@@ -97,7 +97,7 @@ function dial (swarm) {
             return cb(new Error(`Circuit already tried!`))
           }
 
-          if (!swarm.transports[Circuit.tag]) {
+          if (!swtch.transports[Circuit.tag]) {
             return cb(new Error(`Circuit not enabled!`))
           }
 
@@ -108,7 +108,7 @@ function dial (swarm) {
         }
 
         log(`dialing transport ${transport}`)
-        swarm.transport.dial(transport, pi, (err, conn) => {
+        swtch.transport.dial(transport, pi, (err, conn) => {
           if (err) {
             log(err)
             return nextTransport(tKeys.shift())
@@ -123,12 +123,12 @@ function dial (swarm) {
                 return cb(err)
               }
 
-              const myId = swarm._peerInfo.id
-              log('selecting crypto: %s', swarm.crypto.tag)
-              ms.select(swarm.crypto.tag, (err, conn) => {
+              const myId = swtch._peerInfo.id
+              log('selecting crypto: %s', swtch.crypto.tag)
+              ms.select(swtch.crypto.tag, (err, conn) => {
                 if (err) { return cb(err) }
 
-                const wrapped = swarm.crypto.encrypt(myId, conn, pi.id, (err) => {
+                const wrapped = swtch.crypto.encrypt(myId, conn, pi.id, (err) => {
                   if (err) {
                     return cb(err)
                   }
@@ -143,7 +143,7 @@ function dial (swarm) {
     }
 
     function attemptMuxerUpgrade (conn, cb) {
-      const muxers = Object.keys(swarm.muxers)
+      const muxers = Object.keys(swtch.muxers)
       if (muxers.length === 0) {
         return cb(new Error('no muxers available'))
       }
@@ -174,26 +174,26 @@ function dial (swarm) {
             return
           }
 
-          const muxedConn = swarm.muxers[key].dialer(conn)
-          swarm.muxedConns[b58Id] = {}
-          swarm.muxedConns[b58Id].muxer = muxedConn
-          // should not be needed anymore - swarm.muxedConns[b58Id].conn = conn
+          const muxedConn = swtch.muxers[key].dialer(conn)
+          swtch.muxedConns[b58Id] = {}
+          swtch.muxedConns[b58Id].muxer = muxedConn
+          // should not be needed anymore - swtch.muxedConns[b58Id].conn = conn
 
           muxedConn.once('close', () => {
             const b58Str = pi.id.toB58String()
-            delete swarm.muxedConns[b58Str]
+            delete swtch.muxedConns[b58Str]
             pi.disconnect()
-            swarm._peerBook.get(b58Str).disconnect()
-            setImmediate(() => swarm.emit('peer-mux-closed', pi))
+            swtch._peerBook.get(b58Str).disconnect()
+            setImmediate(() => swtch.emit('peer-mux-closed', pi))
           })
 
           // For incoming streams, in case identify is on
           muxedConn.on('stream', (conn) => {
             conn.setPeerInfo(pi)
-            swarm.protocolMuxer(key)(conn)
+            swtch.protocolMuxer(key)(conn)
           })
 
-          setImmediate(() => swarm.emit('peer-mux-established', pi))
+          setImmediate(() => swtch.emit('peer-mux-established', pi))
 
           cb(null, muxedConn)
         })

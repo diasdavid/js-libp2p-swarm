@@ -4,7 +4,7 @@ const identify = require('libp2p-identify')
 const multistream = require('multistream-select')
 const waterfall = require('async/waterfall')
 const debug = require('debug')
-const log = debug('libp2p:swarm:connection')
+const log = debug('libp2p:switch:connection')
 const once = require('once')
 const setImmediate = require('async/setImmediate')
 
@@ -12,25 +12,25 @@ const Circuit = require('libp2p-circuit')
 
 const plaintext = require('./plaintext')
 
-module.exports = function connection (swarm) {
+module.exports = function connection (swtch) {
   return {
     addUpgrade () {},
 
     addStreamMuxer (muxer) {
       // for dialing
-      swarm.muxers[muxer.multicodec] = muxer
+      swtch.muxers[muxer.multicodec] = muxer
 
       // for listening
-      swarm.handle(muxer.multicodec, (protocol, conn) => {
+      swtch.handle(muxer.multicodec, (protocol, conn) => {
         const muxedConn = muxer.listener(conn)
 
-        muxedConn.on('stream', swarm.protocolMuxer(protocol))
+        muxedConn.on('stream', swtch.protocolMuxer(protocol))
 
         // If identify is enabled
         //   1. overload getPeerInfo
         //   2. call getPeerInfo
         //   3. add this conn to the pool
-        if (swarm.identify) {
+        if (swtch.identify) {
           // overload peerInfo to use Identify instead
           conn.getPeerInfo = (cb) => {
             const conn = muxedConn.newStream()
@@ -43,7 +43,7 @@ module.exports = function connection (swarm) {
               (conn, cb) => identify.dialer(conn, cb),
               (peerInfo, observedAddrs, cb) => {
                 observedAddrs.forEach((oa) => {
-                  swarm._peerInfo.multiaddrs.addSafe(oa)
+                  swtch._peerInfo.multiaddrs.addSafe(oa)
                 })
                 cb(null, peerInfo)
               }
@@ -61,7 +61,7 @@ module.exports = function connection (swarm) {
             }
             const b58Str = peerInfo.id.toB58String()
 
-            swarm.muxedConns[b58Str] = { muxer: muxedConn }
+            swtch.muxedConns[b58Str] = { muxer: muxedConn }
 
             if (peerInfo.multiaddrs.size > 0) {
               // with incomming conn and through identify, going to pick one
@@ -74,16 +74,16 @@ module.exports = function connection (swarm) {
               // no addr, use just their IPFS id
               peerInfo.connect(`/ipfs/${b58Str}`)
             }
-            peerInfo = swarm._peerBook.put(peerInfo)
+            peerInfo = swtch._peerBook.put(peerInfo)
 
             muxedConn.on('close', () => {
-              delete swarm.muxedConns[b58Str]
+              delete swtch.muxedConns[b58Str]
               peerInfo.disconnect()
-              peerInfo = swarm._peerBook.put(peerInfo)
-              setImmediate(() => swarm.emit('peer-mux-closed', peerInfo))
+              peerInfo = swtch._peerBook.put(peerInfo)
+              setImmediate(() => swtch.emit('peer-mux-closed', peerInfo))
             })
 
-            setImmediate(() => swarm.emit('peer-mux-established', peerInfo))
+            setImmediate(() => swtch.emit('peer-mux-established', peerInfo))
           })
         }
 
@@ -92,9 +92,9 @@ module.exports = function connection (swarm) {
     },
 
     reuse () {
-      swarm.identify = true
-      swarm.handle(identify.multicodec, (protocol, conn) => {
-        identify.listener(conn, swarm._peerInfo)
+      swtch.identify = true
+      swtch.handle(identify.multicodec, (protocol, conn) => {
+        identify.listener(conn, swtch._peerInfo)
       })
     },
 
@@ -108,7 +108,7 @@ module.exports = function connection (swarm) {
 
         // TODO: (dryajov) should we enable circuit listener and
         // dialer by default?
-        swarm.transport.add(Circuit.tag, new Circuit(swarm, config))
+        swtch.transport.add(Circuit.tag, new Circuit(swtch, config))
       }
     },
 
@@ -118,15 +118,15 @@ module.exports = function connection (swarm) {
         encrypt = plaintext.encrypt
       }
 
-      swarm.unhandle(swarm.crypto.tag)
-      swarm.handle(tag, (protocol, conn) => {
-        const myId = swarm._peerInfo.id
+      swtch.unhandle(swtch.crypto.tag)
+      swtch.handle(tag, (protocol, conn) => {
+        const myId = swtch._peerInfo.id
         const secure = encrypt(myId, conn, undefined, () => {
-          swarm.protocolMuxer(tag)(secure)
+          swtch.protocolMuxer(tag)(secure)
         })
       })
 
-      swarm.crypto = {tag, encrypt}
+      swtch.crypto = {tag, encrypt}
     }
   }
 }

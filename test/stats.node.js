@@ -6,7 +6,9 @@ const dirtyChai = require('dirty-chai')
 const expect = chai.expect
 chai.use(dirtyChai)
 const parallel = require('async/parallel')
+const each = require('async/each')
 const map = require('async/map')
+const series = require('async/series')
 const TCP = require('libp2p-tcp')
 const multiplex = require('libp2p-multiplex')
 const pull = require('pull-stream')
@@ -205,6 +207,69 @@ describe('Stats', () => {
         })
       })
       teardown(switches, done)
+    })
+  })
+
+  it('retains peer after disconnect', (done) => {
+    setup((err, switches) => {
+      expect(err).to.not.exist()
+      let index = -1
+      each(switches, (swtch, cb) => {
+        swtch.once('peer-mux-closed', () => cb())
+        index++
+        swtch.hangUp(selectOther(switches, index)._peerInfo, (err) => {
+          expect(err).to.not.exist()
+        })
+      },
+      (err) => {
+        expect(err).to.not.exist()
+        switches.forEach((swtch, index) => {
+          const other = selectOther(switches, index)
+          const snapshot = swtch.stats.forPeer(other._peerInfo.id.toB58String()).snapshot
+          expect(snapshot.dataReceived.toFixed()).to.equal('51')
+          expect(snapshot.dataSent.toFixed()).to.equal('49')
+        })
+        teardown(switches, done)
+      })
+    })
+  })
+
+  it('retains peer after reconnect', (done) => {
+    setup((err, switches) => {
+      expect(err).to.not.exist()
+      series([
+        (cb) => {
+          let index = -1
+          each(switches, (swtch, cb) => {
+            swtch.once('peer-mux-closed', () => cb())
+            index++
+            swtch.hangUp(selectOther(switches, index)._peerInfo, (err) => {
+              expect(err).to.not.exist()
+            })
+          }, cb)
+        },
+        (cb) => {
+          let index = -1
+          each(switches, (swtch, cb) => {
+            index++
+            const other = selectOther(switches, index)
+            swtch.dial(other._peerInfo, '/echo/1.0.0', (err, conn) => {
+              expect(err).to.not.exist()
+              tryEcho(conn, cb)
+            })
+          }, cb)
+        },
+        (cb) => setTimeout(cb, 500),
+        (cb) => {
+          switches.forEach((swtch, index) => {
+            const other = selectOther(switches, index)
+            const snapshot = swtch.stats.forPeer(other._peerInfo.id.toB58String()).snapshot
+            expect(snapshot.dataReceived.toFixed()).to.equal('102')
+            expect(snapshot.dataSent.toFixed()).to.equal('98')
+          })
+          teardown(switches, done)
+        }
+      ], done)
     })
   })
 })

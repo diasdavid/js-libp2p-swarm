@@ -3,6 +3,7 @@
 const EventEmitter = require('events')
 
 const Stat = require('./stat')
+const OldPeers = require('./old-peers')
 
 const defaultOptions = {
   computeThrottleMaxQueueSize: 1000,
@@ -11,7 +12,8 @@ const defaultOptions = {
     60 * 1000, // 1 minute
     5 * 60 * 1000, // 5 minutes
     15 * 60 * 1000 // 15 minutes
-  ]
+  ],
+  maxOldPeersRetention: 50
 }
 
 const initialCounters = [
@@ -32,7 +34,9 @@ module.exports = (observer, _options) => {
     stop: stop,
     global: globalStats,
     peers: () => Array.from(peerStats.keys()),
-    forPeer: (peerId) => peerStats.get(peerId),
+    forPeer: (peerId) => {
+      return peerStats.get(peerId) || oldPeers.get(peerId)
+    },
     transports: () => Array.from(transportStats.keys()),
     forTransport: (transport) => transportStats.get(transport),
     protocols: () => Array.from(protocolStats.keys()),
@@ -41,6 +45,7 @@ module.exports = (observer, _options) => {
 
   globalStats.on('update', propagateChange)
 
+  const oldPeers = OldPeers(options.maxOldPeersRetention)
   const peerStats = new Map()
   const transportStats = new Map()
   const protocolStats = new Map()
@@ -54,10 +59,17 @@ module.exports = (observer, _options) => {
     // peer stats
     let peer = peerStats.get(peerId)
     if (!peer) {
-      peer = new Stat(initialCounters, options)
+      peer = oldPeers.get(peerId)
+      if (peer) {
+        oldPeers.delete(peerId)
+      } else {
+        peer = new Stat(initialCounters, options)
+      }
       peer.on('update', propagateChange)
+      peer.start()
       peerStats.set(peerId, peer)
     }
+
     peer.push(event, bufferLength)
 
     // transport stats
@@ -85,6 +97,7 @@ module.exports = (observer, _options) => {
       peer.removeListener('update', propagateChange)
       peer.stop()
       peerStats.delete(peerId)
+      oldPeers.set(peerId, peer)
     }
   })
 

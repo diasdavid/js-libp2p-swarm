@@ -28,6 +28,12 @@ class Stats extends EventEmitter {
     })
   }
 
+  start () {
+    if (this._queue.length) {
+      this._resetComputeTimeout()
+    }
+  }
+
   stop () {
     if (this._timeout) {
       clearTimeout(this._timeout)

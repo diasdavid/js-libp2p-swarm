@@ -58,6 +58,7 @@ const sw = new switch(peerInfo , peerBook [, options])
 If defined, `options` should be an object with the following keys and respective values:
 
 - `stats`: an object with the following keys and respective values:
+  - `maxOldPeersRetention`: maximum old peers retention. For when peers disconnect and keeping the stats around in case they reconnect. Defaults to `100`.
   - `computeThrottleMaxQueueSize`: maximum queue size to perform stats computation throttling. Defaults to `1000`.
   - `computeThrottleTimeout`: Throttle timeout, in miliseconds. Defaults to `2000`,
   - `movingAverageIntervals`: Array containin the intervals, in miliseconds, for which moving averages are calculated. Defaults to:
