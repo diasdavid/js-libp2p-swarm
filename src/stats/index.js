@@ -1,5 +1,7 @@
 'use strict'
 
+const EventEmitter = require('events')
+
 const Stat = require('./stat')
 
 const defaultOptions = {
@@ -26,6 +28,20 @@ const directionToEvent = {
 module.exports = (observer, _options) => {
   const options = Object.assign({}, defaultOptions, _options)
   const globalStats = new Stat(initialCounters, options)
+
+  const stats = Object.assign(new EventEmitter(), {
+    stop: stop,
+    global: globalStats,
+    peers: () => Array.from(peerStats.keys()),
+    forPeer: (peerId) => peerStats.get(peerId),
+    transports: () => Array.from(transportStats.keys()),
+    forTransport: (transport) => transportStats.get(transport),
+    protocols: () => Array.from(protocolStats.keys()),
+    forProtocol: (protocol) => protocolStats.get(protocol)
+  })
+
+  globalStats.on('update', propagateChange)
+
   const peerStats = new Map()
   const transportStats = new Map()
   const protocolStats = new Map()
@@ -40,6 +56,7 @@ module.exports = (observer, _options) => {
     let peer = peerStats.get(peerId)
     if (!peer) {
       peer = new Stat(initialCounters, options)
+      peer.on('update', propagateChange)
       peerStats.set(peerId, peer)
     }
     peer.push(event, bufferLength)
@@ -48,6 +65,7 @@ module.exports = (observer, _options) => {
     let transport = transportStats.get(transportTag)
     if (!transport) {
       transport = new Stat(initialCounters, options)
+      transport.on('update', propagateChange)
       transportStats.set(transportTag, transport)
     }
     transport.push(event, bufferLength)
@@ -56,25 +74,22 @@ module.exports = (observer, _options) => {
     let protocol = protocolStats.get(protocolTag)
     if (!protocol) {
       protocol = new Stat(initialCounters, options)
+      protocol.on('update', propagateChange)
       protocolStats.set(protocolTag, transport)
     }
     protocol.push(event, bufferLength)
   })
 
   observer.on('peer:closed', (peerId) => {
-    peerStats.delete(peerId)
+    const peer = peerStats.get(peerId)
+    if (peer) {
+      peer.removeListener('update', propagateChange)
+      peer.stop()
+      peerStats.delete(peerId)
+    }
   })
 
-  return {
-    stop: stop,
-    global: globalStats,
-    peers: () => Array.from(peerStats.keys()),
-    forPeer: (peerId) => peerStats.get(peerId),
-    transports: () => Array.from(transportStats.keys()),
-    forTransport: (transport) => transportStats.get(transport),
-    protocols: () => Array.from(protocolStats.keys()),
-    forProtocol: (protocol) => protocolStats.get(protocol)
-  }
+  return stats
 
   function stop () {
     globalStats.stop()
@@ -84,5 +99,9 @@ module.exports = (observer, _options) => {
     for (let transportStat of transportStats.values()) {
       transportStat.stop()
     }
+  }
+
+  function propagateChange () {
+    stats.emit('update')
   }
 }

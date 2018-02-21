@@ -79,7 +79,17 @@ describe('Stats', () => {
           }
 
           // wait until stats are processed
-          setTimeout(() => cb(null, [switchA, switchB]), 500)
+          let pending = 12
+          switchA.stats.on('update', waitForUpdate)
+          switchB.stats.on('update', waitForUpdate)
+
+          function waitForUpdate () {
+            if (--pending === 0) {
+              switchA.stats.removeListener('update', waitForUpdate)
+              switchB.stats.removeListener('update', waitForUpdate)
+              cb(null, [switchA, switchB])
+            }
+          }
         })
       })
     })

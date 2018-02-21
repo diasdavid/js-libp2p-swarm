@@ -226,6 +226,10 @@ To avoid the confusion between connection, stream, transport, and other names th
 
 ### Stats API
 
+##### `switch.stats.emit('update')`
+
+Every time any stat value changes, this object emits an `update` event.
+
 #### Global stats
 
 ##### `switch.stats.global.snapshot`
