@@ -180,14 +180,14 @@ Each one of these values is [an exponential moving-average instance](https://git
 
 Returns an array containing the tags (string) for each observed transport.
 
-##### `switch.stats.forTransports(transportTag).snapshot`
+##### `switch.stats.forTransport(transportTag).snapshot`
 
 Should return a stats snapshot, which is an object containing the following keys and respective values:
 
 * dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
 * dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
 
-##### `switch.stats.forTransports(transportTag).movingAverages`
+##### `switch.stats.forTransport(transportTag).movingAverages`
 
 Returns an object containing the following keys:
 
