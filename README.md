@@ -160,15 +160,15 @@ Every time any stat value changes, this object emits an `update` event.
 
 Should return a stats snapshot, which is an object containing the following keys and respective values:
 
-* dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
-* dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
+- dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
+- dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
 
 ##### `switch.stats.global.movingAverages`
 
 Returns an object containing the following keys:
 
-* dataSent
-* dataReceived
+- dataSent
+- dataReceived
 
 Each one of them contains an object that has a key for each interval (`60000`, `300000` and `900000` miliseconds).
 
@@ -184,15 +184,15 @@ Returns an array containing the tags (string) for each observed transport.
 
 Should return a stats snapshot, which is an object containing the following keys and respective values:
 
-* dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
-* dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
+- dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
+- dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
 
 ##### `switch.stats.forTransport(transportTag).movingAverages`
 
 Returns an object containing the following keys:
 
-* dataSent
-* dataReceived
+ dataSent
+ dataReceived
 
 Each one of them contains an object that has a key for each interval (`60000`, `300000` and `900000` miliseconds).
 
@@ -208,16 +208,16 @@ Returns an array containing the tags (string) for each observed protocol.
 
 Should return a stats snapshot, which is an object containing the following keys and respective values:
 
-* dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
-* dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
+- dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
+- dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
 
 
 ##### `switch.stats.forProtocol(protocolTag).movingAverages`
 
 Returns an object containing the following keys:
 
-* dataSent
-* dataReceived
+- dataSent
+- dataReceived
 
 Each one of them contains an object that has a key for each interval (`60000`, `300000` and `900000` miliseconds).
 
@@ -233,16 +233,16 @@ Returns an array containing the peerIDs (B58-encoded string) for each observed p
 
 Should return a stats snapshot, which is an object containing the following keys and respective values:
 
-* dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
-* dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
+- dataSent: amount of bytes sent, [Big](https://github.com/MikeMcl/big.js#readme) number
+- dataReceived: amount of bytes received, [Big](https://github.com/MikeMcl/big.js#readme) number
 
 
 ##### `switch.stats.forPeer(peerId:String).movingAverages`
 
 Returns an object containing the following keys:
 
-* dataSent
-* dataReceived
+- dataSent
+- dataReceived
 
 Each one of them contains an object that has a key for each interval (`60000`, `300000` and `900000` miliseconds).
 
