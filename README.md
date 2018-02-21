@@ -52,8 +52,24 @@ libp2p-switch is used by [libp2p](https://github.com/libp2p/js-libp2p) but it ca
 ```JavaScript
 const switch = require('libp2p-switch')
 
-const sw = new switch(peerInfo [, peerBook [, options]])
+const sw = new switch(peerInfo , peerBook [, options])
 ```
+
+If defined, `options` should be an object with the following keys and respective values:
+
+- `stats`: an object with the following keys and respective values:
+  - `computeThrottleMaxQueueSize`: maximum queue size to perform stats computation throttling. Defaults to `1000`.
+  - `computeThrottleTimeout`: Throttle timeout, in miliseconds. Defaults to `2000`,
+  - `movingAverageIntervals`: Array containin the intervals, in miliseconds, for which moving averages are calculated. Defaults to:
+
+  ```js
+  [
+    60 * 1000, // 1 minute
+    5 * 60 * 1000, // 5 minutes
+    15 * 60 * 1000 // 15 minutes
+  ]
+  ```
+
 
 ## API
 

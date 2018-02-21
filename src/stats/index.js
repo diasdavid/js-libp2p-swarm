@@ -5,7 +5,6 @@ const EventEmitter = require('events')
 const Stat = require('./stat')
 
 const defaultOptions = {
-  enabled: true,
   computeThrottleMaxQueueSize: 1000,
   computeThrottleTimeout: 2000,
   movingAverageIntervals: [
