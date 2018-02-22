@@ -53,42 +53,48 @@ module.exports = (observer, _options) => {
   observer.on('message', (peerId, transportTag, protocolTag, direction, bufferLength) => {
     const event = directionToEvent[direction]
 
-    // global stats
-    globalStats.push(event, bufferLength)
+    if (transportTag) {
+      // because it has a transport tag, this message is at the global level, so we account this
+      // traffic as global.
+      globalStats.push(event, bufferLength)
 
-    // peer stats
-    let peer = peerStats.get(peerId)
-    if (!peer) {
-      peer = oldPeers.get(peerId)
-      if (peer) {
-        oldPeers.delete(peerId)
-      } else {
-        peer = new Stat(initialCounters, options)
+      // peer stats
+      let peer = peerStats.get(peerId)
+      if (!peer) {
+        peer = oldPeers.get(peerId)
+        if (peer) {
+          oldPeers.delete(peerId)
+        } else {
+          peer = new Stat(initialCounters, options)
+        }
+        peer.on('update', propagateChange)
+        peer.start()
+        peerStats.set(peerId, peer)
       }
-      peer.on('update', propagateChange)
-      peer.start()
-      peerStats.set(peerId, peer)
+      peer.push(event, bufferLength)
     }
-
-    peer.push(event, bufferLength)
 
     // transport stats
-    let transport = transportStats.get(transportTag)
-    if (!transport) {
-      transport = new Stat(initialCounters, options)
-      transport.on('update', propagateChange)
-      transportStats.set(transportTag, transport)
+    if (transportTag) {
+      let transport = transportStats.get(transportTag)
+      if (!transport) {
+        transport = new Stat(initialCounters, options)
+        transport.on('update', propagateChange)
+        transportStats.set(transportTag, transport)
+      }
+      transport.push(event, bufferLength)
     }
-    transport.push(event, bufferLength)
 
     // protocol stats
-    let protocol = protocolStats.get(protocolTag)
-    if (!protocol) {
-      protocol = new Stat(initialCounters, options)
-      protocol.on('update', propagateChange)
-      protocolStats.set(protocolTag, transport)
+    if (protocolTag) {
+      let protocol = protocolStats.get(protocolTag)
+      if (!protocol) {
+        protocol = new Stat(initialCounters, options)
+        protocol.on('update', propagateChange)
+        protocolStats.set(protocolTag, protocol)
+      }
+      protocol.push(event, bufferLength)
     }
-    protocol.push(event, bufferLength)
   })
 
   observer.on('peer:closed', (peerId) => {

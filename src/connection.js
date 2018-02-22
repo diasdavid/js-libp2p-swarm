@@ -24,7 +24,7 @@ module.exports = function connection (swtch) {
       swtch.handle(muxer.multicodec, (protocol, conn) => {
         const muxedConn = muxer.listener(conn)
 
-        muxedConn.on('stream', swtch.protocolMuxer(protocol))
+        muxedConn.on('stream', swtch.protocolMuxer(null))
 
         // If identify is enabled
         //   1. overload getPeerInfo
@@ -122,7 +122,7 @@ module.exports = function connection (swtch) {
       swtch.handle(tag, (protocol, conn) => {
         const myId = swtch._peerInfo.id
         const secure = encrypt(myId, conn, undefined, () => {
-          swtch.protocolMuxer(tag)(secure)
+          swtch.protocolMuxer(null)(secure)
         })
       })
 

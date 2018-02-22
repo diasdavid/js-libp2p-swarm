@@ -72,14 +72,14 @@ class Switch extends EE {
         })
     }
 
-    const observer = Observer(this)
-    this.stats = Stats(observer, this._options.stats)
-    this.protocolMuxer = ProtocolMuxer(this.protocols, observer)
+    this.observer = Observer(this)
+    this.stats = Stats(this.observer, this._options.stats)
+    this.protocolMuxer = ProtocolMuxer(this.protocols, this.observer)
 
     this.handle(this.crypto.tag, (protocol, conn) => {
       const peerId = this._peerInfo.id
       const wrapped = this.crypto.encrypt(peerId, conn, undefined, () => {})
-      return this.protocolMuxer(this.crypto.tag)(wrapped)
+      return this.protocolMuxer(null)(wrapped)
     })
 
     // higher level (public) API

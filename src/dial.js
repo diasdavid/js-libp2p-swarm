@@ -3,11 +3,13 @@
 const multistream = require('multistream-select')
 const Connection = require('interface-connection').Connection
 const setImmediate = require('async/setImmediate')
-const getPeerInfo = require('./get-peer-info')
 const Circuit = require('libp2p-circuit')
 
 const debug = require('debug')
 const log = debug('libp2p:switch:dial')
+
+const getPeerInfo = require('./get-peer-info')
+const observeConnection = require('./observe-connection')
 
 function dial (swtch) {
   return (peer, protocol, callback) => {
@@ -108,11 +110,13 @@ function dial (swtch) {
         }
 
         log(`dialing transport ${transport}`)
-        swtch.transport.dial(transport, pi, (err, conn) => {
+        swtch.transport.dial(transport, pi, (err, _conn) => {
           if (err) {
             log(err)
             return nextTransport(tKeys.shift())
           }
+
+          const conn = observeConnection(transport, null, _conn, swtch.observer)
 
           cryptoDial()
 
@@ -125,13 +129,16 @@ function dial (swtch) {
 
               const myId = swtch._peerInfo.id
               log('selecting crypto: %s', swtch.crypto.tag)
-              ms.select(swtch.crypto.tag, (err, conn) => {
+              ms.select(swtch.crypto.tag, (err, _conn) => {
                 if (err) { return cb(err) }
+
+                const conn = observeConnection(null, swtch.crypto.tag, _conn, swtch.observer)
 
                 const wrapped = swtch.crypto.encrypt(myId, conn, pi.id, (err) => {
                   if (err) {
                     return cb(err)
                   }
+
                   wrapped.setPeerInfo(pi)
                   cb(null, wrapped)
                 })
@@ -190,7 +197,7 @@ function dial (swtch) {
           // For incoming streams, in case identify is on
           muxedConn.on('stream', (conn) => {
             conn.setPeerInfo(pi)
-            swtch.protocolMuxer(key)(conn)
+            swtch.protocolMuxer(null)(conn)
           })
 
           setImmediate(() => swtch.emit('peer-mux-established', pi))
