@@ -88,7 +88,7 @@ describe(`circuit`, function () {
 
     swarmA.dial(swarmC._peerInfo, (err, conn) => {
       expect(err).to.exist()
-      expect(err).to.match(/Circuit already tried!/)
+      expect(err).to.match(/No available transports to dial peer/)
       expect(conn).to.not.exist()
       expect(dialSpyA.callCount).to.be.eql(1)
       done()
