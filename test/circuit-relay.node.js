@@ -54,6 +54,15 @@ describe(`circuit`, function () {
     ], done)
   })
 
+  it('circuit not enabled and all transports failed', (done) => {
+    swarmA.dial(swarmC._peerInfo, (err, conn) => {
+      expect(err).to.exist()
+      expect(err).to.match(/Circuit not enabled and all transports failed to dial peer/)
+      expect(conn).to.not.exist()
+      done()
+    })
+  })
+
   it('.enableCircuitRelay', () => {
     swarmA.connection.enableCircuitRelay({ enabled: true })
     expect(Object.keys(swarmA.transports).length).to.equal(3)
