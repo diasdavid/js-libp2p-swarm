@@ -77,7 +77,10 @@ function dial (swtch) {
         // 3. update the peerInfo that is already stored in the conn
       }
 
-      openConnInMuxedConn(muxer, (conn) => {
+      openConnInMuxedConn(muxer, (err, conn) => {
+        if (err) {
+          return callback(err)
+        }
         protocolHandshake(conn, protocol, callback)
       })
     }
@@ -210,7 +213,7 @@ function dial (swtch) {
     }
 
     function openConnInMuxedConn (muxer, cb) {
-      cb(muxer.newStream())
+      return muxer.newStream(cb)
     }
 
     function protocolHandshake (conn, protocol, cb) {
