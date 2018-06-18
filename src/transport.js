@@ -4,6 +4,7 @@ const parallel = require('async/parallel')
 const once = require('once')
 const debug = require('debug')
 const log = debug('libp2p:switch:transport')
+const ERRORS = require('./errors')
 
 const LimitDialer = require('./limit-dialer')
 
@@ -128,6 +129,15 @@ class TransportManager {
 
     parallel(createListeners, (err) => {
       if (err) {
+        // Error connecting to WebSocket
+        if (err.description && err.description.code === 'ENOTFOUND') {
+          const hostname = err.description.hostname
+
+          err = Object.assign(new Error(`WebSocket connection failed on ${hostname}`), {
+            code: ERRORS.ERR_SWITCH_WEBSOCKET_CONNECTION
+          })
+        }
+
         return callback(err)
       }
 
