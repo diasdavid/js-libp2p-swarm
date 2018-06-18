@@ -12,6 +12,8 @@ const plaintext = require('./plaintext')
 const Observer = require('./observer')
 const Stats = require('./stats')
 const assert = require('assert')
+const debug = require('debug')
+const log = debug('libp2p:switch')
 
 class Switch extends EE {
   constructor (peerInfo, peerBook, options) {
@@ -97,6 +99,7 @@ class Switch extends EE {
     each(this.availableTransports(this._peerInfo), (ts, cb) => {
       // Listen on the given transport
       this.transport.listen(ts, {}, null, cb)
+      log('transport:', ts)
     }, callback)
   }
 
