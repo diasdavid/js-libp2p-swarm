@@ -132,13 +132,8 @@ class TransportManager {
 
     parallel(createListeners, (err) => {
       if (err) {
-        const index = swarm._peerInfo.multiaddrs.toArray().indexOf(multiaddrs[0])
-
-        return callback({
-          err: err,
-          index: index,
-          address: multiaddrs[0]
-        })
+        const index = this.switch._peerInfo.multiaddrs.toArray().indexOf(multiaddrs[0])
+        return callback({ err: err, index: index, address: multiaddrs[0] })
       }
 
       // cause we can listen on port 0 or 0.0.0.0
