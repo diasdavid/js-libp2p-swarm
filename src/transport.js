@@ -111,11 +111,8 @@ class TransportManager {
 
         listener.listen(ma, (err) => {
           if (err) {
-            return done({
-              err: err,
-              address: ma,
-              index: i
-            })
+            err.badswarm = { index: i, address: ma }
+            return done(err)
           }
           listener.removeListener('error', done)
           listener.getAddrs((err, addrs) => {
@@ -132,8 +129,12 @@ class TransportManager {
 
     parallel(createListeners, (err) => {
       if (err) {
-        const index = this.switch._peerInfo.multiaddrs.toArray().indexOf(multiaddrs[0])
-        return callback({ err: err, index: index, address: multiaddrs[0] })
+        err.badswarm = {
+          index: this.switch._peerInfo.multiaddrs.toArray().indexOf(multiaddrs[0]),
+          address: multiaddrs[0]
+        }
+
+        return callback(err)
       }
 
       // cause we can listen on port 0 or 0.0.0.0
