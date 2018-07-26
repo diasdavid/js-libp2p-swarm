@@ -48,7 +48,7 @@ class DialQueue {
         log('work:cancel')
         // clean up already done dials
         pull(pull.empty(), conn)
-        // TODO: proper cleanup once the connection interface supports it
+        // This is TODO: proper cleanup once the connection interface supports it
         // return conn.close(() => callback(new Error('Manual cancel'))
         return callback(null, {cancel: true})
       }

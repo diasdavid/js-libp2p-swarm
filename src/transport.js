@@ -11,7 +11,7 @@ const LimitDialer = require('./limit-dialer')
 const defaultPerPeerRateLimit = 8
 
 // the amount of time a single dial has to succeed
-// TODO this should be exposed as a option
+// This is TODO this should be exposed as a option
 const dialTimeout = 30 * 1000
 
 /**

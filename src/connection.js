@@ -79,7 +79,7 @@ class ConnectionManager {
             // with incomming conn and through identify, going to pick one
             // of the available multiaddrs from the other peer as the one
             // I'm connected to as we really can't be sure at the moment
-            // TODO add this consideration to the connection abstraction!
+            // This is TODO: add this consideration to the connection abstraction!
             peerInfo.connect(peerInfo.multiaddrs.toArray()[0])
           } else {
             // for the case of websockets in the browser, where peers have

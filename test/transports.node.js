@@ -187,7 +187,7 @@ describe('transports', () => {
     })
 
     it('handles EADDRINUSE error when trying to listen', (done) => {
-      // TODO: fix libp2p-websockets to not throw Uncaught Error in this test
+      // This is TODO: fix libp2p-websockets to not throw Uncaught Error in this test
       if (t.n === 'WS') { return done() }
 
       const switch1 = new Switch(switchA._peerInfo, new PeerBook())

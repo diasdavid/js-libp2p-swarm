@@ -13,6 +13,9 @@ const Observer = require('./observer')
 const Stats = require('./stats')
 const assert = require('assert')
 
+const debug = require('debug')
+const log = debug('libp2p:switch:index')
+
 class Switch extends EE {
   constructor (peerInfo, peerBook, options) {
     super()
@@ -99,12 +102,12 @@ class Switch extends EE {
       this.transport.listen(ts, {}, null, cb)
     }, (err) => {
       if (err !== null &&
-        typeof err !=='undefined' &&
+        typeof err !== 'undefined' &&
         typeof err.badswarm.index !== 'undefined') {
         // Get swarm list
         const swarmArray = this._peerInfo.multiaddrs._multiaddrs
         // Output error in console
-        console.log(`Error connect to ${err.badswarm.address}, error type is ${err.message}, check other swarm`);
+        log(`Error connect to ${err.badswarm.address}, error type is ${err.message}, check other swarm`)
         // Delete not working swarm
         if (swarmArray.length > 0) {
           swarmArray.splice(err.badswarm.index, 1)
