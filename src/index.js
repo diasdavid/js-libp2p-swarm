@@ -100,7 +100,27 @@ class Switch extends EE {
     each(this.availableTransports(this._peerInfo), (ts, cb) => {
       // Listen on the given transport
       this.transport.listen(ts, {}, null, cb)
-    }, callback)
+    }, (err) => {
+      if (err !== null &&
+        typeof err !=='undefined' &&
+        typeof err.badswarm.index !== 'undefined') {
+        // Get swarm list
+        const swarmArray = this._peerInfo.multiaddrs._multiaddrs
+        // Output error in console
+        console.log(`Error connect to ${err.badswarm.address}, error type is ${err.message}, check other swarm`);
+        // Delete not working swarm
+        if (swarmArray.length > 0) {
+          swarmArray.splice(err.badswarm.index, 1)
+        } else {
+          throw new Error(`All swarm it's down`)
+        }
+
+        // Restart
+        return this.start(callback)
+      } else {
+        callback()
+      }
+    })
   }
 
   /**

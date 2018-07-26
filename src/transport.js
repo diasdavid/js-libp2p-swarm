@@ -116,7 +116,7 @@ class TransportManager {
 
     let freshMultiaddrs = []
 
-    const createListeners = multiaddrs.map((ma) => {
+    const createListeners = multiaddrs.map((ma, i) => {
       return (cb) => {
         const done = once(cb)
         const listener = transport.createListener(handler)
@@ -124,6 +124,7 @@ class TransportManager {
 
         listener.listen(ma, (err) => {
           if (err) {
+            err.badswarm = { index: i, address: ma }
             return done(err)
           }
           listener.removeListener('error', done)
@@ -141,6 +142,11 @@ class TransportManager {
 
     parallel(createListeners, (err) => {
       if (err) {
+        err.badswarm = {
+          index: this.switch._peerInfo.multiaddrs.toArray().indexOf(multiaddrs[0]),
+          address: multiaddrs[0]
+        }
+
         return callback(err)
       }
 
