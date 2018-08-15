@@ -14,6 +14,7 @@ const TCP = require('libp2p-tcp')
 const WS = require('libp2p-websockets')
 const multiplex = require('libp2p-mplex')
 const PeerBook = require('peer-book')
+const getPorts = require('portfinder').getPorts
 
 const utils = require('./utils')
 const createInfos = utils.createInfos
@@ -160,100 +161,114 @@ describe(`circuit`, function () {
     before((done) => createInfos(5, (err, infos) => {
       expect(err).to.not.exist()
 
-      bootstrapPeer = infos[0]
-      tcpPeer1 = infos[1]
-      tcpPeer2 = infos[2]
-      wsPeer1 = infos[3]
-      wsPeer2 = infos[4]
+      getPorts(6, (err, ports) => {
+        expect(err).to.not.exist()
 
-      // Setup the addresses of our nodes
-      bootstrapPeer.multiaddrs.add('/ip4/127.0.0.1/tcp/9100')
-      bootstrapPeer.multiaddrs.add('/ip4/127.0.0.1/tcp/9101/ws')
-      tcpPeer1.multiaddrs.add('/ip4/127.0.0.1/tcp/9102')
-      tcpPeer2.multiaddrs.add('/ip4/127.0.0.1/tcp/9103')
-      wsPeer1.multiaddrs.add('/ip4/127.0.0.1/tcp/9104/ws')
-      wsPeer2.multiaddrs.add('/ip4/127.0.0.1/tcp/9105/ws')
+        bootstrapPeer = infos[0]
+        tcpPeer1 = infos[1]
+        tcpPeer2 = infos[2]
+        wsPeer1 = infos[3]
+        wsPeer2 = infos[4]
 
-      // Setup the bootstrap node with the minimum needed for being a relay
-      bootstrapSwitch = new Swarm(bootstrapPeer, new PeerBook())
-      bootstrapSwitch.connection.addStreamMuxer(multiplex)
-      bootstrapSwitch.connection.reuse()
-      bootstrapSwitch.connection.enableCircuitRelay({
-        enabled: true,
-        // The relay needs to allow hopping
-        hop: {
-          enabled: true
-        }
-      })
+        // Setup the addresses of our nodes
+        bootstrapPeer.multiaddrs.add(`/ip4/0.0.0.0/tcp/${ports.shift()}`)
+        bootstrapPeer.multiaddrs.add(`/ip4/0.0.0.0/tcp/${ports.shift()}/ws`)
+        tcpPeer1.multiaddrs.add(`/ip4/0.0.0.0/tcp/${ports.shift()}`)
+        tcpPeer2.multiaddrs.add(`/ip4/0.0.0.0/tcp/${ports.shift()}`)
+        wsPeer1.multiaddrs.add(`/ip4/0.0.0.0/tcp/${ports.shift()}/ws`)
+        wsPeer2.multiaddrs.add(`/ip4/0.0.0.0/tcp/${ports.shift()}/ws`)
 
-      // Setup the tcp1 node with the minimum needed for dialing via a relay
-      tcpSwitch1 = new Swarm(tcpPeer1, new PeerBook())
-      tcpSwitch1.connection.addStreamMuxer(multiplex)
-      tcpSwitch1.connection.reuse()
-      tcpSwitch1.connection.enableCircuitRelay({
-        enabled: true
-      })
-
-      // Setup tcp2 node to not be able to dial/listen over relay
-      tcpSwitch2 = new Swarm(tcpPeer2, new PeerBook())
-      tcpSwitch2.connection.reuse()
-      tcpSwitch2.connection.addStreamMuxer(multiplex)
-
-      // Setup the ws1 node with the minimum needed for dialing via a relay
-      wsSwitch1 = new Swarm(wsPeer1, new PeerBook())
-      wsSwitch1.connection.addStreamMuxer(multiplex)
-      wsSwitch1.connection.reuse()
-      wsSwitch1.connection.enableCircuitRelay({
-        enabled: true
-      })
-
-      // Setup the ws2 node with the minimum needed for dialing via a relay
-      wsSwitch2 = new Swarm(wsPeer2, new PeerBook())
-      wsSwitch2.connection.addStreamMuxer(multiplex)
-      wsSwitch2.connection.reuse()
-      wsSwitch2.connection.enableCircuitRelay({
-        enabled: true
-      })
-
-      bootstrapSwitch.transport.add('tcp', new TCP())
-      bootstrapSwitch.transport.add('ws', new WS())
-      tcpSwitch1.transport.add('tcp', new TCP())
-      tcpSwitch2.transport.add('tcp', new TCP())
-      wsSwitch1.transport.add('ws', new WS())
-      wsSwitch2.transport.add('ws', new WS())
-
-      series([
-        // start the nodes
-        (cb) => {
-          parallel([
-            (cb) => bootstrapSwitch.start(cb),
-            (cb) => tcpSwitch1.start(cb),
-            (cb) => tcpSwitch2.start(cb),
-            (cb) => wsSwitch1.start(cb),
-            (cb) => wsSwitch2.start(cb)
-          ], cb)
-        },
-        // dial to the bootstrap node
-        (cb) => {
-          parallel([
-            (cb) => tcpSwitch1.dial(bootstrapPeer, cb),
-            (cb) => tcpSwitch2.dial(bootstrapPeer, cb),
-            (cb) => wsSwitch1.dial(bootstrapPeer, cb),
-            (cb) => wsSwitch2.dial(bootstrapPeer, cb)
-          ], cb)
-        }
-      ], (err) => {
-        if (err) return done(err)
-
-        done = once(done)
-        // Wait for everyone to connect, before we try relaying
-        bootstrapSwitch.on('peer-mux-established', () => {
-          if (bootstrapSwitch._peerBook.getAllArray().length === 4) {
-            done()
+        // Setup the bootstrap node with the minimum needed for being a relay
+        bootstrapSwitch = new Swarm(bootstrapPeer, new PeerBook())
+        bootstrapSwitch.connection.addStreamMuxer(multiplex)
+        bootstrapSwitch.connection.reuse()
+        bootstrapSwitch.connection.enableCircuitRelay({
+          enabled: true,
+          // The relay needs to allow hopping
+          hop: {
+            enabled: true
           }
+        })
+
+        // Setup the tcp1 node with the minimum needed for dialing via a relay
+        tcpSwitch1 = new Swarm(tcpPeer1, new PeerBook())
+        tcpSwitch1.connection.addStreamMuxer(multiplex)
+        tcpSwitch1.connection.reuse()
+        tcpSwitch1.connection.enableCircuitRelay({
+          enabled: true
+        })
+
+        // Setup tcp2 node to not be able to dial/listen over relay
+        tcpSwitch2 = new Swarm(tcpPeer2, new PeerBook())
+        tcpSwitch2.connection.reuse()
+        tcpSwitch2.connection.addStreamMuxer(multiplex)
+
+        // Setup the ws1 node with the minimum needed for dialing via a relay
+        wsSwitch1 = new Swarm(wsPeer1, new PeerBook())
+        wsSwitch1.connection.addStreamMuxer(multiplex)
+        wsSwitch1.connection.reuse()
+        wsSwitch1.connection.enableCircuitRelay({
+          enabled: true
+        })
+
+        // Setup the ws2 node with the minimum needed for dialing via a relay
+        wsSwitch2 = new Swarm(wsPeer2, new PeerBook())
+        wsSwitch2.connection.addStreamMuxer(multiplex)
+        wsSwitch2.connection.reuse()
+        wsSwitch2.connection.enableCircuitRelay({
+          enabled: true
+        })
+
+        bootstrapSwitch.transport.add('tcp', new TCP())
+        bootstrapSwitch.transport.add('ws', new WS())
+        tcpSwitch1.transport.add('tcp', new TCP())
+        tcpSwitch2.transport.add('tcp', new TCP())
+        wsSwitch1.transport.add('ws', new WS())
+        wsSwitch2.transport.add('ws', new WS())
+
+        series([
+          // start the nodes
+          (cb) => {
+            parallel([
+              (cb) => bootstrapSwitch.start(cb),
+              (cb) => tcpSwitch1.start(cb),
+              (cb) => tcpSwitch2.start(cb),
+              (cb) => wsSwitch1.start(cb),
+              (cb) => wsSwitch2.start(cb)
+            ], cb)
+          },
+          // dial to the bootstrap node
+          (cb) => {
+            parallel([
+              (cb) => tcpSwitch1.dial(bootstrapPeer, cb),
+              (cb) => tcpSwitch2.dial(bootstrapPeer, cb),
+              (cb) => wsSwitch1.dial(bootstrapPeer, cb),
+              (cb) => wsSwitch2.dial(bootstrapPeer, cb)
+            ], cb)
+          }
+        ], (err) => {
+          if (err) return done(err)
+
+          done = once(done)
+          // Wait for everyone to connect, before we try relaying
+          bootstrapSwitch.on('peer-mux-established', () => {
+            if (bootstrapSwitch._peerBook.getAllArray().length === 4) {
+              done()
+            }
+          })
         })
       })
     }))
+
+    after((done) => {
+      parallel([
+        (cb) => bootstrapSwitch.stop(cb),
+        (cb) => tcpSwitch1.stop(cb),
+        (cb) => tcpSwitch2.stop(cb),
+        (cb) => wsSwitch1.stop(cb),
+        (cb) => wsSwitch2.stop(cb)
+      ], done)
+    })
 
     it('should be able to dial tcp -> tcp', (done) => {
       tcpSwitch2.once('peer-mux-established', (peerInfo) => {

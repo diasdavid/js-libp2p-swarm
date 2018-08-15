@@ -48,6 +48,7 @@
     "libp2p-webrtc-star": "~0.14.0",
     "libp2p-websockets": "~0.12.0",
     "peer-book": "~0.7.0",
+    "portfinder": "^1.0.16",
     "sinon": "^5.0.2",
     "webrtcsupport": "^2.2.0"
   },
