@@ -55,6 +55,7 @@
     "async": "^2.6.1",
     "big.js": "^5.1.2",
     "debug": "^3.1.0",
+    "fsm-event": "^2.1.0",
     "hashlru": "^2.2.1",
     "interface-connection": "~0.3.2",
     "ip-address": "^5.8.9",

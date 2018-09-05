@@ -461,7 +461,7 @@ class Dialer {
 
 /**
  * Returns a Dialer generator that when called, will immediately begin dialing
- * fo the given `peer`.
+ * to the given `peer`.
  *
  * @param {Switch} _switch
  * @returns {function(PeerInfo, string, function(Error, Connection))}

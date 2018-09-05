@@ -1,6 +1,7 @@
-'use strict'
+'use strict';
 
-const EE = require('events').EventEmitter
+const FSM = require('fsm-event')
+const EventEmitter = require('events').EventEmitter
 const each = require('async/each')
 const series = require('async/series')
 const TransportManager = require('./transport')
@@ -13,8 +14,10 @@ const Observer = require('./observer')
 const Stats = require('./stats')
 const assert = require('assert')
 const Errors = require('./errors')
+const debug = require('debug')
+const log = debug('libp2p:switch')
 
-class Switch extends EE {
+class Switch extends EventEmitter {
   constructor (peerInfo, peerBook, options) {
     super()
     assert(peerInfo, 'You must provide a `peerInfo`')
@@ -70,6 +73,40 @@ class Switch extends EE {
 
     // higher level (public) API
     this.dial = dial(this)
+
+    // Setup the internal state
+    this.state = new FSM('STOPPED', {
+      STOPPED: {
+        start: 'STARTING',
+        stop: 'STOPPING' // ensures that any transports that were manually started are stopped
+      },
+      STARTING: {
+        done: 'STARTED',
+        stop: 'STOPPING'
+      },
+      STARTED: {
+        stop: 'STOPPING',
+        start: 'STARTED'
+      },
+      STOPPING: { done: 'STOPPED' }
+    })
+    this.state.on('STARTING', () => {
+      log('The switch is starting')
+      this._onStarting()
+    })
+    this.state.on('STOPPING', () => {
+      log('The switch is stopping')
+      this._onStopping()
+    })
+    this.state.on('STARTED', () => {
+      log('The switch has started')
+      this.emit('started')
+    })
+    this.state.on('STOPPED', () => {
+      log('The switch has stopped')
+      this.emit('stopped')
+    })
+    this.state.on('error', (err) => this.emit('error', err))
   }
 
   /**
@@ -88,52 +125,6 @@ class Switch extends EE {
       .sort((a) => {
         return a === 'Circuit' ? 1 : 0
       })
-  }
-
-  /**
-   * Starts the Switch listening on all available Transports
-   *
-   * @param {function(Error)} callback
-   * @returns {void}
-   */
-  start (callback) {
-    each(this.availableTransports(this._peerInfo), (ts, cb) => {
-      // Listen on the given transport
-      this.transport.listen(ts, {}, null, cb)
-    }, callback)
-  }
-
-  /**
-   * Stops all services and connections for the Switch
-   *
-   * @param {function(Error)} callback
-   * @returns {void}
-   */
-  stop (callback) {
-    this.stats.stop()
-    series([
-      (cb) => each(this.muxedConns, (conn, cb) => {
-        // If the connection was destroyed while we are hanging up, continue
-        if (!conn) {
-          return cb()
-        }
-
-        conn.muxer.end((err) => {
-          // If OK things are fine, and someone just shut down
-          if (err && err.message !== 'Fatal error: OK') {
-            return cb(err)
-          }
-          cb()
-        })
-      }, cb),
-      (cb) => {
-        each(this.transports, (transport, cb) => {
-          each(transport.listeners, (listener, cb) => {
-            listener.close(cb)
-          }, cb)
-        }, cb)
-      }
-    ], callback)
   }
 
   /**
@@ -196,6 +187,92 @@ class Switch extends EE {
   hasTransports () {
     const transports = Object.keys(this.transports).filter((t) => t !== 'Circuit')
     return transports && transports.length > 0
+  }
+
+  /**
+   * Issues a start on the Switch state.
+   *
+   * @param {function} callback deprecated: Listening for the `error` and `start` events are recommended
+   * @fires Switch#started
+   * @returns {void}
+   */
+  start (callback = () => {}) {
+    // Add once listener for deprecated callback support
+    this.once('started', callback)
+
+    this.state('start')
+  }
+
+  /**
+   * Issues a stop on the Switch state.
+   *
+   * @param {function} callback deprecated: Listening for the `error` and `stop` events are recommended
+   * @fires Switch#stop
+   * @returns {void}
+   */
+  stop (callback = () => {}) {
+    // Add once listener for deprecated callback support
+    this.once('stopped', callback)
+
+    this.state('stop')
+  }
+
+  /**
+   * A listener that will start any necessary services and listeners
+   *
+   * @fires Switch#error
+   * @returns {void}
+   */
+  _onStarting () {
+    each(this.availableTransports(this._peerInfo), (ts, cb) => {
+      // Listen on the given transport
+      this.transport.listen(ts, {}, null, cb)
+    }, (err) => {
+      if (err) {
+        return this.emit('error', err)
+      }
+      this.state('done')
+    })
+  }
+
+  /**
+   * A listener that will turn off all running services and listeners
+   *
+   * @fires Switch#error
+   * @returns {void}
+   */
+  _onStopping () {
+    this.stats.stop()
+    series([
+      (cb) => each(this.muxedConns, (conn, cb) => {
+        // If the connection was destroyed while we are hanging up, continue
+        if (!conn) {
+          return cb()
+        }
+
+        conn.muxer.end((err) => {
+          // If OK things are fine, and someone just shut down
+          if (err && err.message !== 'Fatal error: OK') {
+            return cb(err)
+          }
+          cb()
+        })
+      }, cb),
+      (cb) => {
+        each(this.transports, (transport, cb) => {
+          each(transport.listeners, (listener, cb) => {
+            listener.close(cb)
+          }, cb)
+        }, cb)
+      }
+    ], (err) => {
+      if (err) {
+        console.log('Error', err)
+        this.emit('error', err)
+      }
+
+      this.state('done')
+    })
   }
 }
 
