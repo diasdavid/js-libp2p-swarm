@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 const FSM = require('fsm-event')
 const EventEmitter = require('events').EventEmitter
@@ -17,6 +17,11 @@ const Errors = require('./errors')
 const debug = require('debug')
 const log = debug('libp2p:switch')
 
+/**
+ * @fires Switch#stopped  Triggered when the switch has stopped
+ * @fires Switch#started  Triggered when the switch has started
+ * @fires Switch#error    Triggered whenever an error occurs
+ */
 class Switch extends EventEmitter {
   constructor (peerInfo, peerBook, options) {
     super()
