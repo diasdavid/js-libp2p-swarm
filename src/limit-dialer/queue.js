@@ -6,7 +6,7 @@ const timeout = require('async/timeout')
 const queue = require('async/queue')
 const debug = require('debug')
 
-const log = debug('libp2p:swarm:dialer:queue')
+const log = debug('libp2p:switch:dialer:queue')
 
 /**
  * Queue up the amount of dials to a given peer.
@@ -37,15 +37,15 @@ class DialQueue {
    * @private
    */
   _doWork (transport, addr, token, callback) {
-    log('work')
+    log(`${transport.constructor.name}:work:start`)
     this._dialWithTimeout(transport, addr, (err, conn) => {
       if (err) {
-        log('work:error')
+        log(`${transport.constructor.name}:work:error`, err)
         return callback(null, {error: err})
       }
 
       if (token.cancel) {
-        log('work:cancel')
+        log(`${transport.constructor.name}:work:cancel`)
         // clean up already done dials
         pull(pull.empty(), conn)
         // TODO: proper cleanup once the connection interface supports it
@@ -56,7 +56,7 @@ class DialQueue {
       // one is enough
       token.cancel = true
 
-      log('work:success')
+      log(`${transport.constructor.name}:work:success`)
 
       const proxyConn = new Connection()
       proxyConn.setInnerConn(conn)

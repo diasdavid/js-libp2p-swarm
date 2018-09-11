@@ -44,6 +44,27 @@ class TransportManager {
   }
 
   /**
+   * Closes connections for the given transport key
+   * and removes it from the switch.
+   *
+   * @param {String} key
+   * @param {function(Error)} callback
+   * @returns {void}
+   */
+  remove (key, callback) {
+    callback = callback || function() {}
+
+    if (!this.switch.transports[key]) {
+      return callback()
+    }
+
+    this.close(key, (err) => {
+      delete this.switch.transports[key]
+      callback(err)
+    })
+  }
+
+  /**
    * For a given transport `key`, dial to all that transport multiaddrs
    *
    * @param {String} key Key of the `Transport` to dial

@@ -4,7 +4,7 @@ const identify = require('libp2p-identify')
 const multistream = require('multistream-select')
 const waterfall = require('async/waterfall')
 const debug = require('debug')
-const log = debug('libp2p:switch:connection')
+const log = debug('libp2p:switch:conn-manager')
 const once = require('once')
 const setImmediate = require('async/setImmediate')
 

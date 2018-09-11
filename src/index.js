@@ -163,7 +163,7 @@ class Switch extends EventEmitter {
 
   /**
    * If a muxed Connection exists for the given peer, it will be closed
-   * and its reference on the Switch will be removed.
+   * and its reference on the Switch and will be removed.
    *
    * @param {PeerInfo|Multiaddr|PeerId} peer
    * @param {function()} callback
@@ -225,6 +225,7 @@ class Switch extends EventEmitter {
   /**
    * A listener that will start any necessary services and listeners
    *
+   * @private
    * @fires Switch#error
    * @returns {void}
    */
@@ -243,6 +244,7 @@ class Switch extends EventEmitter {
   /**
    * A listener that will turn off all running services and listeners
    *
+   * @private
    * @fires Switch#error
    * @returns {void}
    */
@@ -270,12 +272,7 @@ class Switch extends EventEmitter {
           }, cb)
         }, cb)
       }
-    ], (err) => {
-      if (err) {
-        console.log('Error', err)
-        this.emit('error', err)
-      }
-
+    ], (_) => {
       this.state('done')
     })
   }
