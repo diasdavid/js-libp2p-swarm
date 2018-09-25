@@ -19,7 +19,6 @@ const getPorts = require('portfinder').getPorts
 const utils = require('./utils')
 const createInfos = utils.createInfos
 const Swarm = require('../src')
-const debug = require('debug')
 
 describe(`circuit`, function () {
   let swarmA // TCP and WS

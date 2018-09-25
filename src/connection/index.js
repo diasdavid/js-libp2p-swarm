@@ -31,7 +31,7 @@ class ConnectionFSM extends BaseConnection {
    * @param {*} connection
    * @returns {boolean}
    */
-  static isConnection(connection) {
+  static isConnection (connection) {
     return connection instanceof ConnectionFSM
   }
 
@@ -48,7 +48,7 @@ class ConnectionFSM extends BaseConnection {
     this.theirPeerInfo = peerInfo
     this.theirB58Id = this.theirPeerInfo.id.toB58String()
 
-    this.conn = null  // The base connection
+    this.conn = null // The base connection
     this.muxer = muxer // The upgraded/muxed connection
 
     // TODO: If given a muxer, we need to set the state
@@ -142,7 +142,7 @@ class ConnectionFSM extends BaseConnection {
     return this._state._state
   }
 
-    /**
+  /**
    * Puts the state into dialing mode
    *
    * @fires ConnectionFSM#Error May emit a DIAL_SELF error
@@ -251,7 +251,7 @@ class ConnectionFSM extends BaseConnection {
     nextTransport(tKeys.shift())
   }
 
-    /**
+  /**
    * Once a connection has been successfully dialed, the connection
    * will be privatized or encrypted depending on the presence of the
    * Switch.protector.
@@ -410,6 +410,7 @@ class ConnectionFSM extends BaseConnection {
    * needs to go.
    *
    * @param {Error} err
+   * @returns {void}
    */
   _didUpgrade (err) {
     if (err) {

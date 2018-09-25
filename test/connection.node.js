@@ -5,7 +5,6 @@ const chai = require('chai')
 const dirtyChai = require('dirty-chai')
 const expect = chai.expect
 chai.use(dirtyChai)
-const sinon = require('sinon')
 const PeerBook = require('peer-book')
 const WS = require('libp2p-websockets')
 const parallel = require('async/parallel')
@@ -21,9 +20,7 @@ generatePSK(psk)
 
 const ConnectionFSM = require('../src/connection')
 const Switch = require('../src')
-const Errors = require('../src/errors')
 const createInfos = require('./utils').createInfos
-const tryEcho = require('./utils').tryEcho
 
 describe('ConnectionFSM', () => {
   let listenerSwitch

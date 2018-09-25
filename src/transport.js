@@ -52,7 +52,7 @@ class TransportManager {
    * @returns {void}
    */
   remove (key, callback) {
-    callback = callback || function() {}
+    callback = callback || function () {}
 
     if (!this.switch.transports[key]) {
       return callback()

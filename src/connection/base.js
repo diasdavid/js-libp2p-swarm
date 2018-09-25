@@ -4,7 +4,7 @@ const EventEmitter = require('events').EventEmitter
 const debug = require('debug')
 
 class BaseConnection extends EventEmitter {
-  constructor({ _switch, logName }) {
+  constructor ({ _switch, logName }) {
     super()
 
     this.switch = _switch
@@ -39,7 +39,7 @@ class BaseConnection extends EventEmitter {
     this._state('upgrade')
   }
 
-   /**
+  /**
    * Wraps this.conn with the Switch.protector for private connections
    *
    * @private
