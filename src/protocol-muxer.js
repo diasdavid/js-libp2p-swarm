@@ -5,6 +5,7 @@ const observeConn = require('./observe-connection')
 
 const debug = require('debug')
 const log = debug('libp2p:switch:protocol-muxer')
+log.error = debug('libp2p:switch:protocol-muxer:error')
 
 module.exports = function protocolMuxer (protocols, observer) {
   return (transport) => (_parentConn) => {
@@ -35,8 +36,9 @@ module.exports = function protocolMuxer (protocols, observer) {
     })
 
     ms.handle(parentConn, (err) => {
+      // TODO: handle successful and failed connections for the FSM
       if (err) {
-        // the multistream handshake failed
+        log.error(`multistream handshake failed`, err)
       }
     })
   }

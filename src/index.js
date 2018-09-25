@@ -5,9 +5,10 @@ const EventEmitter = require('events').EventEmitter
 const each = require('async/each')
 const series = require('async/series')
 const TransportManager = require('./transport')
-const ConnectionManager = require('./connection-manager')
+const ConnectionManager = require('./connection/manager')
 const getPeerInfo = require('./get-peer-info')
-const dial = require('./dial')
+const dial = require('./dialer')
+const connectionHandler = require('./connection/handler')
 const ProtocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
 const Observer = require('./observer')
@@ -78,6 +79,9 @@ class Switch extends EventEmitter {
 
     // higher level (public) API
     this.dial = dial(this)
+
+    // All purpose connection handler for managing incoming connections
+    this._connectionHandler = connectionHandler(this)
 
     // Setup the internal state
     this.state = new FSM('STOPPED', {
@@ -257,13 +261,18 @@ class Switch extends EventEmitter {
           return cb()
         }
 
-        conn.muxer.end((err) => {
-          // If OK things are fine, and someone just shut down
-          if (err && err.message !== 'Fatal error: OK') {
-            return cb(err)
-          }
-          cb()
-        })
+        try {
+          conn.muxer.end((err) => {
+            // If OK things are fine, and someone just shut down
+            if (err && err.message !== 'Fatal error: OK') {
+              return cb(err)
+            }
+            cb()
+          })
+        } catch (err) {
+          console.log('Ka-blewy')
+          cb(err)
+        }
       }, cb),
       (cb) => {
         each(this.transports, (transport, cb) => {

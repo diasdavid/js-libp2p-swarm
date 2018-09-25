@@ -33,3 +33,10 @@ Encrypted Connection -> .upgrade -> upgraded connection *upgraded*
   or Encrypted Connection -> .upgrade <Error> ->
 Encrypted Connection -> .shake(protocol) -> Connected _cannot reuse_ *connection*
 Upgraded Connection -> .shake(protocol) -> new stream _upraded conn can be used_ *stream*
+
+
+## Incoming connections
+1. Transport.listener gives us a basic connection
+2. We privatize the connection, if needed
+3. We must handle encyption muxing first
+4. We then handle protocol muxing

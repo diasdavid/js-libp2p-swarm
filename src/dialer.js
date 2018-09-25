@@ -4,7 +4,6 @@ const Connection = require('interface-connection').Connection
 const ConnectionFSM = require('./connection')
 const getPeerInfo = require('./get-peer-info')
 const once = require('once')
-const setImmediate = require('async/setImmediate')
 
 const debug = require('debug')
 const log = debug('libp2p:switch:dial')
@@ -56,7 +55,6 @@ function dial (_switch) {
 
     let connection = _switch.muxedConns[b58Id] || _switch.conns[b58Id]
 
-    // TODO: make the listen logic of switch create an fsm
     if (!ConnectionFSM.isConnection(connection)) {
       connection = new ConnectionFSM({
         _switch,
@@ -65,22 +63,11 @@ function dial (_switch) {
       })
     }
 
-    // TODO: Add listeners to the connection to control its state
-
-    // TODO: Add logic here for handling previous connections
     const proxyConnection = new Connection()
     proxyConnection.setPeerInfo(peerInfo)
 
-    connection.once('error', (err) => {
-      // console.log('got an err', err)
-      callback(err)
-    })
-    connection.once('connected', () => {
-      if (_switch.protector) {
-        return connection.protect()
-      }
-      connection.encrypt()
-    })
+    connection.once('error', (err) => callback(err))
+    connection.once('connected', () => connection.protect())
     connection.once('private', () => connection.encrypt())
     connection.once('encrypted', () => connection.upgrade())
     connection.once('muxed', () => {

@@ -101,29 +101,13 @@ class TransportManager {
    * If a `handler` is not provided, the Switch's `protocolMuxer` will be used.
    *
    * @param {String} key
-   * @param {*} options
+   * @param {*} _options Currently ignored
    * @param {function(Connection)} handler
    * @param {function(Error)} callback
    * @returns {void}
    */
-  listen (key, options, handler, callback) {
-    let muxerHandler
-
-    // if no handler is passed, we pass conns to protocolMuxer
-    if (!handler) {
-      handler = this.switch.protocolMuxer(key)
-    }
-
-    // If we have a protector make the connection private
-    if (this.switch.protector) {
-      muxerHandler = handler
-      handler = (parentConnection) => {
-        const connection = this.switch.protector.protect(parentConnection, () => {
-          // If we get an error here, we should stop talking to this peer
-          muxerHandler(connection)
-        })
-      }
-    }
+  listen (key, _options, handler, callback) {
+    handler = this.switch._connectionHandler(key, handler)
 
     const transport = this.switch.transports[key]
     const multiaddrs = TransportManager.dialables(

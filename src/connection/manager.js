@@ -10,7 +10,7 @@ const setImmediate = require('async/setImmediate')
 
 const Circuit = require('libp2p-circuit')
 
-const plaintext = require('./plaintext')
+const plaintext = require('../plaintext')
 
 /**
  * Contains methods for binding handlers to the Switch
@@ -104,7 +104,7 @@ class ConnectionManager {
             }
             peerInfo = this.switch._peerBook.put(peerInfo)
 
-            muxedConn.on('close', () => {
+            muxedConn.once('close', () => {
               delete this.switch.muxedConns[b58Str]
               peerInfo.disconnect()
               peerInfo = this.switch._peerBook.put(peerInfo)
@@ -123,7 +123,7 @@ class ConnectionManager {
 
   /**
    * Adds the `encrypt` handler for the given `tag` and also sets the
-   * Switch's crypto to past `encrypt` function
+   * Switch's crypto to passed `encrypt` function
    *
    * @param {String} tag
    * @param {function(PeerID, Connection, PeerId, Callback)} encrypt

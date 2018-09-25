@@ -1,14 +1,13 @@
 'use strict'
 
 const FSM = require('fsm-event')
-const EventEmitter = require('events').EventEmitter
 const setImmediate = require('async/setImmediate')
 const Circuit = require('libp2p-circuit')
 const multistream = require('multistream-select')
+const BaseConnection = require('./base')
 
-const observeConnection = require('./observe-connection')
-const Errors = require('./errors')
-const debug = require('debug')
+const observeConnection = require('../observe-connection')
+const Errors = require('../errors')
 
 /**
  * @typedef {Object} ConnectionOptions
@@ -24,7 +23,7 @@ const debug = require('debug')
  * state machine also helps to improve the ability to handle dial backoff,
  * coalescing dials and dial locks.
  */
-class ConnectionFSM extends EventEmitter {
+class ConnectionFSM extends BaseConnection {
   /**
    * Determines if the given connection is an instance of ConnectionFSM
    *
@@ -41,13 +40,13 @@ class ConnectionFSM extends EventEmitter {
    * @constructor
    */
   constructor ({ _switch, peerInfo, muxer }) {
-    super()
+    super({
+      _switch,
+      logName: `libp2p:switch:connection:${_switch._peerInfo.id.toB58String().slice(0, 8)}`
+    })
 
-    this.switch = _switch
     this.theirPeerInfo = peerInfo
     this.theirB58Id = this.theirPeerInfo.id.toB58String()
-    this.ourPeerInfo = this.switch._peerInfo
-    this.log = debug(`libp2p:switch:connection:${this.ourPeerInfo.id.toB58String().slice(0, 8)}`)
 
     this.conn = null  // The base connection
     this.muxer = muxer // The upgraded/muxed connection
@@ -113,10 +112,7 @@ class ConnectionFSM extends EventEmitter {
     this._state.on('DIALING', () => this._onDialing())
     this._state.on('DIALED', () => this._onDialed())
     this._state.on('PRIVATIZING', () => this._onPrivatizing())
-    this._state.on('PRIVATIZED', () => {
-      this.log(`successfully privatized conn to ${this.theirB58Id}`)
-      this.emit('private', this.conn)
-    })
+    this._state.on('PRIVATIZED', () => this.emit('private', this.conn))
     this._state.on('ENCRYPTING', () => this._onEncrypting())
     this._state.on('ENCRYPTED', () => {
       this.log(`successfully encrypted connection to ${this.theirB58Id}`)
@@ -158,24 +154,6 @@ class ConnectionFSM extends EventEmitter {
     }
 
     this._state('dial')
-  }
-
-  /**
-   * Puts the state into encrypting mode
-   *
-   * @returns {void}
-   */
-  encrypt () {
-    this._state('encrypt')
-  }
-
-  /**
-   * Puts the state into privatizing mode
-   *
-   * @returns {void}
-   */
-  protect () {
-    this._state('privatize')
   }
 
   /**
@@ -323,25 +301,6 @@ class ConnectionFSM extends EventEmitter {
     delete this.conn
 
     this._state('done')
-  }
-
-  /**
-   * Wraps this.conn with the Switch.protector for private connections
-   *
-   * @private
-   * @fires ConnectionFSM#error
-   * @returns {void}
-   */
-  _onPrivatizing () {
-    this.conn = this.switch.protector.protect(this.conn, (err) => {
-      if (err) {
-        this.emit('error', err)
-        return this._state('disconnect')
-      }
-
-      this.conn.setPeerInfo(this.theirPeerInfo)
-      this._state('done')
-    })
   }
 
   /**
