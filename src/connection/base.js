@@ -2,6 +2,7 @@
 
 const EventEmitter = require('events').EventEmitter
 const debug = require('debug')
+const withIs = require('class-is')
 
 class BaseConnection extends EventEmitter {
   constructor ({ _switch, name }) {
@@ -64,4 +65,7 @@ class BaseConnection extends EventEmitter {
   }
 }
 
-module.exports = BaseConnection
+module.exports = withIs(BaseConnection, {
+  className: 'BaseConnection',
+  symbolName: 'libp2p-switch/BaseConnection',
+})

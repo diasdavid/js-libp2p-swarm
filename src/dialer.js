@@ -55,7 +55,7 @@ function dial (_switch) {
 
     let connection = _switch.muxedConns[b58Id] || _switch.conns[b58Id]
 
-    if (!ConnectionFSM.isConnection(connection)) {
+    if (!ConnectionFSM.isConnectionFSM(connection)) {
       connection = new ConnectionFSM({
         _switch,
         peerInfo,

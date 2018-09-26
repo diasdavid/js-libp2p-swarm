@@ -4,6 +4,7 @@ const FSM = require('fsm-event')
 const setImmediate = require('async/setImmediate')
 const Circuit = require('libp2p-circuit')
 const multistream = require('multistream-select')
+const withIs = require('class-is')
 const BaseConnection = require('./base')
 
 const observeConnection = require('../observe-connection')
@@ -24,17 +25,6 @@ const Errors = require('../errors')
  * coalescing dials and dial locks.
  */
 class ConnectionFSM extends BaseConnection {
-  /**
-   * Determines if the given connection is an instance of ConnectionFSM
-   *
-   * @static
-   * @param {*} connection
-   * @returns {boolean}
-   */
-  static isConnection (connection) {
-    return connection instanceof ConnectionFSM
-  }
-
   /**
    * @param {ConnectionOptions} param0
    * @constructor
@@ -467,4 +457,7 @@ class ConnectionFSM extends BaseConnection {
   }
 }
 
-module.exports = ConnectionFSM
+module.exports = withIs(ConnectionFSM, {
+  className: 'ConnectionFSM',
+  symbolName: 'libp2p-switch/ConnectionFSM',
+})
