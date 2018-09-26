@@ -261,7 +261,6 @@ describe(`circuit`, function () {
     }))
 
     after(function (done) {
-      this.timeout(10000)
       parallel([
         (cb) => bootstrapSwitch.stop(cb),
         (cb) => tcpSwitch1.stop(cb),
@@ -272,9 +271,9 @@ describe(`circuit`, function () {
     })
 
     it('should be able to dial tcp -> tcp', (done) => {
-      tcpSwitch2.on('peer-mux-established', function handle (peerInfo) {
+      tcpSwitch2.on('peer-mux-established', (peerInfo) => {
         if (peerInfo.id.toB58String() === tcpPeer1.id.toB58String()) {
-          tcpSwitch2.off('peer-mux-established', handle)
+          tcpSwitch2.removeAllListeners('peer-mux-established')
           done()
         }
       })
@@ -286,9 +285,9 @@ describe(`circuit`, function () {
     })
 
     it('should be able to dial tcp -> ws over relay', (done) => {
-      wsSwitch1.on('peer-mux-established', function handle (peerInfo) {
+      wsSwitch1.on('peer-mux-established', (peerInfo) => {
         if (peerInfo.id.toB58String() === tcpPeer1.id.toB58String()) {
-          wsSwitch1.off('peer-mux-established', handle)
+          wsSwitch1.removeAllListeners('peer-mux-established')
           done()
         }
       })
@@ -300,9 +299,9 @@ describe(`circuit`, function () {
     })
 
     it('should be able to dial ws -> ws', (done) => {
-      wsSwitch2.on('peer-mux-established', function handle (peerInfo) {
+      wsSwitch2.on('peer-mux-established', (peerInfo) => {
         if (peerInfo.id.toB58String() === wsPeer1.id.toB58String()) {
-          wsSwitch2.off('peer-mux-established', handle)
+          wsSwitch2.removeAllListeners('peer-mux-established')
           done()
         }
       })
@@ -314,9 +313,9 @@ describe(`circuit`, function () {
     })
 
     it('should be able to dial ws -> tcp over relay', (done) => {
-      tcpSwitch1.on('peer-mux-established', function handle (peerInfo) {
+      tcpSwitch1.on('peer-mux-established', (peerInfo) => {
         if (peerInfo.id.toB58String() === wsPeer2.id.toB58String()) {
-          tcpSwitch1.off('peer-mux-established', handle)
+          tcpSwitch1.removeAllListeners('peer-mux-established')
           expect(Object.keys(tcpSwitch1._peerBook.getAll())).to.include(wsPeer2.id.toB58String())
           done()
         }

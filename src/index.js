@@ -261,18 +261,13 @@ class Switch extends EventEmitter {
           return cb()
         }
 
-        try {
-          conn.muxer.end((err) => {
-            // If OK things are fine, and someone just shut down
-            if (err && err.message !== 'Fatal error: OK') {
-              return cb(err)
-            }
-            cb()
-          })
-        } catch (err) {
-          console.log('Ka-blewy')
-          cb(err)
-        }
+        conn.muxer.end((err) => {
+          // If OK things are fine, and someone just shut down
+          if (err && err.message !== 'Fatal error: OK') {
+            return cb(err)
+          }
+          cb()
+        })
       }, cb),
       (cb) => {
         each(this.transports, (transport, cb) => {
