@@ -260,7 +260,8 @@ describe(`circuit`, function () {
       })
     }))
 
-    after((done) => {
+    after(function (done) {
+      this.timeout(10000)
       parallel([
         (cb) => bootstrapSwitch.stop(cb),
         (cb) => tcpSwitch1.stop(cb),
