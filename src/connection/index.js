@@ -42,7 +42,7 @@ class ConnectionFSM extends BaseConnection {
   constructor ({ _switch, peerInfo, muxer }) {
     super({
       _switch,
-      logName: `libp2p:switch:connection:${_switch._peerInfo.id.toB58String().slice(0, 8)}`
+      name: `out:${_switch._peerInfo.id.toB58String().slice(0, 8)}`
     })
 
     this.theirPeerInfo = peerInfo

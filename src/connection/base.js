@@ -4,12 +4,12 @@ const EventEmitter = require('events').EventEmitter
 const debug = require('debug')
 
 class BaseConnection extends EventEmitter {
-  constructor ({ _switch, logName }) {
+  constructor ({ _switch, name }) {
     super()
 
     this.switch = _switch
     this.ourPeerInfo = this.switch._peerInfo
-    this.log = debug(logName)
+    this.log = debug(`libp2p:conn:${name}`)
   }
 
   /**

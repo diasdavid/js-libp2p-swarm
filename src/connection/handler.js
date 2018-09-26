@@ -11,13 +11,14 @@ class IncomingConnectionFSM extends BaseConnection {
   constructor ({ connection, _switch, transportKey }) {
     super({
       _switch,
-      logName: `libp2p:switch:inc_connection:${_switch._peerInfo.id.toB58String().slice(0, 8)}`
+      name: `inc:${_switch._peerInfo.id.toB58String().slice(0, 8)}`
     })
     this.conn = connection
     this.theirPeerInfo = null
     this.ourPeerInfo = this.switch._peerInfo
     this.transportKey = transportKey
     this.protocolMuxer = this.switch.protocolMuxer(this.transportKey)
+    this.msListener = new multistream.Listener()
 
     this._state = FSM('DIALED', {
       DISCONNECTED: { },
@@ -81,18 +82,10 @@ class IncomingConnectionFSM extends BaseConnection {
 
   // TODO: We need to handle N+1 crypto libraries
   _onEncrypting () {
-    // If the connection is for a specific transport, observe it
-    if (this.transportKey) {
-      this.conn = observeConn(this.transportKey, null, this.conn, this.switch.observer)
-    }
-
     this.log(`encrypting connection via ${this.switch.crypto.tag}`)
 
-    const ms = new multistream.Listener()
-
-    ms.addHandler(this.switch.crypto.tag, (protocol, _conn) => {
-      const conn = observeConn(null, protocol, _conn, this.switch.observer)
-      this.conn = this.switch.crypto.encrypt(this.ourPeerInfo.id, conn, undefined, (err) => {
+    this.msListener.addHandler(this.switch.crypto.tag, (protocol, _conn) => {
+      this.conn = this.switch.crypto.encrypt(this.ourPeerInfo.id, _conn, undefined, (err) => {
         if (err) {
           this.emit('error', err)
           return this._state('disconnect')
@@ -104,7 +97,8 @@ class IncomingConnectionFSM extends BaseConnection {
       })
     }, null)
 
-    ms.handle(this.conn, (err) => {
+    // Start handling the connection, this is only needed once
+    this.msListener.handle(this.conn, (err) => {
       if (err) {
         this.emit('crypto handshaking failed', err)
       }
@@ -118,7 +112,7 @@ class IncomingConnectionFSM extends BaseConnection {
 
   _onUpgrading () {
     this.log('adding the protocol muxer to the connection')
-    this.protocolMuxer(this.conn)
+    this.protocolMuxer(this.conn, this.msListener)
     this._state('done')
   }
 }
@@ -137,17 +131,21 @@ function listener (_switch) {
     /**
      * Takes a base connection and manages listening behavior
      *
-     * @param {Connection} connection The connection to manage
+     * @param {Connection} conn The connection to manage
      * @returns {void}
      */
-    return (connection) => {
+    return (conn) => {
+      // Add a transport level observer, if needed
+      const connection = transportKey ? observeConn(transportKey, null, conn, _switch.observer) : conn
+
       log('received incoming connection')
       const connFSM = new IncomingConnectionFSM({ connection, _switch, transportKey })
 
       connFSM.once('error', (err) => log(err))
-      connFSM.once('private', (conn) => {
+      connFSM.once('private', (_conn) => {
+        // Use the custom handler, if it was provided
         if (handler) {
-          return handler(conn)
+          return handler(_conn)
         }
         connFSM.encrypt()
       })
