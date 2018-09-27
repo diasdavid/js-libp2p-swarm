@@ -40,7 +40,6 @@ module.exports = function protocolMuxer (protocols, observer) {
     })
 
     ms.handle(parentConn, (err) => {
-      // TODO: handle successful and failed connections for the FSM
       if (err) {
         log.error(`multistream handshake failed`, err)
       }

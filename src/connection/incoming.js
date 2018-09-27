@@ -97,7 +97,7 @@ class IncomingConnectionFSM extends BaseConnection {
       })
     }, null)
 
-    // Start handling the connection, this is only needed once
+    // Start handling the connection
     this.msListener.handle(this.conn, (err) => {
       if (err) {
         this.emit('crypto handshaking failed', err)

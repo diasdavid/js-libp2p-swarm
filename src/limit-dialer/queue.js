@@ -48,8 +48,10 @@ class DialQueue {
         log(`${transport.constructor.name}:work:cancel`)
         // clean up already done dials
         pull(pull.empty(), conn)
-        // TODO: proper cleanup once the connection interface supports it
-        // return conn.close(() => callback(new Error('Manual cancel'))
+        // If we can close the connection, do it
+        if (typeof conn.close === 'function') {
+          return conn.close((_) => callback(null, {cancel: true}))
+        }
         return callback(null, {cancel: true})
       }
 

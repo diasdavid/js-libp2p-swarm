@@ -41,8 +41,6 @@ class ConnectionFSM extends BaseConnection {
     this.conn = null // The base connection
     this.muxer = muxer // The upgraded/muxed connection
 
-    // TODO: If given a muxer, we need to set the state
-    // at connected.
     let startState = 'DISCONNECTED'
     if (this.muxer) {
       startState = 'MUXED'
@@ -126,15 +124,6 @@ class ConnectionFSM extends BaseConnection {
   }
 
   /**
-   * Gets the current state of the connection
-   *
-   * @returns {string} The current state of the connection
-   */
-  getState () {
-    return this._state._state
-  }
-
-  /**
    * Puts the state into dialing mode
    *
    * @fires ConnectionFSM#Error May emit a DIAL_SELF error
@@ -193,8 +182,6 @@ class ConnectionFSM extends BaseConnection {
    * @returns {void}
    */
   _onDialing () {
-    // TODO: Start the connection flow
-    // TODO: Allow multiple dials?
     this.log(`dialing ${this.theirB58Id}`)
 
     if (!this.switch.hasTransports()) {
@@ -268,10 +255,6 @@ class ConnectionFSM extends BaseConnection {
     if (this.theirPeerInfo) {
       this.theirPeerInfo.disconnect()
       this.log(`closed connection to ${this.theirB58Id}`)
-    }
-    // TODO: should we do this?
-    if (this.ourPeerInfo) {
-      this.ourPeerInfo.disconnect()
     }
 
     // Clean up stored connections

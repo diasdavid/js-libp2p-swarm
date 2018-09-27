@@ -14,6 +14,15 @@ class BaseConnection extends EventEmitter {
   }
 
   /**
+   * Gets the current state of the connection
+   *
+   * @returns {string} The current state of the connection
+   */
+  getState () {
+    return this._state._state
+  }
+
+  /**
    * Puts the state into encrypting mode
    *
    * @returns {void}
