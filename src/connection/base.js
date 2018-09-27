@@ -41,6 +41,16 @@ class BaseConnection extends EventEmitter {
   }
 
   /**
+   * Event handler for disconneced.
+   *
+   * @returns {void}
+   */
+  _onDisconnected () {
+    this.log(`disconnected from ${this.theirB58Id}`)
+    this.removeAllListeners()
+  }
+
+  /**
    * Wraps this.conn with the Switch.protector for private connections
    *
    * @private
@@ -67,5 +77,5 @@ class BaseConnection extends EventEmitter {
 
 module.exports = withIs(BaseConnection, {
   className: 'BaseConnection',
-  symbolName: 'libp2p-switch/BaseConnection',
+  symbolName: 'libp2p-switch/BaseConnection'
 })

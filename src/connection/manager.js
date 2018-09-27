@@ -7,6 +7,7 @@ const debug = require('debug')
 const log = debug('libp2p:switch:conn-manager')
 const once = require('once')
 const setImmediate = require('async/setImmediate')
+const ConnectionFSM = require('../connection')
 
 const Circuit = require('libp2p-circuit')
 
@@ -89,7 +90,11 @@ class ConnectionManager {
             }
             const b58Str = peerInfo.id.toB58String()
 
-            this.switch.muxedConns[b58Str] = { muxer: muxedConn }
+            this.switch.muxedConns[b58Str] = new ConnectionFSM({
+              _switch: this.switch,
+              peerInfo,
+              muxer: muxedConn
+            })
 
             if (peerInfo.multiaddrs.size > 0) {
               // with incomming conn and through identify, going to pick one

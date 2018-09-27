@@ -61,31 +61,30 @@ function dial (_switch) {
         peerInfo,
         muxer: _switch.muxedConns[b58Id] || null
       })
+      connection.once('error', (err) => callback(err))
+      connection.on('connected', () => connection.protect())
+      connection.on('private', () => connection.encrypt())
+      connection.on('encrypted', () => connection.upgrade())
+      connection.on('muxed', () => {
+        maybePerformHandshake({
+          protocol,
+          proxyConnection,
+          connection,
+          callback
+        })
+      })
+      connection.on('unmuxed', () => {
+        maybePerformHandshake({
+          protocol,
+          proxyConnection,
+          connection,
+          callback
+        })
+      })
     }
 
     const proxyConnection = new Connection()
     proxyConnection.setPeerInfo(peerInfo)
-
-    connection.once('error', (err) => callback(err))
-    connection.once('connected', () => connection.protect())
-    connection.once('private', () => connection.encrypt())
-    connection.once('encrypted', () => connection.upgrade())
-    connection.once('muxed', () => {
-      maybePerformHandshake({
-        protocol,
-        proxyConnection,
-        connection,
-        callback
-      })
-    })
-    connection.once('unmuxed', () => {
-      maybePerformHandshake({
-        protocol,
-        proxyConnection,
-        connection,
-        callback
-      })
-    })
 
     // If we have a connection, maybe perform the protocol handshake
     // TODO: The basic connection probably shouldnt be reused

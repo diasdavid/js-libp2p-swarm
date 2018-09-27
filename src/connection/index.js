@@ -43,10 +43,12 @@ class ConnectionFSM extends BaseConnection {
 
     // TODO: If given a muxer, we need to set the state
     // at connected.
-    // * A muxed connection should be fully connected.
-    // * A protocol handshake should generate a new connection
+    let startState = 'DISCONNECTED'
+    if (this.muxer) {
+      startState = 'MUXED'
+    }
 
-    this._state = FSM('DISCONNECTED', {
+    this._state = FSM(startState, {
       DISCONNECTED: { // No active connections exist for the peer
         dial: 'DIALING'
       },
@@ -255,15 +257,6 @@ class ConnectionFSM extends BaseConnection {
   }
 
   /**
-   * Event handler for disconneced.
-   *
-   * @returns {void}
-   */
-  _onDisconnected () {
-    this.log(`disconnected from ${this.theirB58Id}`)
-  }
-
-  /**
    * Event handler for disconnecting. Handles any needed cleanup
    *
    * @returns {void}
@@ -459,5 +452,5 @@ class ConnectionFSM extends BaseConnection {
 
 module.exports = withIs(ConnectionFSM, {
   className: 'ConnectionFSM',
-  symbolName: 'libp2p-switch/ConnectionFSM',
+  symbolName: 'libp2p-switch/ConnectionFSM'
 })

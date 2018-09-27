@@ -1,11 +1,9 @@
 'use strict'
 
 const FSM = require('fsm-event')
-const debug = require('debug')
 const multistream = require('multistream-select')
 const withIs = require('class-is')
 
-const observeConn = require('../observe-connection')
 const BaseConnection = require('./base')
 
 class IncomingConnectionFSM extends BaseConnection {
@@ -69,6 +67,7 @@ class IncomingConnectionFSM extends BaseConnection {
       if (this.theirPeerInfo) {
         this.theirPeerInfo.disconnect()
       }
+      this._state('done')
     })
   }
 
@@ -120,5 +119,5 @@ class IncomingConnectionFSM extends BaseConnection {
 
 module.exports = withIs(IncomingConnectionFSM, {
   className: 'IncomingConnectionFSM',
-  symbolName: 'libp2p-switch/IncomingConnectionFSM',
+  symbolName: 'libp2p-switch/IncomingConnectionFSM'
 })

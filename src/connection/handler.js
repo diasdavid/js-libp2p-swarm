@@ -1,10 +1,6 @@
 'use strict'
 
-const FSM = require('fsm-event')
 const debug = require('debug')
-const multistream = require('multistream-select')
-const withIs = require('class-is')
-
 const IncomingConnection = require('./incoming')
 const observeConn = require('../observe-connection')
 
