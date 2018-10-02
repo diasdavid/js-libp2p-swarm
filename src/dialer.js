@@ -51,7 +51,7 @@ function dial (_switch) {
     const peerInfo = getPeerInfo(peer, _switch._peerBook)
     const b58Id = peerInfo.id.toB58String()
 
-    log(`${_switch._peerInfo.id.toB58String().slice(0, 8)} dial request to ${b58Id.slice(0, 8)} with protocol ${protocol}`)
+    log(`dialing to ${b58Id.slice(0, 8)} with protocol ${protocol || 'unknown'}`)
 
     let connection = _switch.muxedConns[b58Id] || _switch.conns[b58Id]
 

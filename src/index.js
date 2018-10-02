@@ -17,6 +17,7 @@ const assert = require('assert')
 const Errors = require('./errors')
 const debug = require('debug')
 const log = debug('libp2p:switch')
+log.error = debug('libp2p:switch:error')
 
 /**
  * @fires Switch#stopped  Triggered when the switch has stopped
@@ -115,7 +116,10 @@ class Switch extends EventEmitter {
       log('The switch has stopped')
       this.emit('stopped')
     })
-    this.state.on('error', (err) => this.emit('error', err))
+    this.state.on('error', (err) => {
+      log.error(err)
+      this.emit('error', err)
+    })
   }
 
   /**
@@ -167,7 +171,7 @@ class Switch extends EventEmitter {
 
   /**
    * If a muxed Connection exists for the given peer, it will be closed
-   * and its reference on the Switch and will be removed.
+   * and its reference on the Switch will be removed.
    *
    * @param {PeerInfo|Multiaddr|PeerId} peer
    * @param {function()} callback
@@ -239,6 +243,7 @@ class Switch extends EventEmitter {
       this.transport.listen(ts, {}, null, cb)
     }, (err) => {
       if (err) {
+        log.error(err)
         return this.emit('error', err)
       }
       this.state('done')
@@ -264,6 +269,7 @@ class Switch extends EventEmitter {
         conn.muxer.end((err) => {
           // If OK things are fine, and someone just shut down
           if (err && err.message !== 'Fatal error: OK') {
+            log.error(err)
             return cb(err)
           }
           cb()

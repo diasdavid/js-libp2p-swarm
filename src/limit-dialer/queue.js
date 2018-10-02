@@ -7,6 +7,7 @@ const queue = require('async/queue')
 const debug = require('debug')
 
 const log = debug('libp2p:switch:dialer:queue')
+log.error = debug('libp2p:switch:dialer:queue:error')
 
 /**
  * Queue up the amount of dials to a given peer.
@@ -40,7 +41,7 @@ class DialQueue {
     log(`${transport.constructor.name}:work:start`)
     this._dialWithTimeout(transport, addr, (err, conn) => {
       if (err) {
-        log(`${transport.constructor.name}:work:error`, err)
+        log.error(`${transport.constructor.name}:work`, err)
         return callback(null, {error: err})
       }
 
