@@ -38,6 +38,7 @@
   "devDependencies": {
     "aegir": "^15.1.0",
     "chai": "^4.1.2",
+    "chai-checkmark": "^1.0.1",
     "dirty-chai": "^2.0.1",
     "libp2p-mplex": "~0.8.2",
     "libp2p-pnet": "~0.1.0",

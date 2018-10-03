@@ -48,7 +48,8 @@ class ConnectionFSM extends BaseConnection {
 
     this._state = FSM(startState, {
       DISCONNECTED: { // No active connections exist for the peer
-        dial: 'DIALING'
+        dial: 'DIALING',
+        disconnect: 'DISCONNECTED'
       },
       DIALING: { // Creating an initial connection
         abort: 'ABORTED',
@@ -129,6 +130,7 @@ class ConnectionFSM extends BaseConnection {
    * @returns {void}
    */
   close () {
+    this.log(`closing connection to ${this.theirB58Id}`)
     this._state('disconnect')
   }
 
@@ -266,19 +268,21 @@ class ConnectionFSM extends BaseConnection {
     // Issue disconnects on both Peers
     if (this.theirPeerInfo) {
       this.theirPeerInfo.disconnect()
-      this.log(`closed connection to ${this.theirB58Id}`)
     }
 
     // Clean up stored connections
     if (this.muxer) {
-      setImmediate(() => this.switch.emit('peer-mux-closed', this.theirPeerInfo))
+      this.muxer.end()
     }
+
     delete this.switch.muxedConns[this.theirB58Id]
     delete this.switch.conns[this.theirB58Id]
     delete this.muxer
     delete this.conn
 
     this._state('done')
+
+    setImmediate(() => this.switch.emit('peer-mux-closed', this.theirPeerInfo))
   }
 
   /**
@@ -363,6 +367,7 @@ class ConnectionFSM extends BaseConnection {
           this.switch.muxedConns[this.theirB58Id] = this
 
           this.muxer.once('close', () => {
+            delete this.muxer
             this._state('disconnect')
           })
 

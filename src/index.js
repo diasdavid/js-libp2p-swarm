@@ -182,12 +182,12 @@ class Switch extends EventEmitter {
     const peerInfo = getPeerInfo(peer, this.peerBook)
     const key = peerInfo.id.toB58String()
     if (this.muxedConns[key]) {
-      const muxer = this.muxedConns[key].muxer
-      muxer.once('close', () => {
+      const conn = this.muxedConns[key]
+      conn.once('close', () => {
         delete this.muxedConns[key]
         callback()
       })
-      muxer.end()
+      conn.close()
     } else {
       callback()
     }
@@ -267,14 +267,8 @@ class Switch extends EventEmitter {
           return cb()
         }
 
-        conn.muxer.end((err) => {
-          // If OK things are fine, and someone just shut down
-          if (err && err.message !== 'Fatal error: OK') {
-            log.error(err)
-            return cb(err)
-          }
-          cb()
-        })
+        conn.once('close', cb)
+        conn.close()
       }, cb),
       (cb) => {
         each(this.transports, (transport, cb) => {

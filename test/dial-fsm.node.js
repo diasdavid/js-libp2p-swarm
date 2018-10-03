@@ -4,6 +4,7 @@
 const chai = require('chai')
 const dirtyChai = require('dirty-chai')
 const expect = chai.expect
+chai.use(require('chai-checkmark'))
 chai.use(dirtyChai)
 const PeerBook = require('peer-book')
 const parallel = require('async/parallel')
@@ -50,6 +51,10 @@ describe('dialFSM', () => {
     switchB.connection.addStreamMuxer(multiplex)
     switchC.connection.addStreamMuxer(multiplex)
 
+    switchA.connection.reuse()
+    switchB.connection.reuse()
+    switchC.connection.reuse()
+
     parallel([
       (cb) => switchA.transport.listen('tcp', {}, null, cb),
       (cb) => switchB.transport.listen('tcp', {}, null, cb),
@@ -73,7 +78,6 @@ describe('dialFSM', () => {
     connFSM.once('error:connection_attempt_failed', (errors) => {
       expect(errors).to.be.an('array')
       expect(errors).to.have.length(1)
-      expect(errors[0]).to.have.property('code', 'EADDRNOTAVAIL')
       done()
     })
   })
@@ -104,6 +108,29 @@ describe('dialFSM', () => {
         switchB._peerInfo.id.toB58String()
       ])
       done()
+    })
+  })
+
+  it('should close when the receiver closes', (done) => {
+    const peerIdA = switchA._peerInfo.id.toB58String()
+
+    // wait for the expects to happen
+    expect(2).checks(done)
+
+    switchB.handle('/closed/1.0.0', () => { })
+    switchB.on('peer-mux-established', (peerInfo) => {
+      if (peerInfo.id.toB58String() === peerIdA) {
+        switchB.removeAllListeners('peer-mux-established')
+        expect(switchB.muxedConns).to.have.property(peerIdA).mark()
+        switchB.muxedConns[peerIdA].close()
+      }
+    })
+
+    const connFSM = switchA.dialFSM(switchB._peerInfo, '/closed/1.0.0', () => { })
+    connFSM.once('close', () => {
+      expect(switchA.muxedConns).to.not.have.any.keys([
+        switchB._peerInfo.id.toB58String()
+      ]).mark()
     })
   })
 })
