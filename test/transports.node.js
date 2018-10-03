@@ -52,6 +52,15 @@ describe('transports', () => {
       expect(Object.keys(switchB.transports).length).to.equal(1)
     })
 
+    it('.transport.remove', () => {
+      switchA.transport.add('test', new WS())
+      expect(switchA.transports).to.have.any.keys(['test'])
+      switchA.transport.remove('test')
+      expect(switchA.transports).to.not.have.any.keys(['test'])
+      // verify remove fails silently
+      switchA.transport.remove('test')
+    })
+
     it('.transport.listen', (done) => {
       let count = 0
 

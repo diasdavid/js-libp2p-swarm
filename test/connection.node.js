@@ -156,6 +156,37 @@ describe('ConnectionFSM', () => {
     connection.dial()
   })
 
+  it('should not return a connection when handshaking with no protocol', (done) => {
+    const connection = new ConnectionFSM({
+      _switch: dialerSwitch,
+      peerInfo: listenerSwitch._peerInfo
+    })
+
+    listenerSwitch.handle('/muxed-conn-test/1.0.0', (_, conn) => {
+      return pull(conn, conn)
+    })
+
+    connection.once('connected', (conn) => {
+      expect(conn).to.be.an.instanceof(Connection)
+      connection.encrypt()
+    })
+    connection.once('encrypted', (conn) => {
+      expect(conn).to.be.an.instanceof(Connection)
+      connection.upgrade()
+    })
+    connection.once('muxed', (conn) => {
+      expect(conn.multicodec).to.equal(multiplex.multicodec)
+
+      connection.shake(null, (err, protocolConn) => {
+        expect(err).to.not.exist()
+        expect(protocolConn).to.not.exist()
+        done()
+      })
+    })
+
+    connection.dial()
+  })
+
   describe('with no muxers', () => {
     let oldMuxers
     before(() => {
