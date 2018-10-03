@@ -56,6 +56,7 @@ class BaseConnection extends EventEmitter {
    */
   _onDisconnected () {
     this.log(`disconnected from ${this.theirB58Id}`)
+    this.emit('close')
     this.removeAllListeners()
   }
 

@@ -80,6 +80,7 @@ class Switch extends EventEmitter {
 
     // higher level (public) API
     this.dial = dial(this)
+    this.dialFSM = dial(this, true)
 
     // All purpose connection handler for managing incoming connections
     this._connectionHandler = connectionHandler(this)

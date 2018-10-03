@@ -29,9 +29,10 @@ function maybePerformHandshake ({ protocol, proxyConnection, connection, callbac
  * to the given `peer`.
  *
  * @param {Switch} _switch
+ * @param {Boolean} returnFSM Whether or not to return an fsm instead of a Connection
  * @returns {function(PeerInfo, string, function(Error, Connection))}
  */
-function dial (_switch) {
+function dial (_switch, returnFSM) {
   /**
    * Creates a new dialer and immediately begins dialing to the given `peer`
    *
@@ -86,19 +87,21 @@ function dial (_switch) {
     const proxyConnection = new Connection()
     proxyConnection.setPeerInfo(peerInfo)
 
-    // If we have a muxed connection, attempt the protocol handshake
-    if (connection.getState() === 'MUXED') {
-      maybePerformHandshake({
-        protocol,
-        proxyConnection,
-        connection,
-        callback
-      })
-    } else {
-      connection.dial()
-    }
+    setImmediate(() => {
+      // If we have a muxed connection, attempt the protocol handshake
+      if (connection.getState() === 'MUXED') {
+        maybePerformHandshake({
+          protocol,
+          proxyConnection,
+          connection,
+          callback
+        })
+      } else {
+        connection.dial()
+      }
+    })
 
-    return proxyConnection
+    return returnFSM ? connection : proxyConnection
   }
 }
 

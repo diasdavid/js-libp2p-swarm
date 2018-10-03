@@ -124,6 +124,15 @@ class ConnectionFSM extends BaseConnection {
   }
 
   /**
+   * Puts the state into its disconnecting flow
+   *
+   * @returns {void}
+   */
+  close () {
+    this._state('disconnect')
+  }
+
+  /**
    * Puts the state into dialing mode
    *
    * @fires ConnectionFSM#Error May emit a DIAL_SELF error
@@ -198,14 +207,16 @@ class ConnectionFSM extends BaseConnection {
       let transport = key
       if (!transport) {
         if (!circuitEnabled) {
-          this.emit('error', new Error(
-            `Circuit not enabled and all transports failed to dial peer ${this.theirB58Id}!`
+          this.emit('error', Errors.CONNECTION_FAILED(
+            new Error(`Circuit not enabled and all transports failed to dial peer ${this.theirB58Id}!`)
           ))
           return this._state('disconnect')
         }
 
         if (circuitTried) {
-          this.emit('error', new Error(`No available transports to dial peer ${this.theirB58Id}!`))
+          this.emit('error', Errors.CONNECTION_FAILED(
+            new Error(`No available transports to dial peer ${this.theirB58Id}!`)
+          ))
           return this._state('disconnect')
         }
 
@@ -218,6 +229,7 @@ class ConnectionFSM extends BaseConnection {
       this.log(`dialing transport ${transport}`)
       this.switch.transport.dial(transport, this.theirPeerInfo, (err, _conn) => {
         if (err) {
+          this.emit('error:connection_attempt_failed', err.errors || [err])
           this.log(err)
           return nextTransport(tKeys.shift())
         }

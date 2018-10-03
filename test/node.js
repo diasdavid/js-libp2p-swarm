@@ -1,6 +1,7 @@
 'use strict'
 
 require('./connection.node')
+require('./dial-emitter.node')
 require('./pnet.node')
 require('./transports.node')
 require('./stream-muxers.node')
