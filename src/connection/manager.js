@@ -140,14 +140,6 @@ class ConnectionManager {
       encrypt = plaintext.encrypt
     }
 
-    this.switch.unhandle(this.switch.crypto.tag)
-    this.switch.handle(tag, (protocol, conn) => {
-      const myId = this.switch._peerInfo.id
-      const secure = encrypt(myId, conn, undefined, () => {
-        this.switch.protocolMuxer(null)(secure)
-      })
-    })
-
     this.switch.crypto = {tag, encrypt}
   }
 

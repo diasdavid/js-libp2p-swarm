@@ -50,14 +50,26 @@ class BaseConnection extends EventEmitter {
   }
 
   /**
-   * Event handler for disconneced.
+   * Event handler for disconnected.
    *
+   * @fires BaseConnection#close
    * @returns {void}
    */
   _onDisconnected () {
     this.log(`disconnected from ${this.theirB58Id}`)
     this.emit('close')
     this.removeAllListeners()
+  }
+
+  /**
+   * Event handler for privatized
+   *
+   * @fires BaseConnection#private
+   * @returns {void}
+   */
+  _onPrivatized () {
+    this.log(`successfully privatized incoming connection`)
+    this.emit('private', this.conn)
   }
 
   /**

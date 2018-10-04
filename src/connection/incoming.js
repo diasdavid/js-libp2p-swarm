@@ -72,15 +72,12 @@ class IncomingConnectionFSM extends BaseConnection {
   }
 
   /**
-   * Gets the current state of the connection
+   * Attempts to encrypt `this.conn` with the Switch's crypto.
    *
-   * @returns {string} The current state of the connection
+   * @private
+   * @fires IncomingConnectionFSM#error
+   * @returns {void}
    */
-  getState () {
-    return this._state._state
-  }
-
-  // TODO: We need to handle N+1 crypto libraries
   _onEncrypting () {
     this.log(`encrypting connection via ${this.switch.crypto.tag}`)
 
@@ -103,11 +100,6 @@ class IncomingConnectionFSM extends BaseConnection {
         this.emit('crypto handshaking failed', err)
       }
     })
-  }
-
-  _onPrivatized () {
-    this.log(`successfully privatized incoming connection`)
-    this.emit('private', this.conn)
   }
 
   _onUpgrading () {

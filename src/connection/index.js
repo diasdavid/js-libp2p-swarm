@@ -103,7 +103,7 @@ class ConnectionFSM extends BaseConnection {
     this._state.on('DIALING', () => this._onDialing())
     this._state.on('DIALED', () => this._onDialed())
     this._state.on('PRIVATIZING', () => this._onPrivatizing())
-    this._state.on('PRIVATIZED', () => this.emit('private', this.conn))
+    this._state.on('PRIVATIZED', () => this._onPrivatized())
     this._state.on('ENCRYPTING', () => this._onEncrypting())
     this._state.on('ENCRYPTED', () => {
       this.log(`successfully encrypted connection to ${this.theirB58Id}`)
