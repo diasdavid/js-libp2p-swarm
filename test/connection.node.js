@@ -11,6 +11,7 @@ const parallel = require('async/parallel')
 const secio = require('libp2p-secio')
 const pull = require('pull-stream')
 const multiplex = require('libp2p-mplex')
+const spdy = require('libp2p-spdy')
 const Connection = require('interface-connection').Connection
 const Protector = require('libp2p-pnet')
 const generatePSK = Protector.generate
@@ -23,11 +24,12 @@ const Switch = require('../src')
 const createInfos = require('./utils').createInfos
 
 describe('ConnectionFSM', () => {
+  let spdySwitch
   let listenerSwitch
   let dialerSwitch
 
   before((done) => {
-    createInfos(2, (err, infos) => {
+    createInfos(3, (err, infos) => {
       if (err) {
         return done(err)
       }
@@ -44,9 +46,16 @@ describe('ConnectionFSM', () => {
       listenerSwitch.connection.addStreamMuxer(multiplex)
       listenerSwitch.transport.add('ws', new WS())
 
+      spdySwitch = new Switch(infos.shift(), new PeerBook())
+      spdySwitch._peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/15453/ws')
+      spdySwitch.connection.crypto(secio.tag, secio.encrypt)
+      spdySwitch.connection.addStreamMuxer(spdy)
+      spdySwitch.transport.add('ws', new WS())
+
       parallel([
         (cb) => dialerSwitch.start(cb),
-        (cb) => listenerSwitch.start(cb)
+        (cb) => listenerSwitch.start(cb),
+        (cb) => spdySwitch.start(cb)
       ], (err) => {
         done(err)
       })
@@ -56,7 +65,8 @@ describe('ConnectionFSM', () => {
   after((done) => {
     parallel([
       (cb) => dialerSwitch.stop(cb),
-      (cb) => listenerSwitch.stop(cb)
+      (cb) => listenerSwitch.stop(cb),
+      (cb) => spdySwitch.stop(cb)
     ], () => {
       done()
     })
@@ -134,6 +144,28 @@ describe('ConnectionFSM', () => {
     })
     connection.once('muxed', (conn) => {
       expect(conn.multicodec).to.equal(multiplex.multicodec)
+      done()
+    })
+
+    connection.dial()
+  })
+
+  it('should fail to upgrade a connection with incompatible muxers', (done) => {
+    const connection = new ConnectionFSM({
+      _switch: dialerSwitch,
+      peerInfo: spdySwitch._peerInfo
+    })
+
+    connection.once('connected', (conn) => {
+      expect(conn).to.be.an.instanceof(Connection)
+      connection.encrypt()
+    })
+    connection.once('encrypted', (conn) => {
+      expect(conn).to.be.an.instanceof(Connection)
+      connection.upgrade()
+    })
+    connection.once('error:upgrade_failed', (err) => {
+      expect(err).to.exist()
       done()
     })
 
