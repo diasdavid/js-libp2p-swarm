@@ -306,16 +306,16 @@ class ConnectionFSM extends BaseConnection {
 
       msDialer.select(this.switch.crypto.tag, (err, _conn) => {
         if (err) {
-          this.emit('error', Errors.maybeUnexpectedEnd(err))
-          return this._state('disconnect')
+          this._state('disconnect')
+          return this.emit('error', Errors.maybeUnexpectedEnd(err))
         }
 
         const conn = observeConnection(null, this.switch.crypto.tag, _conn, this.switch.observer)
 
         this.conn = this.switch.crypto.encrypt(this.ourPeerInfo.id, conn, this.theirPeerInfo.id, (err) => {
           if (err) {
-            this.emit('error', err)
-            return this._state('disconnect')
+            this._state('disconnect')
+            return this.emit('error', err)
           }
 
           this.conn.setPeerInfo(this.theirPeerInfo)

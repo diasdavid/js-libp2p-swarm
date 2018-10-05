@@ -2,9 +2,10 @@
 'use strict'
 
 const chai = require('chai')
-const dirtyChai = require('dirty-chai')
 const expect = chai.expect
-chai.use(dirtyChai)
+chai.use(require('dirty-chai'))
+chai.use(require('chai-checkmark'))
+const sinon = require('sinon')
 const PeerBook = require('peer-book')
 const WS = require('libp2p-websockets')
 const parallel = require('async/parallel')
@@ -110,6 +111,32 @@ describe('ConnectionFSM', () => {
     connection.dial()
   })
 
+  it('should emit warning on dial failed attempt', (done) => {
+    const connection = new ConnectionFSM({
+      _switch: dialerSwitch,
+      peerInfo: listenerSwitch._peerInfo
+    })
+
+    const stub = sinon.stub(dialerSwitch.transport, 'dial').callsArgWith(2, {
+      errors: [
+        new Error('address in use')
+      ]
+    })
+
+    connection.once('error:connection_attempt_failed', (errors) => {
+      expect(errors).to.have.length(1).mark()
+      stub.restore()
+    })
+
+    connection.once('error', (err) => {
+      expect(err).to.exist().mark()
+    })
+
+    expect(2).checks(done)
+
+    connection.dial()
+  })
+
   it('should be able to encrypt a basic connection', (done) => {
     const connection = new ConnectionFSM({
       _switch: dialerSwitch,
@@ -123,6 +150,30 @@ describe('ConnectionFSM', () => {
     connection.once('encrypted', (conn) => {
       expect(conn).to.be.an.instanceof(Connection)
       done()
+    })
+
+    connection.dial()
+  })
+
+  it('should disconnect on encryption failure', (done) => {
+    const connection = new ConnectionFSM({
+      _switch: dialerSwitch,
+      peerInfo: listenerSwitch._peerInfo
+    })
+
+    const stub = sinon.stub(dialerSwitch.crypto, 'encrypt')
+      .callsArgWith(3, new Error('fail encrypt'))
+
+    connection.once('connected', (conn) => {
+      expect(conn).to.be.an.instanceof(Connection)
+      connection.encrypt()
+    })
+    connection.once('close', () => {
+      stub.restore()
+      done()
+    })
+    connection.once('encrypted', () => {
+      throw new Error('should not encrypt')
     })
 
     connection.dial()
