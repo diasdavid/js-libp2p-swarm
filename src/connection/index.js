@@ -399,6 +399,7 @@ class ConnectionFSM extends BaseConnection {
     if (err) {
       this.log('Error upgrading connection:', err)
       this.switch.conns[this.theirB58Id] = this
+      this.emit('error:upgrade_failed', err)
       // Cant upgrade, hold the encrypted connection
       return this._state('stop')
     }
