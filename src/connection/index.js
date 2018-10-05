@@ -433,6 +433,7 @@ class ConnectionFSM extends BaseConnection {
 
         const conn = observeConnection(null, protocol, _conn, this.switch.observer)
         this.log(`successfully performed handshake of ${protocol} to ${this.theirB58Id}`)
+        this.emit('connection', conn)
         callback(null, conn)
       })
     })

@@ -111,11 +111,11 @@ class Switch extends EventEmitter {
     })
     this.state.on('STARTED', () => {
       log('The switch has started')
-      this.emit('started')
+      this.emit('start')
     })
     this.state.on('STOPPED', () => {
       log('The switch has stopped')
-      this.emit('stopped')
+      this.emit('stop')
     })
     this.state.on('error', (err) => {
       log.error(err)
@@ -212,7 +212,7 @@ class Switch extends EventEmitter {
    */
   start (callback = () => {}) {
     // Add once listener for deprecated callback support
-    this.once('started', callback)
+    this.once('start', callback)
 
     this.state('start')
   }
@@ -226,7 +226,7 @@ class Switch extends EventEmitter {
    */
   stop (callback = () => {}) {
     // Add once listener for deprecated callback support
-    this.once('stopped', callback)
+    this.once('stop', callback)
 
     this.state('stop')
   }

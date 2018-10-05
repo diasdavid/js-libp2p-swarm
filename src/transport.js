@@ -65,6 +65,22 @@ class TransportManager {
   }
 
   /**
+   * Calls `remove` on each transport the switch has
+   *
+   * @param {function(Error)} callback
+   * @returns {void}
+   */
+  removeAll (callback) {
+    const tasks = Object.keys(this.switch.transports).map((key) => {
+      return (cb) => {
+        this.remove(key, cb)
+      }
+    })
+
+    parallel(tasks, callback)
+  }
+
+  /**
    * For a given transport `key`, dial to all that transport multiaddrs
    *
    * @param {String} key Key of the `Transport` to dial
