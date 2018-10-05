@@ -72,12 +72,6 @@ class Switch extends EventEmitter {
     this.stats = Stats(this.observer, this._options.stats)
     this.protocolMuxer = ProtocolMuxer(this.protocols, this.observer)
 
-    this.handle(this.crypto.tag, (protocol, conn) => {
-      const peerId = this._peerInfo.id
-      const wrapped = this.crypto.encrypt(peerId, conn, undefined, () => {})
-      return this.protocolMuxer(null)(wrapped)
-    })
-
     // higher level (public) API
     this.dial = dial(this)
     this.dialFSM = dial(this, true)

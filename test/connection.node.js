@@ -71,6 +71,21 @@ describe('ConnectionFSM', () => {
     expect(connection.getState()).to.equal('DISCONNECTED')
   })
 
+  it('should emit an error with an invalid transition', (done) => {
+    const connection = new ConnectionFSM({
+      _switch: dialerSwitch,
+      peerInfo: listenerSwitch._peerInfo
+    })
+
+    expect(connection.getState()).to.equal('DISCONNECTED')
+
+    connection.once('error', (err) => {
+      expect(err).to.have.property('code', 'INVALID_STATE_TRANSITION')
+      done()
+    })
+    connection.upgrade()
+  })
+
   it('.dial should create a basic connection', (done) => {
     const connection = new ConnectionFSM({
       _switch: dialerSwitch,

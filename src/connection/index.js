@@ -49,7 +49,8 @@ class ConnectionFSM extends BaseConnection {
     this._state = FSM(startState, {
       DISCONNECTED: { // No active connections exist for the peer
         dial: 'DIALING',
-        disconnect: 'DISCONNECTED'
+        disconnect: 'DISCONNECTED',
+        done: 'DISCONNECTED'
       },
       DIALING: { // Creating an initial connection
         abort: 'ABORTED',
@@ -91,7 +92,8 @@ class ConnectionFSM extends BaseConnection {
         disconnect: 'DISCONNECTING'
       },
       DISCONNECTING: { // Shutting down the connection
-        done: 'DISCONNECTED'
+        done: 'DISCONNECTED',
+        disconnect: 'DISCONNECTING'
       },
       ABORTED: { }, // A severe event occurred
       ERRORED: { // An error occurred, but future dials may be allowed
@@ -447,7 +449,7 @@ class ConnectionFSM extends BaseConnection {
    * @returns {void}
    */
   _onStateError (err) {
-    // TODO: may need to do something for legit invalid transitions
+    this.emit('error', Errors.INVALID_STATE_TRANSITION(err))
     this.log(err)
   }
 }
