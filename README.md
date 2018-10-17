@@ -29,7 +29,7 @@ libp2p-switch is used by [libp2p](https://github.com/libp2p/js-libp2p) but it ca
   - [`switch.dial(peer, protocol, callback)`](#switchdialpeer-protocol-callback)
   - [`switch.dialFSM(peer, protocol, callback)`](#switchdialfsmpeer-protocol-callback)
   - [`switch.hangUp(peer, callback)`](#switchhanguppeer-callback)
-  - [`switch.handle(protocol, handler)`](#switchhandleprotocol-handler)
+  - [`switch.handle(protocol, handlerFunc, matchFunc)`](#switchhandleprotocol-handlerfunc-matchfunc)
   - [`switch.unhandle(protocol)`](#switchunhandleprotocol)
   - [`switch.start(callback)`](#switchstartcallback)
   - [`switch.stop(callback)`](#switchstopcallback)
