@@ -26,16 +26,17 @@ libp2p-switch is used by [libp2p](https://github.com/libp2p/js-libp2p) but it ca
 - [Usage](#usage)
   - [Create a libp2p switch](#create-a-libp2p-switch)
 - [API](#api)
-  - [`switch.dial(peer, protocol, callback)`](#swarmdialpi-protocol-callback)
-  - [`switch.hangUp(peer, callback)`](#swarmhanguppi-callback)
-  - [`switch.handle(protocol, handler)`](#swarmhandleprotocol-handler)
-  - [`switch.unhandle(protocol)`](#swarmunhandleprotocol)
-  - [`switch.start(callback)`](#swarmlistencallback)
-  - [`switch.stop(callback)`](#swarmclosecallback)
-  - [`switch.connection`](#connection)
+  - [`switch.dial(peer, protocol, callback)`](#switchdialpeer-protocol-callback)
+  - [`switch.dialFSM(peer, protocol, callback)`](#switchdialfsmpeer-protocol-callback)
+  - [`switch.hangUp(peer, callback)`](#switchhanguppeer-callback)
+  - [`switch.handle(protocol, handler)`](#switchhandleprotocol-handler)
+  - [`switch.unhandle(protocol)`](#switchunhandleprotocol)
+  - [`switch.start(callback)`](#switchstartcallback)
+  - [`switch.stop(callback)`](#switchstopcallback)
+  - [`switch.connection`](#switchconnection)
   - [`switch.stats`](#stats-api)
-  - [Internal Transports API](#transports)
-- [Design Notes](#designnotes)
+  - [Internal Transports API](#internal-transports-api)
+- [Design Notes](#design-notes)
   - [Multitransport](#multitransport)
   - [Connection upgrades](#connection-upgrades)
   - [Identify](#identify)
@@ -93,6 +94,25 @@ dial uses the best transport (whatever works first, in the future we can have so
 - `peer`: can be an instance of [PeerInfo][], [PeerId][] or [multiaddr][]
 - `protocol`
 - `callback`
+
+### `switch.dialFSM(peer, protocol, callback)`
+
+works like dial, but calls back with a [Connection State Machine](#connection-state-machine)
+
+- `peer`: can be an instance of [PeerInfo][], [PeerId][] or [multiaddr][]
+- `protocol`: String that defines the protocol (e.g '/ipfs/bitswap/1.1.0') to be used
+- `callback`: Function with signature `function (err, connFSM) {}` where `connFSM` is a [Connection State Machine](#connection-state-machine)
+
+#### Connection State Machine
+Connection state machines emit a number of events that can be used to determine the current state of the connection
+and to received the underlying connection that can be used to transfer data.
+
+##### Events
+- `error`:  emitted whenever a fatal error occurs with the connection; the error will be emitted.
+- `error:upgrade_failed`: emitted whenever the connection fails to upgrade with a muxer, this is not fatal.
+- `error:connection_attempt_failed`: emitted whenever a dial attempt fails for a given transport. An array of errors is emitted.
+- `connection`: emitted whenever a useable connection has been established; the underlying [Connection](https://github.com/libp2p/interface-connection) will be emitted.
+- `close`: emitted when the connection has closed.
 
 ### `switch.hangUp(peer, callback)`
 
