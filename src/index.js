@@ -20,9 +20,9 @@ const log = debug('libp2p:switch')
 log.error = debug('libp2p:switch:error')
 
 /**
- * @fires Switch#stopped  Triggered when the switch has stopped
- * @fires Switch#started  Triggered when the switch has started
- * @fires Switch#error    Triggered whenever an error occurs
+ * @fires Switch#stop Triggered when the switch has stopped
+ * @fires Switch#start Triggered when the switch has started
+ * @fires Switch#error Triggered whenever an error occurs
  */
 class Switch extends EventEmitter {
   constructor (peerInfo, peerBook, options) {
@@ -201,7 +201,6 @@ class Switch extends EventEmitter {
    * Issues a start on the Switch state.
    *
    * @param {function} callback deprecated: Listening for the `error` and `start` events are recommended
-   * @fires Switch#started
    * @returns {void}
    */
   start (callback = () => {}) {
@@ -215,7 +214,6 @@ class Switch extends EventEmitter {
    * Issues a stop on the Switch state.
    *
    * @param {function} callback deprecated: Listening for the `error` and `stop` events are recommended
-   * @fires Switch#stop
    * @returns {void}
    */
   stop (callback = () => {}) {
@@ -229,7 +227,6 @@ class Switch extends EventEmitter {
    * A listener that will start any necessary services and listeners
    *
    * @private
-   * @fires Switch#error
    * @returns {void}
    */
   _onStarting () {
@@ -249,7 +246,6 @@ class Switch extends EventEmitter {
    * A listener that will turn off all running services and listeners
    *
    * @private
-   * @fires Switch#error
    * @returns {void}
    */
   _onStopping () {
