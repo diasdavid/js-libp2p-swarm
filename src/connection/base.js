@@ -14,6 +14,20 @@ class BaseConnection extends EventEmitter {
   }
 
   /**
+   * Puts the state into its disconnecting flow
+   *
+   * @param {Error} err Will be emitted if provided
+   * @returns {void}
+   */
+  close (err) {
+    this.log(`closing connection to ${this.theirB58Id}`)
+    if (err && this._events.error) {
+      this.emit('error', err)
+    }
+    this._state('disconnect')
+  }
+
+  /**
    * Gets the current state of the connection
    *
    * @returns {string} The current state of the connection
@@ -86,8 +100,7 @@ class BaseConnection extends EventEmitter {
 
     this.conn = this.switch.protector.protect(this.conn, (err) => {
       if (err) {
-        this.emit('error', err)
-        return this._state('disconnect')
+        return this.close(err)
       }
 
       this.log(`successfully privatized conn to ${this.theirB58Id}`)
