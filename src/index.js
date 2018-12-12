@@ -231,6 +231,7 @@ class Switch extends EventEmitter {
    * @returns {void}
    */
   _onStarting () {
+    this.stats.start()
     eachSeries(this.availableTransports(this._peerInfo), (ts, cb) => {
       // Listen on the given transport
       this.transport.listen(ts, {}, null, cb)
