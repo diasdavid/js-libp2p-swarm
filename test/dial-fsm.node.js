@@ -12,6 +12,7 @@ const WS = require('libp2p-websockets')
 const TCP = require('libp2p-tcp')
 const secio = require('libp2p-secio')
 const multiplex = require('libp2p-mplex')
+const pull = require('pull-stream')
 
 const utils = require('./utils')
 const createInfos = utils.createInfos
@@ -121,8 +122,8 @@ describe('dialFSM', () => {
     switchB.on('peer-mux-established', (peerInfo) => {
       if (peerInfo.id.toB58String() === peerIdA) {
         switchB.removeAllListeners('peer-mux-established')
-        expect(switchB.muxedConns).to.have.property(peerIdA).mark()
-        switchB.muxedConns[peerIdA].close()
+        expect(switchB.muxedConnsIn).to.have.property(peerIdA).mark()
+        switchB.muxedConnsIn[peerIdA].close()
       }
     })
 
@@ -131,6 +132,52 @@ describe('dialFSM', () => {
       expect(switchA.muxedConns).to.not.have.any.keys([
         switchB._peerInfo.id.toB58String()
       ]).mark()
+    })
+  })
+
+  it('parallel dials to one another should disconnect on hangup', (done) => {
+    switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
+    switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
+
+    parallel([
+      (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', cb),
+      (cb) => switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', cb)
+    ], (err) => {
+      if (err) return done(err)
+
+      // Hangup and verify the connections are closed
+      switchA.hangUp(switchB._peerInfo, () => {
+        setTimeout(() => {
+          expect(switchB.muxedConns).to.eql({})
+          expect(switchB.muxedConnsIn).to.eql({})
+          expect(switchA.muxedConns).to.eql({})
+          expect(switchA.muxedConnsIn).to.eql({})
+          done()
+        }, 250)
+      })
+    })
+  })
+
+  it('parallel dials to one another should disconnect on hangup', (done) => {
+    switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
+    switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
+
+    parallel([
+      (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', cb),
+      (cb) => switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', cb)
+    ], (err) => {
+      if (err) return done(err)
+
+      // Hangup and verify the connections are closed
+      switchA.stop(() => {
+        setTimeout(() => {
+          expect(switchB.muxedConns).to.eql({})
+          expect(switchB.muxedConnsIn).to.eql({})
+          expect(switchA.muxedConns).to.eql({})
+          expect(switchA.muxedConnsIn).to.eql({})
+          done()
+        }, 250)
+      })
     })
   })
 })

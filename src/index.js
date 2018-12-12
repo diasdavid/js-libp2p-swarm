@@ -51,6 +51,7 @@ class Switch extends EventEmitter {
     //   }
     // }
     this.muxedConns = {}
+    this.muxedConnsIn = {}
 
     // { protocol: handler }
     this.protocols = {}
@@ -176,16 +177,15 @@ class Switch extends EventEmitter {
   hangUp (peer, callback) {
     const peerInfo = getPeerInfo(peer, this.peerBook)
     const key = peerInfo.id.toB58String()
-    if (this.muxedConns[key]) {
-      const conn = this.muxedConns[key]
-      conn.once('close', () => {
-        delete this.muxedConns[key]
-        callback()
-      })
+    let conns = []
+
+    if (this.muxedConns[key]) conns.push(this.muxedConns[key])
+    if (this.muxedConnsIn[key]) conns.push(this.muxedConnsIn[key])
+
+    each(conns, (conn, cb) => {
+      conn.once('close', cb)
       conn.close()
-    } else {
-      callback()
-    }
+    }, callback)
   }
 
   /**
@@ -252,22 +252,16 @@ class Switch extends EventEmitter {
   _onStopping () {
     this.stats.stop()
     series([
-      (cb) => each(this.muxedConns, (conn, cb) => {
-        // If the connection was destroyed while we are hanging up, continue
-        if (!conn) {
-          return cb()
-        }
-
-        conn.once('close', cb)
-        conn.close()
-      }, cb),
       (cb) => {
         each(this.transports, (transport, cb) => {
           each(transport.listeners, (listener, cb) => {
             listener.close(cb)
           }, cb)
         }, cb)
-      }
+      },
+      (cb) => each(this._peerBook.getAllArray(), (peer, cb) => {
+        this.hangUp(peer, cb)
+      }, cb)
     ], (_) => {
       this.state('done')
     })

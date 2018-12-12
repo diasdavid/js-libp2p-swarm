@@ -91,7 +91,7 @@ class ConnectionManager {
             }
             const b58Str = peerInfo.id.toB58String()
 
-            this.switch.muxedConns[b58Str] = new ConnectionFSM({
+            this.switch.muxedConnsIn[b58Str] = new ConnectionFSM({
               _switch: this.switch,
               peerInfo,
               muxer: muxedConn
@@ -111,7 +111,7 @@ class ConnectionManager {
             peerInfo = this.switch._peerBook.put(peerInfo)
 
             muxedConn.once('close', () => {
-              delete this.switch.muxedConns[b58Str]
+              delete this.switch.muxedConnsIn[b58Str]
               peerInfo.disconnect()
               peerInfo = this.switch._peerBook.put(peerInfo)
               log(`closed connection to ${b58Str}`)
