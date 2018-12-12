@@ -367,6 +367,7 @@ describe('ConnectionFSM', () => {
         (cb) => dialerSwitch.stop(cb),
         (cb) => listenerSwitch.stop(cb)
       ], () => {
+        console.log('Stopped')
         dialerSwitch.protector = new Protector(psk)
         listenerSwitch.protector = new Protector(psk)
 

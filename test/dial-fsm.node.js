@@ -100,14 +100,12 @@ describe('dialFSM', () => {
 
     const connFSM = switchA.dialFSM(switchB._peerInfo, '/closed/1.0.0', (err) => {
       expect(err).to.not.exist()
-      expect(switchA.muxedConns).to.have.property(switchB._peerInfo.id.toB58String())
+      expect(switchA.connection.getAllById(switchB._peerInfo.id.toB58String())).to.have.length(1)
       connFSM.close()
     })
 
     connFSM.once('close', () => {
-      expect(switchA.muxedConns).to.not.have.any.keys([
-        switchB._peerInfo.id.toB58String()
-      ])
+      expect(switchA.connection.getAllById(switchB._peerInfo.id.toB58String())).to.have.length(0)
       done()
     })
   })
@@ -122,16 +120,14 @@ describe('dialFSM', () => {
     switchB.on('peer-mux-established', (peerInfo) => {
       if (peerInfo.id.toB58String() === peerIdA) {
         switchB.removeAllListeners('peer-mux-established')
-        expect(switchB.muxedConnsIn).to.have.property(peerIdA).mark()
-        switchB.muxedConnsIn[peerIdA].close()
+        expect(switchB.connection.getAllById(peerIdA)).to.have.length(1).mark()
+        switchB.connection.getOne(peerIdA).close()
       }
     })
 
     const connFSM = switchA.dialFSM(switchB._peerInfo, '/closed/1.0.0', () => { })
     connFSM.once('close', () => {
-      expect(switchA.muxedConns).to.not.have.any.keys([
-        switchB._peerInfo.id.toB58String()
-      ]).mark()
+      expect(switchA.connection.getAllById(switchB._peerInfo.id.toB58String())).to.have.length(0).mark()
     })
   })
 
@@ -148,17 +144,15 @@ describe('dialFSM', () => {
       // Hangup and verify the connections are closed
       switchA.hangUp(switchB._peerInfo, () => {
         setTimeout(() => {
-          expect(switchB.muxedConns).to.eql({})
-          expect(switchB.muxedConnsIn).to.eql({})
-          expect(switchA.muxedConns).to.eql({})
-          expect(switchA.muxedConnsIn).to.eql({})
+          expect(switchB.connection.getAll()).to.have.length(0)
+          expect(switchA.connection.getAll()).to.have.length(0)
           done()
         }, 250)
       })
     })
   })
 
-  it('parallel dials to one another should disconnect on hangup', (done) => {
+  it('parallel dials to one another should disconnect on stop', (done) => {
     switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
     switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
 
@@ -171,10 +165,8 @@ describe('dialFSM', () => {
       // Hangup and verify the connections are closed
       switchA.stop(() => {
         setTimeout(() => {
-          expect(switchB.muxedConns).to.eql({})
-          expect(switchB.muxedConnsIn).to.eql({})
-          expect(switchA.muxedConns).to.eql({})
-          expect(switchA.muxedConnsIn).to.eql({})
+          expect(switchB.connection.getAll()).to.have.length(0)
+          expect(switchA.connection.getAll()).to.have.length(0)
           done()
         }, 250)
       })

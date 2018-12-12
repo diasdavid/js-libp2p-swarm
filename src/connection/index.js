@@ -114,6 +114,7 @@ class ConnectionFSM extends BaseConnection {
     this._state.on('UPGRADING', () => this._onUpgrading())
     this._state.on('MUXED', () => {
       this.log(`successfully muxed connection to ${this.theirB58Id}`)
+      delete this.switch.conns[this.theirB58Id]
       this.emit('muxed', this.muxer)
     })
     this._state.on('CONNECTED', () => {
@@ -166,6 +167,7 @@ class ConnectionFSM extends BaseConnection {
       })
     }
 
+    // TODO: probably not necessary
     this.conn.setPeerInfo(this.theirPeerInfo)
     this._protocolHandshake(protocol, this.conn, callback)
   }
@@ -266,7 +268,8 @@ class ConnectionFSM extends BaseConnection {
       this.muxer.end()
     }
 
-    delete this.switch.muxedConns[this.theirB58Id]
+    this.switch.connection.remove(this)
+
     delete this.switch.conns[this.theirB58Id]
     delete this.muxer
     delete this.conn
@@ -352,7 +355,8 @@ class ConnectionFSM extends BaseConnection {
           const conn = observeConnection(null, key, _conn, this.switch.observer)
 
           this.muxer = this.switch.muxers[key].dialer(conn)
-          this.switch.muxedConns[this.theirB58Id] = this
+          // this.switch.muxedConns[this.theirB58Id] = this
+          this.switch.connection.add(this)
 
           this.muxer.once('close', () => {
             this.close()

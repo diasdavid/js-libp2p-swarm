@@ -86,10 +86,10 @@ describe('Switch (webrtc-star)', () => {
   it('dial on proto', (done) => {
     switch1.dial(peer2, '/echo/1.0.0', (err, conn) => {
       expect(err).to.not.exist()
-      expect(Object.keys(switch1.muxedConns).length).to.equal(1)
+      expect(switch1.connection.getAll()).to.have.length(1)
 
       tryEcho(conn, () => {
-        expect(Object.keys(switch2.muxedConns).length).to.equal(1)
+        expect(switch2.connection.getAll()).to.have.length(1)
         done()
       })
     })
@@ -104,12 +104,12 @@ describe('Switch (webrtc-star)', () => {
 
     function check () {
       if (++counter === 4) {
-        const s1n = Object.keys(switch1.muxedConns).length
-        const s2n = Object.keys(switch2.muxedConns).length
-        const s3n = Object.keys(switch3.muxedConns).length
-        expect(s1n).to.equal(2)
-        expect(s2n).to.equal(2)
-        expect(s3n).to.equal(2)
+        const s1n = switchA.connection.getAll()
+        const s2n = switchA.connection.getAll()
+        const s3n = switchA.connection.getAll()
+        expect(s1n).to.have.length(2)
+        expect(s2n).to.have.length(2)
+        expect(s3n).to.have.length(2)
         switch3.stop(done)
       }
       if (counter === 3) {

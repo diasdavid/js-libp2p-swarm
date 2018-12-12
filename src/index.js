@@ -50,8 +50,8 @@ class Switch extends EventEmitter {
     //     conn: <transport socket> // to extract info required for the Identify Protocol
     //   }
     // }
-    this.muxedConns = {}
-    this.muxedConnsIn = {}
+    // this.muxedConns = {}
+    // this.muxedConnsIn = {}
 
     // { protocol: handler }
     this.protocols = {}
@@ -95,7 +95,10 @@ class Switch extends EventEmitter {
         stop: 'STOPPING',
         start: 'STARTED'
       },
-      STOPPING: { done: 'STOPPED' }
+      STOPPING: {
+        stop: 'STOPPING',
+        done: 'STOPPED'
+      }
     })
     this.state.on('STARTING', () => {
       log('The switch is starting')
@@ -177,10 +180,7 @@ class Switch extends EventEmitter {
   hangUp (peer, callback) {
     const peerInfo = getPeerInfo(peer, this.peerBook)
     const key = peerInfo.id.toB58String()
-    let conns = []
-
-    if (this.muxedConns[key]) conns.push(this.muxedConns[key])
-    if (this.muxedConnsIn[key]) conns.push(this.muxedConnsIn[key])
+    const conns = this.connection.getAllById(key)
 
     each(conns, (conn, cb) => {
       conn.once('close', cb)
@@ -262,7 +262,14 @@ class Switch extends EventEmitter {
       },
       (cb) => each(this._peerBook.getAllArray(), (peer, cb) => {
         this.hangUp(peer, cb)
-      }, cb)
+      }, cb),
+      // (cb) => each(this.allConns, (conn, cb) => {
+      //   conn.on('close', cb)
+      //   conn.close()
+      // }, () => {
+      //   this.allConns = []
+      //   cb()
+      // })
     ], (_) => {
       this.state('done')
     })

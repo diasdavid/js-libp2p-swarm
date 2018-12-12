@@ -20,6 +20,57 @@ const plaintext = require('../plaintext')
 class ConnectionManager {
   constructor (_switch) {
     this.switch = _switch
+    this.connections = {}
+  }
+
+  add (connection) {
+    this.connections[connection.theirB58Id] = this.connections[connection.theirB58Id] || []
+    // Only add it if it's not there
+    if (!this.get(connection)) {
+      this.connections[connection.theirB58Id].push(connection)
+    }
+  }
+
+  get (connection) {
+    if (!this.connections[connection.theirB58Id]) return null
+
+    for (let i = 0; i < this.connections[connection.theirB58Id].length; i++) {
+      if (this.connections[connection.theirB58Id][i]) {
+        return this.connections[connection.theirB58Id][i]
+      }
+    }
+    return null
+  }
+
+  getOne (peerId) {
+    if (this.connections[peerId]) {
+      // TODO: Maybe select the best?
+      return this.connections[peerId][0]
+    }
+    return null
+  }
+
+  remove (connection) {
+    if (!this.connections[connection.theirB58Id]) return
+
+    for (let i = 0; i < this.connections[connection.theirB58Id].length; i++) {
+      if (this.connections[connection.theirB58Id][i]) {
+        this.connections[connection.theirB58Id].splice(i, 1)
+        return
+      }
+    }
+  }
+
+  getAll () {
+    let connections = []
+    for (const conns of Object.values(this.connections)) {
+      connections = [...connections, ...conns]
+    }
+    return connections
+  }
+
+  getAllById (id) {
+    return this.connections[id] || []
   }
 
   /**
@@ -91,11 +142,12 @@ class ConnectionManager {
             }
             const b58Str = peerInfo.id.toB58String()
 
-            this.switch.muxedConnsIn[b58Str] = new ConnectionFSM({
+            const connection = new ConnectionFSM({
               _switch: this.switch,
               peerInfo,
               muxer: muxedConn
             })
+            this.switch.connection.add(connection)
 
             if (peerInfo.multiaddrs.size > 0) {
               // with incomming conn and through identify, going to pick one
@@ -111,7 +163,8 @@ class ConnectionManager {
             peerInfo = this.switch._peerBook.put(peerInfo)
 
             muxedConn.once('close', () => {
-              delete this.switch.muxedConnsIn[b58Str]
+              // delete this.switch.muxedConnsIn[b58Str]
+              this.switch.connection.remove(connection)
               peerInfo.disconnect()
               peerInfo = this.switch._peerBook.put(peerInfo)
               log(`closed connection to ${b58Str}`)
