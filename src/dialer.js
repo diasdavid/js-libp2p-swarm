@@ -60,7 +60,8 @@ function dial (_switch, returnFSM) {
       connection = new ConnectionFSM({
         _switch,
         peerInfo,
-        muxer: null
+        muxer: null,
+        conn: null
       })
       connection.once('error', (err) => callback(err))
       connection.once('connected', () => connection.protect())

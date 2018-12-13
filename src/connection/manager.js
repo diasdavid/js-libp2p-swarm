@@ -145,7 +145,8 @@ class ConnectionManager {
             const connection = new ConnectionFSM({
               _switch: this.switch,
               peerInfo,
-              muxer: muxedConn
+              muxer: muxedConn,
+              conn: conn
             })
             this.switch.connection.add(connection)
 

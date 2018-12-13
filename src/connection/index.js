@@ -15,6 +15,7 @@ const Errors = require('../errors')
  * @property {Switch} _switch Our switch instance
  * @property {PeerInfo} peerInfo The PeerInfo of the peer to dial
  * @property {Muxer} muxer Optional - A muxed connection
+ * @property {Connection} conn Optional - The base connection
  */
 
 /**
@@ -29,7 +30,7 @@ class ConnectionFSM extends BaseConnection {
    * @param {ConnectionOptions} param0
    * @constructor
    */
-  constructor ({ _switch, peerInfo, muxer }) {
+  constructor ({ _switch, peerInfo, muxer, conn }) {
     super({
       _switch,
       name: `out:${_switch._peerInfo.id.toB58String().slice(0, 8)}`
@@ -38,7 +39,7 @@ class ConnectionFSM extends BaseConnection {
     this.theirPeerInfo = peerInfo
     this.theirB58Id = this.theirPeerInfo.id.toB58String()
 
-    this.conn = null // The base connection
+    this.conn = conn // The base connection
     this.muxer = muxer // The upgraded/muxed connection
 
     let startState = 'DISCONNECTED'
@@ -270,11 +271,18 @@ class ConnectionFSM extends BaseConnection {
 
     delete this.switch.conns[this.theirB58Id]
     delete this.muxer
-    delete this.conn
 
-    this._state('done')
-
-    setImmediate(() => this.switch.emit('peer-mux-closed', this.theirPeerInfo))
+    // If we have the base connection, abort it
+    if (this.conn) {
+      this.conn.source(true, () => {
+        this._state('done')
+        this.switch.emit('peer-mux-closed', this.theirPeerInfo)
+        delete this.conn
+      })
+    } else {
+      this._state('done')
+      this.switch.emit('peer-mux-closed', this.theirPeerInfo)
+    }
   }
 
   /**
