@@ -135,6 +135,17 @@ describe('dialFSM', () => {
     switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
     switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
 
+    switchB.on('peer-mux-closed', (peerInfo) => {
+      switchB.removeAllListeners('peer-mux-closed')
+      expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
+    })
+
+    expect(2).checks(() => {
+      expect(switchA.connection.getAll()).to.have.length(0)
+      expect(switchB.connection.getAll()).to.have.length(0)
+      done()
+    })
+
     parallel([
       (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', cb),
       (cb) => switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', cb)
@@ -142,12 +153,8 @@ describe('dialFSM', () => {
       if (err) return done(err)
 
       // Hangup and verify the connections are closed
-      switchA.hangUp(switchB._peerInfo, () => {
-        setTimeout(() => {
-          expect(switchB.connection.getAll()).to.have.length(0)
-          expect(switchA.connection.getAll()).to.have.length(0)
-          done()
-        }, 250)
+      switchA.hangUp(switchB._peerInfo, (err) => {
+        expect(err).to.not.exist().mark()
       })
     })
   })
@@ -156,6 +163,17 @@ describe('dialFSM', () => {
     switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
     switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
 
+    switchB.on('peer-mux-closed', (peerInfo) => {
+      switchB.removeAllListeners('peer-mux-closed')
+      expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
+    })
+
+    expect(2).checks(() => {
+      expect(switchA.connection.getAll()).to.have.length(0)
+      expect(switchB.connection.getAll()).to.have.length(0)
+      done()
+    })
+
     parallel([
       (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', cb),
       (cb) => switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', cb)
@@ -163,12 +181,8 @@ describe('dialFSM', () => {
       if (err) return done(err)
 
       // Hangup and verify the connections are closed
-      switchA.stop(() => {
-        setTimeout(() => {
-          expect(switchB.connection.getAll()).to.have.length(0)
-          expect(switchA.connection.getAll()).to.have.length(0)
-          done()
-        }, 250)
+      switchA.stop((err) => {
+        expect(err).to.not.exist().mark()
       })
     })
   })
