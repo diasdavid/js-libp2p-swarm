@@ -44,15 +44,6 @@ class Switch extends EventEmitter {
     // { peerIdB58: { conn: <conn> }}
     this.conns = {}
 
-    // {
-    //   peerIdB58: {
-    //     muxer: <muxer>
-    //     conn: <transport socket> // to extract info required for the Identify Protocol
-    //   }
-    // }
-    // this.muxedConns = {}
-    // this.muxedConnsIn = {}
-
     // { protocol: handler }
     this.protocols = {}
 
@@ -260,8 +251,9 @@ class Switch extends EventEmitter {
           }, cb)
         }, cb)
       },
-      (cb) => each(this._peerBook.getAllArray(), (peer, cb) => {
-        this.hangUp(peer, cb)
+      (cb) => each(this.connection.getAll(), (conn, cb) => {
+        conn.once('close', cb)
+        conn.close()
       }, cb)
     ], (_) => {
       this.state('done')
