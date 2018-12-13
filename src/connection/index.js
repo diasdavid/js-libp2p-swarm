@@ -167,8 +167,6 @@ class ConnectionFSM extends BaseConnection {
       })
     }
 
-    // TODO: probably not necessary
-    this.conn.setPeerInfo(this.theirPeerInfo)
     this._protocolHandshake(protocol, this.conn, callback)
   }
 
