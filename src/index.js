@@ -262,14 +262,7 @@ class Switch extends EventEmitter {
       },
       (cb) => each(this._peerBook.getAllArray(), (peer, cb) => {
         this.hangUp(peer, cb)
-      }, cb),
-      // (cb) => each(this.allConns, (conn, cb) => {
-      //   conn.on('close', cb)
-      //   conn.close()
-      // }, () => {
-      //   this.allConns = []
-      //   cb()
-      // })
+      }, cb)
     ], (_) => {
       this.state('done')
     })

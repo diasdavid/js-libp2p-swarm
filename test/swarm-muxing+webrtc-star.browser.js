@@ -31,7 +31,7 @@ describe('Switch (webrtc-star)', () => {
     (cb) => peerId.create((err, id1) => {
       expect(err).to.not.exist()
       peer1 = new PeerInfo(id1)
-      const ma1 = 'ip4/127.0.0.1/tcp/15555/ws/p2p-webrtc-star/ipfs/' +
+      const ma1 = '/ip4/127.0.0.1/tcp/15555/ws/p2p-webrtc-star/ipfs/' +
         id1.toB58String()
       peer1.multiaddrs.add(ma1)
       cb()
@@ -104,9 +104,9 @@ describe('Switch (webrtc-star)', () => {
 
     function check () {
       if (++counter === 4) {
-        const s1n = switchA.connection.getAll()
-        const s2n = switchA.connection.getAll()
-        const s3n = switchA.connection.getAll()
+        const s1n = switch1.connection.getAll()
+        const s2n = switch2.connection.getAll()
+        const s3n = switch3.connection.getAll()
         expect(s1n).to.have.length(2)
         expect(s2n).to.have.length(2)
         expect(s3n).to.have.length(2)

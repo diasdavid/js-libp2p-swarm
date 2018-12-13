@@ -133,7 +133,7 @@ module.exports = (observer, _options) => {
   }
 
   function stop () {
-    observer.off('message', onMessage)
+    observer.removeListener('message', onMessage)
     globalStats.stop()
 
     for (let peerStat of peerStats.values()) {
