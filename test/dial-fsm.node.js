@@ -131,7 +131,9 @@ describe('dialFSM', () => {
     })
   })
 
-  it('parallel dials to one another should disconnect on hangup', (done) => {
+  it('parallel dials to one another should disconnect on hangup', function (done) {
+    this.timeout(10e3)
+
     switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
     switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
 
