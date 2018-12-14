@@ -135,26 +135,32 @@ describe('dialFSM', () => {
     switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
     switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
 
-    switchB.on('peer-mux-closed', (peerInfo) => {
+    // 4 close checks and 1 hangup check
+    expect(5).checks(() => {
+      switchA.removeAllListeners('peer-mux-closed')
       switchB.removeAllListeners('peer-mux-closed')
-      expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
-    })
-
-    expect(2).checks(() => {
-      expect(switchA.connection.getAll()).to.have.length(0)
-      expect(switchB.connection.getAll()).to.have.length(0)
       done()
     })
 
-    parallel([
-      (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', cb),
-      (cb) => switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', cb)
-    ], (err) => {
-      if (err) return done(err)
+    switchA.on('peer-mux-closed', (peerInfo) => {
+      expect(peerInfo.id.toB58String()).to.eql(switchB._peerInfo.id.toB58String()).mark()
+    })
+    switchB.on('peer-mux-closed', (peerInfo) => {
+      expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
+    })
 
+    const conn = switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', () => {
       // Hangup and verify the connections are closed
       switchA.hangUp(switchB._peerInfo, (err) => {
         expect(err).to.not.exist().mark()
+      })
+    })
+
+    // Hold the dial from A, until switch B is done dialing to ensure
+    // we have both incoming and outgoing connections
+    conn._state.on('DIALING:enter', (cb) => {
+      switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', () => {
+        cb()
       })
     })
   })
@@ -163,26 +169,32 @@ describe('dialFSM', () => {
     switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
     switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
 
-    switchB.on('peer-mux-closed', (peerInfo) => {
+    // 4 close checks and 1 hangup check
+    expect(5).checks(() => {
+      switchA.removeAllListeners('peer-mux-closed')
       switchB.removeAllListeners('peer-mux-closed')
-      expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
-    })
-
-    expect(2).checks(() => {
-      expect(switchA.connection.getAll()).to.have.length(0)
-      expect(switchB.connection.getAll()).to.have.length(0)
       done()
     })
 
-    parallel([
-      (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', cb),
-      (cb) => switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', cb)
-    ], (err) => {
-      if (err) return done(err)
+    switchA.on('peer-mux-closed', (peerInfo) => {
+      expect(peerInfo.id.toB58String()).to.eql(switchB._peerInfo.id.toB58String()).mark()
+    })
+    switchB.on('peer-mux-closed', (peerInfo) => {
+      expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
+    })
 
+    const conn = switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', () => {
       // Hangup and verify the connections are closed
       switchA.stop((err) => {
         expect(err).to.not.exist().mark()
+      })
+    })
+
+    // Hold the dial from A, until switch B is done dialing to ensure
+    // we have both incoming and outgoing connections
+    conn._state.on('DIALING:enter', (cb) => {
+      switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', () => {
+        cb()
       })
     })
   })

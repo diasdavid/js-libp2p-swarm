@@ -16,6 +16,7 @@ const Errors = require('../errors')
  * @property {PeerInfo} peerInfo The PeerInfo of the peer to dial
  * @property {Muxer} muxer Optional - A muxed connection
  * @property {Connection} conn Optional - The base connection
+ * @property {string} type Optional - identify the connection as incoming or outgoing. Defaults to out.
  */
 
 /**
@@ -30,10 +31,10 @@ class ConnectionFSM extends BaseConnection {
    * @param {ConnectionOptions} param0
    * @constructor
    */
-  constructor ({ _switch, peerInfo, muxer, conn }) {
+  constructor ({ _switch, peerInfo, muxer, conn, type = 'out' }) {
     super({
       _switch,
-      name: `out:${_switch._peerInfo.id.toB58String().slice(0, 8)}`
+      name: `${type}:${_switch._peerInfo.id.toB58String().slice(0, 8)}`
     })
 
     this.theirPeerInfo = peerInfo
@@ -375,7 +376,7 @@ class ConnectionFSM extends BaseConnection {
             this.switch.protocolMuxer(null)(conn)
           })
 
-          setImmediate(() => this.switch.emit('peer-mux-established', this.theirPeerInfo))
+          this.switch.emit('peer-mux-established', this.theirPeerInfo)
 
           this._didUpgrade(null)
         })

@@ -23,6 +23,12 @@ class ConnectionManager {
     this.connections = {}
   }
 
+  /**
+   * Adds the connection for tracking if it's not already added
+   * @private
+   * @param {ConnectionFSM} connection
+   * @returns {void}
+   */
   add (connection) {
     this.connections[connection.theirB58Id] = this.connections[connection.theirB58Id] || []
     // Only add it if it's not there
@@ -31,17 +37,29 @@ class ConnectionManager {
     }
   }
 
+  /**
+   * Gets the connection from the list if it exists
+   * @private
+   * @param {ConnectionFSM} connection
+   * @returns {ConnectionFSM|null} The found connection or null
+   */
   get (connection) {
     if (!this.connections[connection.theirB58Id]) return null
 
     for (let i = 0; i < this.connections[connection.theirB58Id].length; i++) {
-      if (this.connections[connection.theirB58Id][i]) {
+      if (this.connections[connection.theirB58Id][i] === connection) {
         return this.connections[connection.theirB58Id][i]
       }
     }
     return null
   }
 
+  /**
+   * Gets a connection associated with the given peer
+   * @private
+   * @param {string} peerId The peers id
+   * @returns {ConnectionFSM|null} The found connection or null
+   */
   getOne (peerId) {
     if (this.connections[peerId]) {
       // TODO: Maybe select the best?
@@ -50,17 +68,28 @@ class ConnectionManager {
     return null
   }
 
+  /**
+   * Removes the connection from tracking
+   * @private
+   * @param {ConnectionFSM} connection The connection to remove
+   * @returns {void}
+   */
   remove (connection) {
     if (!this.connections[connection.theirB58Id]) return
 
     for (let i = 0; i < this.connections[connection.theirB58Id].length; i++) {
-      if (this.connections[connection.theirB58Id][i]) {
+      if (this.connections[connection.theirB58Id][i] === connection) {
         this.connections[connection.theirB58Id].splice(i, 1)
         return
       }
     }
   }
 
+  /**
+   * Returns all connections being tracked
+   * @private
+   * @returns {ConnectionFSM[]}
+   */
   getAll () {
     let connections = []
     for (const conns of Object.values(this.connections)) {
@@ -69,8 +98,14 @@ class ConnectionManager {
     return connections
   }
 
-  getAllById (id) {
-    return this.connections[id] || []
+  /**
+   * Returns all connections being tracked for a given peer id
+   * @private
+   * @param {string} peerId Stringified peer id
+   * @returns {ConnectionFSM[]}
+   */
+  getAllById (peerId) {
+    return this.connections[peerId] || []
   }
 
   /**
@@ -121,9 +156,6 @@ class ConnectionManager {
             ], (err, peerInfo) => {
               if (err) {
                 return muxedConn.end(() => {
-                  if (peerInfo) {
-                    setImmediate(() => this.switch.emit('peer-mux-closed', peerInfo))
-                  }
                   callback(err, null)
                 })
               }
@@ -146,7 +178,8 @@ class ConnectionManager {
               _switch: this.switch,
               peerInfo,
               muxer: muxedConn,
-              conn: conn
+              conn: conn,
+              type: 'inc'
             })
             this.switch.connection.add(connection)
 
@@ -164,15 +197,10 @@ class ConnectionManager {
             peerInfo = this.switch._peerBook.put(peerInfo)
 
             muxedConn.once('close', () => {
-              // delete this.switch.muxedConnsIn[b58Str]
-              this.switch.connection.remove(connection)
-              peerInfo.disconnect()
-              peerInfo = this.switch._peerBook.put(peerInfo)
-              log(`closed connection to ${b58Str}`)
-              setImmediate(() => this.switch.emit('peer-mux-closed', peerInfo))
+              connection.close()
             })
 
-            setImmediate(() => this.switch.emit('peer-mux-established', peerInfo))
+            this.switch.emit('peer-mux-established', peerInfo)
           })
         })
       }
