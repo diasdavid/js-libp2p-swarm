@@ -6,7 +6,6 @@ const waterfall = require('async/waterfall')
 const debug = require('debug')
 const log = debug('libp2p:switch:conn-manager')
 const once = require('once')
-const setImmediate = require('async/setImmediate')
 const ConnectionFSM = require('../connection')
 
 const Circuit = require('libp2p-circuit')

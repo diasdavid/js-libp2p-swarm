@@ -1,7 +1,6 @@
 'use strict'
 
 const FSM = require('fsm-event')
-const setImmediate = require('async/setImmediate')
 const Circuit = require('libp2p-circuit')
 const multistream = require('multistream-select')
 const withIs = require('class-is')
