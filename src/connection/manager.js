@@ -3,7 +3,6 @@
 const identify = require('libp2p-identify')
 const multistream = require('multistream-select')
 const waterfall = require('async/waterfall')
-const setImmediate = require('async/setImmediate')
 const debug = require('debug')
 const log = debug('libp2p:switch:conn-manager')
 const once = require('once')
@@ -146,19 +145,20 @@ class ConnectionManager {
               (cb) => ms.handle(conn, cb),
               (cb) => ms.select(identify.multicodec, cb),
               // run identify and verify the peer has the same info from crypto
-              (conn, cb) => identify.dialer(conn, cryptoPI, cb),
-              (peerInfo, observedAddrs, cb) => {
-                observedAddrs.forEach((oa) => {
-                  this.switch._peerInfo.multiaddrs.addSafe(oa)
-                })
-                setImmediate(() => cb(null, peerInfo))
-              }
-            ], (err, peerInfo) => {
+              (conn, cb) => identify.dialer(conn, cryptoPI, cb)
+            ], (err, peerInfo, observedAddrs) => {
               if (err) {
                 return muxedConn.end(() => {
                   callback(err, null)
                 })
               }
+
+              // const peerInfo = results[0]
+              // const observedAddrs = results[1] || []
+
+              observedAddrs.forEach((oa) => {
+                this.switch._peerInfo.multiaddrs.addSafe(oa)
+              })
 
               if (peerInfo) {
                 conn.setPeerInfo(peerInfo)
