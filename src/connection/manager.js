@@ -3,6 +3,7 @@
 const identify = require('libp2p-identify')
 const multistream = require('multistream-select')
 const waterfall = require('async/waterfall')
+const setImmediate = require('async/setImmediate')
 const debug = require('debug')
 const log = debug('libp2p:switch:conn-manager')
 const once = require('once')
@@ -150,7 +151,7 @@ class ConnectionManager {
                 observedAddrs.forEach((oa) => {
                   this.switch._peerInfo.multiaddrs.addSafe(oa)
                 })
-                cb(null, peerInfo)
+                setImmediate(() => cb(null, peerInfo))
               }
             ], (err, peerInfo) => {
               if (err) {
