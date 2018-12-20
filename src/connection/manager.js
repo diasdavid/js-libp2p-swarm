@@ -153,9 +153,6 @@ class ConnectionManager {
                 })
               }
 
-              // const peerInfo = results[0]
-              // const observedAddrs = results[1] || []
-
               observedAddrs.forEach((oa) => {
                 this.switch._peerInfo.multiaddrs.addSafe(oa)
               })
