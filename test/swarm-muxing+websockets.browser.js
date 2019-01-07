@@ -34,7 +34,7 @@ describe('Switch (WebSockets)', () => {
 
   it('add ws', () => {
     sw.transport.add('ws', new WebSockets())
-    expect(Object.keys(sw.transports).length).to.equal(1)
+    expect(Object.keys(sw.transport.transports).length).to.equal(1)
   })
 
   it('create Dst peer info', (done) => {

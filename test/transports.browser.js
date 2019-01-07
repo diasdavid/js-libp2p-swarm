@@ -35,7 +35,7 @@ describe('Transports', () => {
 
     it('.transport.add', () => {
       sw.transport.add('ws', new WebSockets())
-      expect(Object.keys(sw.transports).length).to.equal(1)
+      expect(Object.keys(sw.transport.transports).length).to.equal(1)
     })
 
     it('.transport.dial', (done) => {

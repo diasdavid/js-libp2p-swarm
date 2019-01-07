@@ -24,6 +24,11 @@ class TransportManager {
   constructor (_switch) {
     this.switch = _switch
     this.dialer = new LimitDialer(defaultPerPeerRateLimit, dialTimeout)
+
+    // transports --
+    // { key: transport }; e.g { tcp: <tcp> }
+    this.transports = {}
+
   }
 
   /**
@@ -35,13 +40,13 @@ class TransportManager {
    */
   add (key, transport) {
     log('adding %s', key)
-    if (this.switch.transports[key]) {
+    if (this.transports[key]) {
       throw new Error('There is already a transport with this key')
     }
 
-    this.switch.transports[key] = transport
-    if (!this.switch.transports[key].listeners) {
-      this.switch.transports[key].listeners = []
+    this.transports[key] = transport
+    if (!this.transports[key].listeners) {
+      this.transports[key].listeners = []
     }
   }
 
@@ -56,12 +61,12 @@ class TransportManager {
   remove (key, callback) {
     callback = callback || function () {}
 
-    if (!this.switch.transports[key]) {
+    if (!this.transports[key]) {
       return callback()
     }
 
     this.close(key, (err) => {
-      delete this.switch.transports[key]
+      delete this.transports[key]
       callback(err)
     })
   }
@@ -73,7 +78,7 @@ class TransportManager {
    * @returns {void}
    */
   removeAll (callback) {
-    const tasks = Object.keys(this.switch.transports).map((key) => {
+    const tasks = Object.keys(this.transports).map((key) => {
       return (cb) => {
         this.remove(key, cb)
       }
@@ -91,7 +96,7 @@ class TransportManager {
    * @returns {void}
    */
   dial (key, peerInfo, callback) {
-    const transport = this.switch.transports[key]
+    const transport = this.transports[key]
     let multiaddrs = peerInfo.multiaddrs.toArray()
 
     if (!Array.isArray(multiaddrs)) {
@@ -127,7 +132,7 @@ class TransportManager {
   listen (key, _options, handler, callback) {
     handler = this.switch._connectionHandler(key, handler)
 
-    const transport = this.switch.transports[key]
+    const transport = this.transports[key]
     const multiaddrs = TransportManager.dialables(
       transport,
       this.switch._peerInfo.multiaddrs.distinct()
@@ -181,7 +186,7 @@ class TransportManager {
    * @returns {void}
    */
   close (key, callback) {
-    const transport = this.switch.transports[key]
+    const transport = this.transports[key]
 
     if (!transport) {
       return callback(new Error(`Trying to close non existing transport: ${key}`))

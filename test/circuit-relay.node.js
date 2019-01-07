@@ -67,15 +67,15 @@ describe(`circuit`, function () {
 
   it('.enableCircuitRelay', () => {
     swarmA.connection.enableCircuitRelay({ enabled: true })
-    expect(Object.keys(swarmA.transports).length).to.equal(3)
+    expect(Object.keys(swarmA.transport.transports).length).to.equal(3)
 
     swarmB.connection.enableCircuitRelay({ enabled: true })
-    expect(Object.keys(swarmB.transports).length).to.equal(2)
+    expect(Object.keys(swarmB.transport.transports).length).to.equal(2)
   })
 
   it('listed on the transports map', () => {
-    expect(swarmA.transports.Circuit).to.exist()
-    expect(swarmB.transports.Circuit).to.exist()
+    expect(swarmA.transport.transports.Circuit).to.exist()
+    expect(swarmB.transport.transports.Circuit).to.exist()
   })
 
   it('add /p2p-circuit addrs on start', (done) => {

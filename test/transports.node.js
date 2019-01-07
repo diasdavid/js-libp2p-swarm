@@ -47,9 +47,9 @@ describe('transports', () => {
 
     it('.transport.remove', () => {
       switchA.transport.add('test', new t.C())
-      expect(switchA.transports).to.have.any.keys(['test'])
+      expect(switchA.transport.transports).to.have.any.keys(['test'])
       switchA.transport.remove('test')
-      expect(switchA.transports).to.not.have.any.keys(['test'])
+      expect(switchA.transport.transports).to.not.have.any.keys(['test'])
       // verify remove fails silently
       switchA.transport.remove('test')
     })
@@ -57,19 +57,19 @@ describe('transports', () => {
     it('.transport.removeAll', (done) => {
       switchA.transport.add('test', new t.C())
       switchA.transport.add('test2', new t.C())
-      expect(switchA.transports).to.have.any.keys(['test', 'test2'])
+      expect(switchA.transport.transports).to.have.any.keys(['test', 'test2'])
       switchA.transport.removeAll(() => {
-        expect(switchA.transports).to.not.have.any.keys(['test', 'test2'])
+        expect(switchA.transport.transports).to.not.have.any.keys(['test', 'test2'])
         done()
       })
     })
 
     it('.transport.add', () => {
       switchA.transport.add(t.n, new t.C())
-      expect(Object.keys(switchA.transports).length).to.equal(1)
+      expect(Object.keys(switchA.transport.transports).length).to.equal(1)
 
       switchB.transport.add(t.n, new t.C())
-      expect(Object.keys(switchB.transports).length).to.equal(1)
+      expect(Object.keys(switchB.transport.transports).length).to.equal(1)
     })
 
     it('.transport.listen', (done) => {

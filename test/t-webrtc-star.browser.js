@@ -39,12 +39,12 @@ describe('transport - webrtc-star', () => {
 
   it('add WebRTCStar transport to switch 1', () => {
     switch1.transport.add('wstar', new WebRTCStar())
-    expect(Object.keys(switch1.transports).length).to.equal(1)
+    expect(Object.keys(switch1.transport.transports).length).to.equal(1)
   })
 
   it('add WebRTCStar transport to switch 2', () => {
     switch2.transport.add('wstar', new WebRTCStar())
-    expect(Object.keys(switch2.transports).length).to.equal(1)
+    expect(Object.keys(switch2.transport.transports).length).to.equal(1)
   })
 
   it('listen on switch 1', (done) => {

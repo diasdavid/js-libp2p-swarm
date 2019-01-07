@@ -196,7 +196,7 @@ class ConnectionFSM extends BaseConnection {
 
     const tKeys = this.switch.availableTransports(this.theirPeerInfo)
 
-    const circuitEnabled = Boolean(this.switch.transports[Circuit.tag])
+    const circuitEnabled = Boolean(this.switch.transport.transports[Circuit.tag])
     let circuitTried = false
 
     const nextTransport = (key) => {

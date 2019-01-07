@@ -36,9 +36,6 @@ class Switch extends EventEmitter {
     this._options = options || {}
 
     this.setMaxListeners(Infinity)
-    // transports --
-    // { key: transport }; e.g { tcp: <tcp> }
-    this.transports = {}
 
     // connections --
     // { peerIdB58: { conn: <conn> }}
@@ -121,10 +118,10 @@ class Switch extends EventEmitter {
    */
   availableTransports (peerInfo) {
     const myAddrs = peerInfo.multiaddrs.toArray()
-    const myTransports = Object.keys(this.transports)
+    const myTransports = Object.keys(this.transport.transports)
 
     // Only listen on transports we actually have addresses for
-    return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
+    return myTransports.filter((ts) => this.transport.transports[ts].filter(myAddrs).length > 0)
       // push Circuit to be the last proto to be dialed
       .sort((a) => {
         return a === 'Circuit' ? 1 : 0
@@ -184,7 +181,7 @@ class Switch extends EventEmitter {
    * @returns {boolean}
    */
   hasTransports () {
-    const transports = Object.keys(this.transports).filter((t) => t !== 'Circuit')
+    const transports = Object.keys(this.transport.transports).filter((t) => t !== 'Circuit')
     return transports && transports.length > 0
   }
 
@@ -244,7 +241,7 @@ class Switch extends EventEmitter {
     this.stats.stop()
     series([
       (cb) => {
-        each(this.transports, (transport, cb) => {
+        each(this.transport.transports, (transport, cb) => {
           each(transport.listeners, (listener, cb) => {
             listener.close(cb)
           }, cb)
