@@ -39,19 +39,19 @@ describe('ConnectionFSM', () => {
       dialerSwitch._peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/15451/ws')
       dialerSwitch.connection.crypto(secio.tag, secio.encrypt)
       dialerSwitch.connection.addStreamMuxer(multiplex)
-      dialerSwitch.transport.add('ws', new WS())
+      dialerSwitch.transportManager.add('ws', new WS())
 
       listenerSwitch = new Switch(infos.shift(), new PeerBook())
       listenerSwitch._peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/15452/ws')
       listenerSwitch.connection.crypto(secio.tag, secio.encrypt)
       listenerSwitch.connection.addStreamMuxer(multiplex)
-      listenerSwitch.transport.add('ws', new WS())
+      listenerSwitch.transportManager.add('ws', new WS())
 
       spdySwitch = new Switch(infos.shift(), new PeerBook())
       spdySwitch._peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/15453/ws')
       spdySwitch.connection.crypto(secio.tag, secio.encrypt)
       spdySwitch.connection.addStreamMuxer(spdy)
-      spdySwitch.transport.add('ws', new WS())
+      spdySwitch.transportManager.add('ws', new WS())
 
       parallel([
         (cb) => dialerSwitch.start(cb),
@@ -132,7 +132,7 @@ describe('ConnectionFSM', () => {
       peerInfo: listenerSwitch._peerInfo
     })
 
-    const stub = sinon.stub(dialerSwitch.transport, 'dial').callsArgWith(2, {
+    const stub = sinon.stub(dialerSwitch.transportManager, 'dial').callsArgWith(2, {
       errors: [
         new Error('address in use')
       ]

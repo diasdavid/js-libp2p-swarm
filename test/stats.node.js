@@ -40,8 +40,8 @@ describe('Stats', () => {
       const switchA = new Switch(peerA, new PeerBook(), options)
       const switchB = new Switch(peerB, new PeerBook(), options)
 
-      switchA.transport.add('tcp', new TCP())
-      switchB.transport.add('tcp', new TCP())
+      switchA.transportManager.add('tcp', new TCP())
+      switchB.transportManager.add('tcp', new TCP())
 
       switchA.connection.crypto(secio.tag, secio.encrypt)
       switchB.connection.crypto(secio.tag, secio.encrypt)

@@ -59,13 +59,13 @@ describe('Switch (everything all together)', () => {
     switchB._peerInfo.multiaddrs.add('/ip4/127.0.0.1/tcp/10200')
     switchC._peerInfo.multiaddrs.add('/ip4/127.0.0.1/tcp/10300')
 
-    switchA.transport.add('tcp', new TCP())
-    switchB.transport.add('tcp', new TCP())
-    switchC.transport.add('tcp', new TCP())
+    switchA.transportManager.add('tcp', new TCP())
+    switchB.transportManager.add('tcp', new TCP())
+    switchC.transportManager.add('tcp', new TCP())
 
     parallel([
-      (cb) => switchA.transport.listen('tcp', {}, null, cb),
-      (cb) => switchB.transport.listen('tcp', {}, null, cb)
+      (cb) => switchA.transportManager.listen('tcp', {}, null, cb),
+      (cb) => switchB.transportManager.listen('tcp', {}, null, cb)
     ], done)
   })
 
@@ -75,15 +75,15 @@ describe('Switch (everything all together)', () => {
     switchD._peerInfo.multiaddrs.add('/ip4/127.0.0.1/tcp/9032/ws')
     switchE._peerInfo.multiaddrs.add('/ip4/127.0.0.1/tcp/9042/ws')
 
-    switchB.transport.add('ws', new WebSockets())
-    switchC.transport.add('ws', new WebSockets())
-    switchD.transport.add('ws', new WebSockets())
-    switchE.transport.add('ws', new WebSockets())
+    switchB.transportManager.add('ws', new WebSockets())
+    switchC.transportManager.add('ws', new WebSockets())
+    switchD.transportManager.add('ws', new WebSockets())
+    switchE.transportManager.add('ws', new WebSockets())
 
     parallel([
-      (cb) => switchB.transport.listen('ws', {}, null, cb),
-      (cb) => switchD.transport.listen('ws', {}, null, cb),
-      (cb) => switchE.transport.listen('ws', {}, null, cb)
+      (cb) => switchB.transportManager.listen('ws', {}, null, cb),
+      (cb) => switchD.transportManager.listen('ws', {}, null, cb),
+      (cb) => switchE.transportManager.listen('ws', {}, null, cb)
     ], done)
   })
 

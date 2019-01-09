@@ -39,9 +39,9 @@ describe('Identify', () => {
     switchB = new Switch(peerB, new PeerBook())
     switchC = new Switch(peerC, new PeerBook())
 
-    switchA.transport.add('tcp', new TCP())
-    switchB.transport.add('tcp', new TCP())
-    switchC.transport.add('tcp', new TCP())
+    switchA.transportManager.add('tcp', new TCP())
+    switchB.transportManager.add('tcp', new TCP())
+    switchC.transportManager.add('tcp', new TCP())
 
     switchA.connection.crypto(secio.tag, secio.encrypt)
     switchB.connection.crypto(secio.tag, secio.encrypt)
@@ -56,9 +56,9 @@ describe('Identify', () => {
     switchC.connection.reuse()
 
     parallel([
-      (cb) => switchA.transport.listen('tcp', {}, null, cb),
-      (cb) => switchB.transport.listen('tcp', {}, null, cb),
-      (cb) => switchC.transport.listen('tcp', {}, null, cb)
+      (cb) => switchA.transportManager.listen('tcp', {}, null, cb),
+      (cb) => switchB.transportManager.listen('tcp', {}, null, cb),
+      (cb) => switchC.transportManager.listen('tcp', {}, null, cb)
     ], done)
   }))
 

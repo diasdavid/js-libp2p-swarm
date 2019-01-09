@@ -239,7 +239,7 @@ class ConnectionManager {
         Object.assign(config, { hop: { enabled: false, active: false } })
       }
 
-      this.switch.transport.add(Circuit.tag, new Circuit(this.switch, config))
+      this.switch.transportManager.add(Circuit.tag, new Circuit(this.switch, config))
     }
   }
 

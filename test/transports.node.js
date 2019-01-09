@@ -46,37 +46,39 @@ describe('transports', () => {
     })
 
     it('.transport.remove', () => {
-      switchA.transport.add('test', new t.C())
-      expect(switchA.transport.transports).to.have.any.keys(['test'])
-      switchA.transport.remove('test')
-      expect(switchA.transport.transports).to.not.have.any.keys(['test'])
+      switchA.transportManager.add('test', new t.C())
+      expect([...switchA.transportManager.getAll().keys()]).to.contain('test')
+      switchA.transportManager.remove('test')
+      expect([...switchA.transportManager.getAll().keys()]).to.not.contain('test')
       // verify remove fails silently
-      switchA.transport.remove('test')
+      switchA.transportManager.remove('test')
     })
 
     it('.transport.removeAll', (done) => {
-      switchA.transport.add('test', new t.C())
-      switchA.transport.add('test2', new t.C())
-      expect(switchA.transport.transports).to.have.any.keys(['test', 'test2'])
-      switchA.transport.removeAll(() => {
-        expect(switchA.transport.transports).to.not.have.any.keys(['test', 'test2'])
+      switchA.transportManager.add('test', new t.C())
+      switchA.transportManager.add('test2', new t.C())
+      expect([...switchA.transportManager.getAll().keys()]).to.contain('test')
+      expect([...switchA.transportManager.getAll().keys()]).to.contain('test2')
+      switchA.transportManager.removeAll(() => {
+        expect([...switchA.transportManager.getAll().keys()]).to.not.contain('test')
+        expect([...switchA.transportManager.getAll().keys()]).to.not.contain('test2')
         done()
       })
     })
 
     it('.transport.add', () => {
-      switchA.transport.add(t.n, new t.C())
-      expect(Object.keys(switchA.transport.transports).length).to.equal(1)
+      switchA.transportManager.add(t.n, new t.C())
+      expect(switchA.transportManager.getAll().size).to.equal(1)
 
-      switchB.transport.add(t.n, new t.C())
-      expect(Object.keys(switchB.transport.transports).length).to.equal(1)
+      switchB.transportManager.add(t.n, new t.C())
+      expect(switchB.transportManager.getAll().size).to.equal(1)
     })
 
     it('.transport.listen', (done) => {
       let count = 0
 
-      switchA.transport.listen(t.n, {}, (conn) => pull(conn, conn), ready)
-      switchB.transport.listen(t.n, {}, (conn) => pull(conn, conn), ready)
+      switchA.transportManager.listen(t.n, {}, (conn) => pull(conn, conn), ready)
+      switchB.transportManager.listen(t.n, {}, (conn) => pull(conn, conn), ready)
 
       function ready () {
         if (++count === 2) {
@@ -91,7 +93,7 @@ describe('transports', () => {
       const peer = morePeerInfo[0]
       peer.multiaddrs.add(t.maGen(9999))
 
-      const conn = switchA.transport.dial(t.n, peer, (err, conn) => {
+      const conn = switchA.transportManager.dial(t.n, peer, (err, conn) => {
         expect(err).to.not.exist()
       })
 
@@ -108,7 +110,7 @@ describe('transports', () => {
       // addr not supported added on purpose
       peer.multiaddrs.add('/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star')
 
-      const conn = switchA.transport.dial(t.n, peer, (err, conn) => {
+      const conn = switchA.transportManager.dial(t.n, peer, (err, conn) => {
         expect(err).to.not.exist()
       })
 
@@ -122,7 +124,7 @@ describe('transports', () => {
       // addr not supported added on purpose
       peer.multiaddrs.add('/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star')
 
-      switchA.transport.dial(t.n, peer, (err, conn) => {
+      switchA.transportManager.dial(t.n, peer, (err, conn) => {
         expect(err).to.exist()
         expect(err.errors).to.have.length(2)
         expect(conn).to.not.exist()
@@ -134,8 +136,8 @@ describe('transports', () => {
       this.timeout(2500)
 
       parallel([
-        (cb) => switchA.transport.close(t.n, cb),
-        (cb) => switchB.transport.close(t.n, cb)
+        (cb) => switchA.transportManager.close(t.n, cb),
+        (cb) => switchB.transportManager.close(t.n, cb)
       ], done)
     })
 
@@ -145,8 +147,8 @@ describe('transports', () => {
       peer.multiaddrs.add(ma)
 
       const sw = new Switch(peer, new PeerBook())
-      sw.transport.add(t.n, new t.C())
-      sw.transport.listen(t.n, {}, (conn) => pull(conn, conn), ready)
+      sw.transportManager.add(t.n, new t.C())
+      sw.transportManager.listen(t.n, {}, (conn) => pull(conn, conn), ready)
 
       function ready () {
         expect(peer.multiaddrs.size).to.equal(1)
@@ -162,8 +164,8 @@ describe('transports', () => {
       peer.multiaddrs.add(ma)
 
       const sw = new Switch(peer, new PeerBook())
-      sw.transport.add(t.n, new t.C())
-      sw.transport.listen(t.n, {}, (conn) => pull(conn, conn), ready)
+      sw.transportManager.add(t.n, new t.C())
+      sw.transportManager.listen(t.n, {}, (conn) => pull(conn, conn), ready)
 
       function ready () {
         expect(peer.multiaddrs.size >= 1).to.equal(true)
@@ -178,8 +180,8 @@ describe('transports', () => {
       peer.multiaddrs.add(ma)
 
       const sw = new Switch(peer, new PeerBook())
-      sw.transport.add(t.n, new t.C())
-      sw.transport.listen(t.n, {}, (conn) => pull(conn, conn), ready)
+      sw.transportManager.add(t.n, new t.C())
+      sw.transportManager.listen(t.n, {}, (conn) => pull(conn, conn), ready)
 
       function ready () {
         expect(peer.multiaddrs.size >= 1).to.equal(true)
@@ -197,8 +199,8 @@ describe('transports', () => {
       peer.multiaddrs.add(t.maGen(9003))
 
       const sw = new Switch(peer, new PeerBook())
-      sw.transport.add(t.n, new t.C())
-      sw.transport.listen(t.n, {}, (conn) => pull(conn, conn), ready)
+      sw.transportManager.add(t.n, new t.C())
+      sw.transportManager.listen(t.n, {}, (conn) => pull(conn, conn), ready)
 
       function ready () {
         expect(peer.multiaddrs.size).to.equal(3)
@@ -213,14 +215,14 @@ describe('transports', () => {
       const switch1 = new Switch(switchA._peerInfo, new PeerBook())
       let switch2
 
-      switch1.transport.add(t.n, new t.C())
-      switch1.transport.listen(t.n, {}, (conn) => pull(conn, conn), () => {
+      switch1.transportManager.add(t.n, new t.C())
+      switch1.transportManager.listen(t.n, {}, (conn) => pull(conn, conn), () => {
         // Add in-use (peerA) address to peerB
         switchB._peerInfo.multiaddrs.add(t.maGen(9888))
 
         switch2 = new Switch(switchB._peerInfo, new PeerBook())
-        switch2.transport.add(t.n, new t.C())
-        switch2.transport.listen(t.n, {}, (conn) => pull(conn, conn), ready)
+        switch2.transportManager.add(t.n, new t.C())
+        switch2.transportManager.listen(t.n, {}, (conn) => pull(conn, conn), ready)
       })
 
       function ready (err) {

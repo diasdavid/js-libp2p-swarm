@@ -26,18 +26,17 @@ class TransportManager {
     this.dialer = new LimitDialer(defaultPerPeerRateLimit, dialTimeout)
 
     // transports --
-    // { <key>: {
+    // Map <<key>, {
     //     transport: <transport>,
     //     listeners: [<Listener>, <Listener>, ...]
-    //   }
-    // }
+    // }>
     // e.g:
-    // { tcp: {
+    // Map { "tcp" => {
     //     transport: <tcp>,
     //     listeners: [<Listener>, <Listener>, ...]
     //   }
     // }
-    this.transports = {}
+    this._transports = new Map()
   }
 
   /**
@@ -49,13 +48,27 @@ class TransportManager {
    */
   add (key, transport) {
     log('adding %s', key)
-    if (this.transports[key]) {
+    if (this._transports.get(key)) {
       throw new Error('There is already a transport with this key')
     }
 
-    this.transports[key] = {
+    this._transports.set(key, {
       transport: transport,
       listeners: []
+    })
+  }
+
+  /**
+   * Returns the `Transport` for the given key
+   *
+   * @param {String} key
+   * @returns {Transport}
+   */
+  get (key) {
+    if (this._transports.has(key)) {
+      return this._transports.get(key).transport
+    } else {
+      return null
     }
   }
 
@@ -64,12 +77,8 @@ class TransportManager {
    *
    * @returns {Map<String,Transport>}
    */
-  getTransports () {
-    return Object.keys(this.transports)
-      .reduce((acc, key) => {
-        acc[key] = this.transports[key].transport
-        return acc
-      }, {})
+  getAll () {
+    return new Map([...this._transports].map(([k, v]) => [k, v.transport]))
   }
 
   /**
@@ -79,10 +88,10 @@ class TransportManager {
    * @returns {Array<listener>}
    */
   getListeners (key) {
-    if (!this.transports[key]) {
+    if (!this._transports.has(key)) {
       return []
     } else {
-      return this.transports[key].listeners
+      return this._transports.get(key).listeners
     }
   }
 
@@ -97,12 +106,12 @@ class TransportManager {
   remove (key, callback) {
     callback = callback || function () {}
 
-    if (!this.transports[key]) {
+    if (!this._transports.get(key)) {
       return callback()
     }
 
     this.close(key, (err) => {
-      delete this.transports[key]
+      this._transports.delete(key)
       callback(err)
     })
   }
@@ -114,7 +123,7 @@ class TransportManager {
    * @returns {void}
    */
   removeAll (callback) {
-    const tasks = Object.keys(this.transports).map((key) => {
+    const tasks = [...this._transports.keys()].map((key) => {
       return (cb) => {
         this.remove(key, cb)
       }
@@ -132,7 +141,7 @@ class TransportManager {
    * @returns {void}
    */
   dial (key, peerInfo, callback) {
-    const transport = this.transports[key].transport
+    const transport = this._transports.get(key).transport
     let multiaddrs = peerInfo.multiaddrs.toArray()
 
     if (!Array.isArray(multiaddrs)) {
@@ -168,7 +177,7 @@ class TransportManager {
   listen (key, _options, handler, callback) {
     handler = this.switch._connectionHandler(key, handler)
 
-    const transport = this.transports[key].transport
+    const transport = this._transports.get(key).transport
     const multiaddrs = TransportManager.dialables(
       transport,
       this.switch._peerInfo.multiaddrs.distinct()
@@ -192,7 +201,7 @@ class TransportManager {
               return done(err)
             }
             freshMultiaddrs = freshMultiaddrs.concat(addrs)
-            this.transports[key].listeners.push(listener)
+            this._transports.get(key).listeners.push(listener)
             done()
           })
         })
@@ -218,13 +227,13 @@ class TransportManager {
    * @returns {void}
    */
   close (key, callback) {
-    const transport = this.transports[key]
+    const transport = this._transports.get(key)
 
     if (!transport) {
       return callback(new Error(`Trying to close non existing transport: ${key}`))
     }
 
-    parallel(this.transports[key].listeners.map((listener) => {
+    parallel(this._transports.get(key).listeners.map((listener) => {
       return (cb) => {
         listener.close(cb)
       }
