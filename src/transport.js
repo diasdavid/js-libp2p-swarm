@@ -51,6 +51,29 @@ class TransportManager {
   }
 
   /**
+   * Returns a map of all `Transports` on the form { key: transport }; e.g { tcp: <tcp> }
+   *
+   * @returns {Map<String,Transport>}
+   */
+  getTransports () {
+    return this.transports
+  }
+
+  /**
+   * Returns an array of listeners for the `Transport` with the given key
+   *
+   * @param {String} key
+   * @returns {Array<listener>}
+   */
+  getListeners (key) {
+    if (!this.transports[key] || !this.transports[key].listeners) {
+      return []
+    } else {
+      return this.transports[key].listeners
+    }
+  }
+
+  /**
    * Closes connections for the given transport key
    * and removes it from the switch.
    *
