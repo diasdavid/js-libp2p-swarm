@@ -26,9 +26,18 @@ class TransportManager {
     this.dialer = new LimitDialer(defaultPerPeerRateLimit, dialTimeout)
 
     // transports --
-    // { key: transport }; e.g { tcp: <tcp> }
+    // { <key>: {
+    //     transport: <transport>,
+    //     listeners: [<Listener>, <Listener>, ...]
+    //   }
+    // }
+    // e.g:
+    // { tcp: {
+    //     transport: <tcp>,
+    //     listeners: [<Listener>, <Listener>, ...]
+    //   }
+    // }
     this.transports = {}
-
   }
 
   /**
@@ -44,9 +53,9 @@ class TransportManager {
       throw new Error('There is already a transport with this key')
     }
 
-    this.transports[key] = transport
-    if (!this.transports[key].listeners) {
-      this.transports[key].listeners = []
+    this.transports[key] = {
+      transport: transport,
+      listeners: []
     }
   }
 
@@ -56,7 +65,11 @@ class TransportManager {
    * @returns {Map<String,Transport>}
    */
   getTransports () {
-    return this.transports
+    return Object.keys(this.transports)
+      .reduce((acc, key) => {
+        acc[key] = this.transports[key].transport
+        return acc
+      }, {})
   }
 
   /**
@@ -66,7 +79,7 @@ class TransportManager {
    * @returns {Array<listener>}
    */
   getListeners (key) {
-    if (!this.transports[key] || !this.transports[key].listeners) {
+    if (!this.transports[key]) {
       return []
     } else {
       return this.transports[key].listeners
@@ -119,7 +132,7 @@ class TransportManager {
    * @returns {void}
    */
   dial (key, peerInfo, callback) {
-    const transport = this.transports[key]
+    const transport = this.transports[key].transport
     let multiaddrs = peerInfo.multiaddrs.toArray()
 
     if (!Array.isArray(multiaddrs)) {
@@ -155,15 +168,11 @@ class TransportManager {
   listen (key, _options, handler, callback) {
     handler = this.switch._connectionHandler(key, handler)
 
-    const transport = this.transports[key]
+    const transport = this.transports[key].transport
     const multiaddrs = TransportManager.dialables(
       transport,
       this.switch._peerInfo.multiaddrs.distinct()
     )
-
-    if (!transport.listeners) {
-      transport.listeners = []
-    }
 
     let freshMultiaddrs = []
 
@@ -183,7 +192,7 @@ class TransportManager {
               return done(err)
             }
             freshMultiaddrs = freshMultiaddrs.concat(addrs)
-            transport.listeners.push(listener)
+            this.transports[key].listeners.push(listener)
             done()
           })
         })
@@ -215,7 +224,7 @@ class TransportManager {
       return callback(new Error(`Trying to close non existing transport: ${key}`))
     }
 
-    parallel(transport.listeners.map((listener) => {
+    parallel(this.transports[key].listeners.map((listener) => {
       return (cb) => {
         listener.close(cb)
       }
