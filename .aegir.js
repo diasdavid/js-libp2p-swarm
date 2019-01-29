@@ -38,8 +38,8 @@ function pre (done) {
       peerA.multiaddrs.add(maA)
       switchA = new Switch(peerA, new PeerBook())
 
-      switchA.transport.add('ws', new WebSockets())
-      switchA.transport.listen('ws', {}, echo, cb)
+      switchA.transportManager.add('ws', new WebSockets())
+      switchA.transportManager.listen('ws', {}, echo, cb)
     })
   }
 
@@ -53,7 +53,7 @@ function pre (done) {
       peerB.multiaddrs.add(maB)
       switchB = new Switch(peerB, new PeerBook())
 
-      switchB.transport.add('ws', new WebSockets())
+      switchB.transportManager.add('ws', new WebSockets())
       switchB.connection.addStreamMuxer(spdy)
       switchB.connection.reuse()
       switchB.handle('/echo/1.0.0', echo)
@@ -72,7 +72,7 @@ function pre (done) {
 
 function post (done) {
   parallel([
-    (cb) => switchA.transport.close('ws', cb),
+    (cb) => switchA.transportManager.close('ws', cb),
     (cb) => switchB.stop(cb),
     (cb) => sigS.stop(cb)
   ], done)

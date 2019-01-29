@@ -38,25 +38,25 @@ describe('transport - webrtc-star', () => {
   })
 
   it('add WebRTCStar transport to switch 1', () => {
-    switch1.transport.add('wstar', new WebRTCStar())
-    expect(Object.keys(switch1.transports).length).to.equal(1)
+    switch1.transportManager.add('wstar', new WebRTCStar())
+    expect(switch1.transportManager.getAll().size).to.equal(1)
   })
 
   it('add WebRTCStar transport to switch 2', () => {
-    switch2.transport.add('wstar', new WebRTCStar())
-    expect(Object.keys(switch2.transports).length).to.equal(1)
+    switch2.transportManager.add('wstar', new WebRTCStar())
+    expect(switch2.transportManager.getAll().size).to.equal(1)
   })
 
   it('listen on switch 1', (done) => {
-    switch1.transport.listen('wstar', {}, (conn) => pull(conn, conn), done)
+    switch1.transportManager.listen('wstar', {}, (conn) => pull(conn, conn), done)
   })
 
   it('listen on switch 2', (done) => {
-    switch2.transport.listen('wstar', {}, (conn) => pull(conn, conn), done)
+    switch2.transportManager.listen('wstar', {}, (conn) => pull(conn, conn), done)
   })
 
   it('dial', (done) => {
-    switch1.transport.dial('wstar', switch2._peerInfo, (err, conn) => {
+    switch1.transportManager.dial('wstar', switch2._peerInfo, (err, conn) => {
       expect(err).to.not.exist()
 
       tryEcho(conn, done)
@@ -67,7 +67,7 @@ describe('transport - webrtc-star', () => {
     peer2.multiaddrs.clear()
     peer2.multiaddrs.add('/ip4/127.0.0.1/tcp/15555/ws/p2p-webrtc-star/ipfs/ABCD')
 
-    switch1.transport.dial('wstar', peer2, (err, conn) => {
+    switch1.transportManager.dial('wstar', peer2, (err, conn) => {
       expect(err).to.exist()
       expect(conn).to.not.exist()
       done()
@@ -76,8 +76,8 @@ describe('transport - webrtc-star', () => {
 
   it('close', (done) => {
     parallel([
-      (cb) => switch1.transport.close('wstar', cb),
-      (cb) => switch2.transport.close('wstar', cb)
+      (cb) => switch1.transportManager.close('wstar', cb),
+      (cb) => switch2.transportManager.close('wstar', cb)
     ], done)
   })
 })

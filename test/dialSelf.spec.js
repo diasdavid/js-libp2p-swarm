@@ -53,7 +53,7 @@ describe(`dial self`, () => {
 
     swarmA = new Swarm(peerA, new PeerBook())
 
-    swarmA.transport.add('tcp', new MockTransport())
+    swarmA.transportManager.add('tcp', new MockTransport())
 
     done()
   }))

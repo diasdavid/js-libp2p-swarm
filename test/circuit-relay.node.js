@@ -40,11 +40,11 @@ describe(`circuit`, function () {
     swarmB = new Swarm(peerB, new PeerBook())
     swarmC = new Swarm(peerC, new PeerBook())
 
-    swarmA.transport.add('tcp', new TCP())
-    swarmA.transport.add('ws', new WS())
-    swarmB.transport.add('ws', new WS())
+    swarmA.transportManager.add('tcp', new TCP())
+    swarmA.transportManager.add('ws', new WS())
+    swarmB.transportManager.add('ws', new WS())
 
-    dialSpyA = sinon.spy(swarmA.transport, 'dial')
+    dialSpyA = sinon.spy(swarmA.transportManager, 'dial')
 
     done()
   }))
@@ -67,15 +67,15 @@ describe(`circuit`, function () {
 
   it('.enableCircuitRelay', () => {
     swarmA.connection.enableCircuitRelay({ enabled: true })
-    expect(Object.keys(swarmA.transports).length).to.equal(3)
+    expect(swarmA.transportManager.getAll().size).to.equal(3)
 
     swarmB.connection.enableCircuitRelay({ enabled: true })
-    expect(Object.keys(swarmB.transports).length).to.equal(2)
+    expect(swarmB.transportManager.getAll().size).to.equal(2)
   })
 
   it('listed on the transports map', () => {
-    expect(swarmA.transports.Circuit).to.exist()
-    expect(swarmB.transports.Circuit).to.exist()
+    expect(swarmA.transportManager.get('Circuit')).to.exist()
+    expect(swarmB.transportManager.get('Circuit')).to.exist()
   })
 
   it('add /p2p-circuit addrs on start', (done) => {
@@ -222,12 +222,12 @@ describe(`circuit`, function () {
           enabled: true
         })
 
-        bootstrapSwitch.transport.add('tcp', new TCP())
-        bootstrapSwitch.transport.add('ws', new WS())
-        tcpSwitch1.transport.add('tcp', new TCP())
-        tcpSwitch2.transport.add('tcp', new TCP())
-        wsSwitch1.transport.add('ws', new WS())
-        wsSwitch2.transport.add('ws', new WS())
+        bootstrapSwitch.transportManager.add('tcp', new TCP())
+        bootstrapSwitch.transportManager.add('ws', new WS())
+        tcpSwitch1.transportManager.add('tcp', new TCP())
+        tcpSwitch2.transportManager.add('tcp', new TCP())
+        wsSwitch1.transportManager.add('ws', new WS())
+        wsSwitch2.transportManager.add('ws', new WS())
 
         series([
           // start the nodes

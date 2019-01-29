@@ -34,15 +34,15 @@ describe('Transports', () => {
     })
 
     it('.transport.add', () => {
-      sw.transport.add('ws', new WebSockets())
-      expect(Object.keys(sw.transports).length).to.equal(1)
+      sw.transportManager.add('ws', new WebSockets())
+      expect(sw.transportManager.getAll().size).to.equal(1)
     })
 
     it('.transport.dial', (done) => {
       peer.multiaddrs.clear()
       peer.multiaddrs.add('/ip4/127.0.0.1/tcp/15337/ws')
 
-      const conn = sw.transport.dial('ws', peer, (err, conn) => {
+      const conn = sw.transportManager.dial('ws', peer, (err, conn) => {
         expect(err).to.not.exist()
       })
 

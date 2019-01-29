@@ -24,6 +24,19 @@ class TransportManager {
   constructor (_switch) {
     this.switch = _switch
     this.dialer = new LimitDialer(defaultPerPeerRateLimit, dialTimeout)
+
+    // transports --
+    // Map <<key>, {
+    //     transport: <transport>,
+    //     listeners: [<Listener>, <Listener>, ...]
+    // }>
+    // e.g:
+    // Map { "tcp" => {
+    //     transport: <tcp>,
+    //     listeners: [<Listener>, <Listener>, ...]
+    //   }
+    // }
+    this._transports = new Map()
   }
 
   /**
@@ -35,13 +48,50 @@ class TransportManager {
    */
   add (key, transport) {
     log('adding %s', key)
-    if (this.switch.transports[key]) {
+    if (this._transports.get(key)) {
       throw new Error('There is already a transport with this key')
     }
 
-    this.switch.transports[key] = transport
-    if (!this.switch.transports[key].listeners) {
-      this.switch.transports[key].listeners = []
+    this._transports.set(key, {
+      transport: transport,
+      listeners: []
+    })
+  }
+
+  /**
+   * Returns the `Transport` for the given key
+   *
+   * @param {String} key
+   * @returns {Transport}
+   */
+  get (key) {
+    if (this._transports.has(key)) {
+      return this._transports.get(key).transport
+    } else {
+      return null
+    }
+  }
+
+  /**
+   * Returns a map of all `Transports` on the form { key: transport }; e.g { tcp: <tcp> }
+   *
+   * @returns {Map<String,Transport>}
+   */
+  getAll () {
+    return new Map([...this._transports].map(([k, v]) => [k, v.transport]))
+  }
+
+  /**
+   * Returns an array of listeners for the `Transport` with the given key
+   *
+   * @param {String} key
+   * @returns {Array<listener>}
+   */
+  getListeners (key) {
+    if (!this._transports.has(key)) {
+      return []
+    } else {
+      return this._transports.get(key).listeners
     }
   }
 
@@ -56,12 +106,12 @@ class TransportManager {
   remove (key, callback) {
     callback = callback || function () {}
 
-    if (!this.switch.transports[key]) {
+    if (!this._transports.get(key)) {
       return callback()
     }
 
     this.close(key, (err) => {
-      delete this.switch.transports[key]
+      this._transports.delete(key)
       callback(err)
     })
   }
@@ -73,7 +123,7 @@ class TransportManager {
    * @returns {void}
    */
   removeAll (callback) {
-    const tasks = Object.keys(this.switch.transports).map((key) => {
+    const tasks = [...this._transports.keys()].map((key) => {
       return (cb) => {
         this.remove(key, cb)
       }
@@ -91,7 +141,7 @@ class TransportManager {
    * @returns {void}
    */
   dial (key, peerInfo, callback) {
-    const transport = this.switch.transports[key]
+    const transport = this._transports.get(key).transport
     let multiaddrs = peerInfo.multiaddrs.toArray()
 
     if (!Array.isArray(multiaddrs)) {
@@ -127,15 +177,11 @@ class TransportManager {
   listen (key, _options, handler, callback) {
     handler = this.switch._connectionHandler(key, handler)
 
-    const transport = this.switch.transports[key]
+    const transport = this._transports.get(key).transport
     const multiaddrs = TransportManager.dialables(
       transport,
       this.switch._peerInfo.multiaddrs.distinct()
     )
-
-    if (!transport.listeners) {
-      transport.listeners = []
-    }
 
     let freshMultiaddrs = []
 
@@ -155,7 +201,7 @@ class TransportManager {
               return done(err)
             }
             freshMultiaddrs = freshMultiaddrs.concat(addrs)
-            transport.listeners.push(listener)
+            this._transports.get(key).listeners.push(listener)
             done()
           })
         })
@@ -181,13 +227,13 @@ class TransportManager {
    * @returns {void}
    */
   close (key, callback) {
-    const transport = this.switch.transports[key]
+    const transport = this._transports.get(key)
 
     if (!transport) {
       return callback(new Error(`Trying to close non existing transport: ${key}`))
     }
 
-    parallel(transport.listeners.map((listener) => {
+    parallel(this._transports.get(key).listeners.map((listener) => {
       return (cb) => {
         listener.close(cb)
       }

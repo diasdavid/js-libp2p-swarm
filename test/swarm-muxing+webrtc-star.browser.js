@@ -54,14 +54,14 @@ describe('Switch (webrtc-star)', () => {
 
   it('add WebRTCStar transport to switch 1', () => {
     wstar1 = new WebRTCStar()
-    switch1.transport.add('wstar', wstar1)
-    expect(Object.keys(switch1.transports).length).to.equal(1)
+    switch1.transportManager.add('wstar', wstar1)
+    expect(switch1.transportManager.getAll().size).to.equal(1)
   })
 
   it('add WebRTCStar transport to switch 2', () => {
     wstar2 = new WebRTCStar()
-    switch2.transport.add('wstar', wstar2)
-    expect(Object.keys(switch2.transports).length).to.equal(1)
+    switch2.transportManager.add('wstar', wstar2)
+    expect(switch2.transportManager.getAll().size).to.equal(1)
   })
 
   it('listen on switch 1', (done) => {
@@ -129,7 +129,7 @@ describe('Switch (webrtc-star)', () => {
 
       switch3 = new Switch(peer3, new PeerBook())
       const wstar3 = new WebRTCStar()
-      switch3.transport.add('wstar', wstar3)
+      switch3.transportManager.add('wstar', wstar3)
       switch3.connection.addStreamMuxer(spdy)
       switch3.connection.reuse()
       switch3.start(check)

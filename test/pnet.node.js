@@ -60,10 +60,10 @@ describe('Private Network', function () {
       protector: new Protector(psk2)
     })
 
-    switchA.transport.add('tcp', new TCP())
-    switchB.transport.add('tcp', new TCP())
-    switchC.transport.add('tcp', new TCP())
-    switchD.transport.add('tcp', new TCP())
+    switchA.transportManager.add('tcp', new TCP())
+    switchB.transportManager.add('tcp', new TCP())
+    switchC.transportManager.add('tcp', new TCP())
+    switchD.transportManager.add('tcp', new TCP())
 
     switchA.connection.crypto(secio.tag, secio.encrypt)
     switchB.connection.crypto(secio.tag, secio.encrypt)
@@ -76,10 +76,10 @@ describe('Private Network', function () {
     switchD.connection.addStreamMuxer(multiplex)
 
     parallel([
-      (cb) => switchA.transport.listen('tcp', {}, null, cb),
-      (cb) => switchB.transport.listen('tcp', {}, null, cb),
-      (cb) => switchC.transport.listen('tcp', {}, null, cb),
-      (cb) => switchD.transport.listen('tcp', {}, null, cb)
+      (cb) => switchA.transportManager.listen('tcp', {}, null, cb),
+      (cb) => switchB.transportManager.listen('tcp', {}, null, cb),
+      (cb) => switchC.transportManager.listen('tcp', {}, null, cb),
+      (cb) => switchD.transportManager.listen('tcp', {}, null, cb)
     ], done)
   }))
 

@@ -196,7 +196,7 @@ class ConnectionFSM extends BaseConnection {
 
     const tKeys = this.switch.availableTransports(this.theirPeerInfo)
 
-    const circuitEnabled = Boolean(this.switch.transports[Circuit.tag])
+    const circuitEnabled = Boolean(this.switch.transportManager.get(Circuit.tag))
     let circuitTried = false
 
     const nextTransport = (key) => {
@@ -221,7 +221,7 @@ class ConnectionFSM extends BaseConnection {
       }
 
       this.log(`dialing transport ${transport}`)
-      this.switch.transport.dial(transport, this.theirPeerInfo, (err, _conn) => {
+      this.switch.transportManager.dial(transport, this.theirPeerInfo, (err, _conn) => {
         if (err) {
           this.emit('error:connection_attempt_failed', err.errors || [err])
           this.log(err)

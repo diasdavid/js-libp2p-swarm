@@ -36,9 +36,6 @@ class Switch extends EventEmitter {
     this._options = options || {}
 
     this.setMaxListeners(Infinity)
-    // transports --
-    // { key: transport }; e.g { tcp: <tcp> }
-    this.transports = {}
 
     // connections --
     // { peerIdB58: { conn: <conn> }}
@@ -58,7 +55,7 @@ class Switch extends EventEmitter {
 
     this.protector = this._options.protector || null
 
-    this.transport = new TransportManager(this)
+    this.transportManager = new TransportManager(this)
     this.connection = new ConnectionManager(this)
 
     this.observer = Observer(this)
@@ -121,10 +118,11 @@ class Switch extends EventEmitter {
    */
   availableTransports (peerInfo) {
     const myAddrs = peerInfo.multiaddrs.toArray()
-    const myTransports = Object.keys(this.transports)
+    const myTransports = this.transportManager.getAll()
 
     // Only listen on transports we actually have addresses for
-    return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
+    return [...myTransports.keys()]
+      .filter((ts) => myTransports.get(ts).filter(myAddrs).length > 0)
       // push Circuit to be the last proto to be dialed
       .sort((a) => {
         return a === 'Circuit' ? 1 : 0
@@ -184,7 +182,7 @@ class Switch extends EventEmitter {
    * @returns {boolean}
    */
   hasTransports () {
-    const transports = Object.keys(this.transports).filter((t) => t !== 'Circuit')
+    const transports = [...this.transportManager.getAll().keys()].filter((t) => t !== 'Circuit')
     return transports && transports.length > 0
   }
 
@@ -224,7 +222,7 @@ class Switch extends EventEmitter {
     this.stats.start()
     eachSeries(this.availableTransports(this._peerInfo), (ts, cb) => {
       // Listen on the given transport
-      this.transport.listen(ts, {}, null, cb)
+      this.transportManager.listen(ts, {}, null, cb)
     }, (err) => {
       if (err) {
         log.error(err)
@@ -244,8 +242,9 @@ class Switch extends EventEmitter {
     this.stats.stop()
     series([
       (cb) => {
-        each(this.transports, (transport, cb) => {
-          each(transport.listeners, (listener, cb) => {
+        const myTransports = this.transportManager.getAll()
+        each(myTransports.keys(), (key, cb) => {
+          each(this.transportManager.getListeners(key), (listener, cb) => {
             listener.close(cb)
           }, cb)
         }, cb)

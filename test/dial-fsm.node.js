@@ -40,9 +40,9 @@ describe('dialFSM', () => {
     switchB = new Switch(peerB, new PeerBook())
     switchC = new Switch(peerC, new PeerBook())
 
-    switchA.transport.add('tcp', new TCP())
-    switchB.transport.add('tcp', new TCP())
-    switchC.transport.add('ws', new WS())
+    switchA.transportManager.add('tcp', new TCP())
+    switchB.transportManager.add('tcp', new TCP())
+    switchC.transportManager.add('ws', new WS())
 
     switchA.connection.crypto(secio.tag, secio.encrypt)
     switchB.connection.crypto(secio.tag, secio.encrypt)
@@ -57,9 +57,9 @@ describe('dialFSM', () => {
     switchC.connection.reuse()
 
     parallel([
-      (cb) => switchA.transport.listen('tcp', {}, null, cb),
-      (cb) => switchB.transport.listen('tcp', {}, null, cb),
-      (cb) => switchC.transport.listen('ws', {}, null, cb)
+      (cb) => switchA.transportManager.listen('tcp', {}, null, cb),
+      (cb) => switchB.transportManager.listen('tcp', {}, null, cb),
+      (cb) => switchC.transportManager.listen('ws', {}, null, cb)
     ], done)
   }))
 

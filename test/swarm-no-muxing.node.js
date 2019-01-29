@@ -32,12 +32,12 @@ describe('Switch (no Stream Multiplexing)', () => {
     switchA = new Switch(peerA, new PeerBook())
     switchB = new Switch(peerB, new PeerBook())
 
-    switchA.transport.add('tcp', new TCP())
-    switchB.transport.add('tcp', new TCP())
+    switchA.transportManager.add('tcp', new TCP())
+    switchB.transportManager.add('tcp', new TCP())
 
     parallel([
-      (cb) => switchA.transport.listen('tcp', {}, null, cb),
-      (cb) => switchB.transport.listen('tcp', {}, null, cb)
+      (cb) => switchA.transportManager.listen('tcp', {}, null, cb),
+      (cb) => switchB.transportManager.listen('tcp', {}, null, cb)
     ], done)
   }))
 
