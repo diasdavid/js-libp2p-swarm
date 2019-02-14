@@ -365,7 +365,6 @@ class ConnectionFSM extends BaseConnection {
           this.switch.connection.add(this)
 
           this.muxer.once('close', () => {
-            this.log('State::', this._state._state)
             this.close()
           })
 
