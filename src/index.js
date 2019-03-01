@@ -5,6 +5,7 @@ const EventEmitter = require('events').EventEmitter
 const each = require('async/each')
 const eachSeries = require('async/eachSeries')
 const series = require('async/series')
+const Circuit = require('libp2p-circuit')
 const TransportManager = require('./transport')
 const ConnectionManager = require('./connection/manager')
 const getPeerInfo = require('./get-peer-info')
@@ -127,7 +128,7 @@ class Switch extends EventEmitter {
     return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
       // push Circuit to be the last proto to be dialed
       .sort((a) => {
-        return a === 'Circuit' ? 1 : 0
+        return a === Circuit.tag ? 1 : 0
       })
   }
 
@@ -184,7 +185,7 @@ class Switch extends EventEmitter {
    * @returns {boolean}
    */
   hasTransports () {
-    const transports = Object.keys(this.transports).filter((t) => t !== 'Circuit')
+    const transports = Object.keys(this.transports).filter((t) => t !== Circuit.tag)
     return transports && transports.length > 0
   }
 

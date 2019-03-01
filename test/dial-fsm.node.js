@@ -114,22 +114,24 @@ describe('dialFSM', () => {
     const peerIdA = switchA._peerInfo.id.toB58String()
 
     // wait for the expects to happen
-    expect(2).checks(done)
+    expect(2).checks(() => {
+      switchB.connection.getOne(peerIdA).close()
+    })
 
     switchB.handle('/closed/1.0.0', () => { })
     switchB.on('peer-mux-established', (peerInfo) => {
       if (peerInfo.id.toB58String() === peerIdA) {
         switchB.removeAllListeners('peer-mux-established')
         expect(switchB.connection.getAllById(peerIdA)).to.have.length(1).mark()
-        switchB.connection.getOne(peerIdA).close()
       }
     })
 
     const connFSM = switchA.dialFSM(switchB._peerInfo, '/closed/1.0.0', (err) => {
-      expect(err).to.not.exist()
+      expect(err).to.not.exist().mark()
     })
     connFSM.once('close', () => {
-      expect(switchA.connection.getAllById(switchB._peerInfo.id.toB58String())).to.have.length(0).mark()
+      expect(switchA.connection.getAllById(switchB._peerInfo.id.toB58String())).to.have.length(0)
+      done()
     })
   })
 

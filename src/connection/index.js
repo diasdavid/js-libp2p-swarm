@@ -381,13 +381,57 @@ class ConnectionFSM extends BaseConnection {
             this.switch.protocolMuxer(null)(conn)
           })
 
-          this.switch.emit('peer-mux-established', this.theirPeerInfo)
-
-          this._didUpgrade(null)
+          // TODO: this should really happen much earlier. However, currently
+          // `multistream-select.ls` drains the connection so we can no longer read
+          // from it. `multistream-select.ls` should be updated to not end the stream
+          // it's on. This would make it much easier to perform the `ls` before
+          // crypto occurs.
+          this._getPeersProtocols((err) => {
+            if (err) {
+              // the ls isn't necessary, so just log and continue
+              this.log(err)
+            }
+            this.switch.emit('peer-mux-established', this.theirPeerInfo)
+            this._didUpgrade(null)
+          })
         })
       }
 
       nextMuxer(muxers.shift())
+    })
+  }
+
+  /**
+   * Performs a multistream ls request on the connected peer.
+   * The fetched protocols will be added to `this.theirPeerInfo.protocols`.
+   *
+   * @private
+   * @param {function(Error)} callback
+   * @returns {void}
+   */
+  _getPeersProtocols (callback) {
+    const msDialer = new multistream.Dialer()
+    this.muxer.newStream((err, c) => {
+      if (err) {
+        return callback(err)
+      }
+      msDialer.handle(c, (err) => {
+        if (err) {
+          return callback(err)
+        }
+
+        msDialer.ls((err, protocolsArray) => {
+          if (err) {
+            return callback(err)
+          }
+
+          this.theirPeerInfo.protocols = new Set([
+            ...this.theirPeerInfo.protocols,
+            ...protocolsArray
+          ])
+          callback(null)
+        })
+      })
     })
   }
 
