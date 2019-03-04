@@ -197,7 +197,10 @@ class ConnectionFSM extends BaseConnection {
     const tKeys = this.switch.availableTransports(this.theirPeerInfo)
 
     const circuitEnabled = Boolean(this.switch.transports[Circuit.tag])
-    let circuitTried = false
+
+    if (circuitEnabled && !tKeys.includes(Circuit.tag)) {
+      tKeys.push(Circuit.tag)
+    }
 
     const nextTransport = (key) => {
       let transport = key
@@ -208,23 +211,20 @@ class ConnectionFSM extends BaseConnection {
           ))
         }
 
-        if (circuitTried) {
-          return this.close(Errors.CONNECTION_FAILED(
-            new Error(`No available transports to dial peer ${this.theirB58Id}!`)
-          ))
-        }
+        return this.close(Errors.CONNECTION_FAILED(
+          new Error(`No available transports to dial peer ${this.theirB58Id}!`)
+        ))
+      }
 
-        this.log(`Falling back to dialing over circuit`)
-        this.theirPeerInfo.multiaddrs.add(`/p2p-circuit/ipfs/${this.theirB58Id}`)
-        circuitTried = true
-        transport = Circuit.tag
+      if (transport === Circuit.tag) {
+        this.theirPeerInfo.multiaddrs.add(`/p2p-circuit/p2p/${this.theirB58Id}`)
       }
 
       this.log(`dialing transport ${transport}`)
-      this.switch.transport.dial(transport, this.theirPeerInfo, (err, _conn) => {
-        if (err) {
-          this.emit('error:connection_attempt_failed', err.errors || [err])
-          this.log(err)
+      this.switch.transport.dial(transport, this.theirPeerInfo, (errors, _conn) => {
+        if (errors) {
+          this.emit('error:connection_attempt_failed', errors)
+          this.log(errors)
           return nextTransport(tKeys.shift())
         }
 
