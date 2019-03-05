@@ -7,7 +7,13 @@ const withIs = require('class-is')
 const BaseConnection = require('./base')
 
 const observeConnection = require('../observe-connection')
-const Errors = require('../errors')
+const {
+  CONNECTION_FAILED,
+  DIAL_SELF,
+  INVALID_STATE_TRANSITION,
+  NO_TRANSPORTS_REGISTERED,
+  maybeUnexpectedEnd
+} = require('../errors')
 
 /**
  * @typedef {Object} ConnectionOptions
@@ -136,7 +142,7 @@ class ConnectionFSM extends BaseConnection {
    */
   dial () {
     if (this.theirB58Id === this.ourPeerInfo.id.toB58String()) {
-      return this.emit('error', Errors.DIAL_SELF())
+      return this.emit('error', DIAL_SELF())
     } else if (this.getState() === 'DIALING') {
       return this.log('attempted to dial while already dialing, ignoring')
     }
@@ -191,7 +197,7 @@ class ConnectionFSM extends BaseConnection {
     this.log(`dialing ${this.theirB58Id}`)
 
     if (!this.switch.hasTransports()) {
-      return this.close(Errors.NO_TRANSPORTS_REGISTERED())
+      return this.close(NO_TRANSPORTS_REGISTERED())
     }
 
     const tKeys = this.switch.availableTransports(this.theirPeerInfo)
@@ -206,14 +212,14 @@ class ConnectionFSM extends BaseConnection {
       let transport = key
       if (!transport) {
         if (!circuitEnabled) {
-          return this.close(Errors.CONNECTION_FAILED(
-            new Error(`Circuit not enabled and all transports failed to dial peer ${this.theirB58Id}!`)
-          ))
+          return this.close(
+            CONNECTION_FAILED(`Circuit not enabled and all transports failed to dial peer ${this.theirB58Id}!`)
+          )
         }
 
-        return this.close(Errors.CONNECTION_FAILED(
-          new Error(`No available transports to dial peer ${this.theirB58Id}!`)
-        ))
+        return this.close(
+          CONNECTION_FAILED(`No available transports to dial peer ${this.theirB58Id}!`)
+        )
       }
 
       if (transport === Circuit.tag) {
@@ -296,14 +302,14 @@ class ConnectionFSM extends BaseConnection {
     const msDialer = new multistream.Dialer()
     msDialer.handle(this.conn, (err) => {
       if (err) {
-        return this.close(Errors.maybeUnexpectedEnd(err))
+        return this.close(maybeUnexpectedEnd(err))
       }
 
       this.log('selecting crypto %s to %s', this.switch.crypto.tag, this.theirB58Id)
 
       msDialer.select(this.switch.crypto.tag, (err, _conn) => {
         if (err) {
-          return this.close(Errors.maybeUnexpectedEnd(err))
+          return this.close(maybeUnexpectedEnd(err))
         }
 
         const conn = observeConnection(null, this.switch.crypto.tag, _conn, this.switch.observer)
@@ -444,7 +450,7 @@ class ConnectionFSM extends BaseConnection {
    * @returns {void}
    */
   _onStateError (err) {
-    this.emit('error', Errors.INVALID_STATE_TRANSITION(err))
+    this.emit('error', INVALID_STATE_TRANSITION(err))
     this.log(err)
   }
 }
