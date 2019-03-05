@@ -13,6 +13,7 @@ const TCP = require('libp2p-tcp')
 const secio = require('libp2p-secio')
 const multiplex = require('pull-mplex')
 const pull = require('pull-stream')
+const identify = require('libp2p-identify')
 
 const utils = require('./utils')
 const createInfos = utils.createInfos
@@ -22,6 +23,7 @@ describe('dialFSM', () => {
   let switchA
   let switchB
   let switchC
+  let protocol
 
   before((done) => createInfos(3, (err, infos) => {
     expect(err).to.not.exist()
@@ -71,10 +73,18 @@ describe('dialFSM', () => {
     ], done)
   })
 
-  it('should emit `error:connection_attempt_failed` when a transport fails to dial', (done) => {
-    switchC.handle('/warn/1.0.0', () => { })
+  afterEach(() => {
+    switchA.unhandle(protocol)
+    switchB.unhandle(protocol)
+    switchC.unhandle(protocol)
+    protocol = null
+  })
 
-    const connFSM = switchA.dialFSM(switchC._peerInfo, '/warn/1.0.0', () => { })
+  it('should emit `error:connection_attempt_failed` when a transport fails to dial', (done) => {
+    protocol = '/warn/1.0.0'
+    switchC.handle(protocol, () => { })
+
+    const connFSM = switchA.dialFSM(switchC._peerInfo, protocol, () => { })
 
     connFSM.once('error:connection_attempt_failed', (errors) => {
       expect(errors).to.be.an('array')
@@ -84,9 +94,10 @@ describe('dialFSM', () => {
   })
 
   it('should emit an `error` event when a it cannot dial a peer', (done) => {
-    switchC.handle('/error/1.0.0', () => { })
+    protocol = '/error/1.0.0'
+    switchC.handle(protocol, () => { })
 
-    const connFSM = switchA.dialFSM(switchC._peerInfo, '/error/1.0.0', () => { })
+    const connFSM = switchA.dialFSM(switchC._peerInfo, protocol, () => { })
 
     connFSM.once('error', (err) => {
       expect(err).to.be.exist()
@@ -96,9 +107,10 @@ describe('dialFSM', () => {
   })
 
   it('should emit a `closed` event when closed', (done) => {
-    switchB.handle('/closed/1.0.0', () => { })
+    protocol = '/closed/1.0.0'
+    switchB.handle(protocol, () => { })
 
-    const connFSM = switchA.dialFSM(switchB._peerInfo, '/closed/1.0.0', (err) => {
+    const connFSM = switchA.dialFSM(switchB._peerInfo, protocol, (err) => {
       expect(err).to.not.exist()
       expect(switchA.connection.getAllById(switchB._peerInfo.id.toB58String())).to.have.length(1)
       connFSM.close()
@@ -110,15 +122,40 @@ describe('dialFSM', () => {
     })
   })
 
+  it('should have the peers protocols after muxing', (done) => {
+    protocol = '/lscheck/1.0.0'
+    switchB.handle(protocol, () => { })
+
+    // Clear the protocols so we have a clean slate to check
+    switchA._peerBook.get(switchB._peerInfo).protocols.clear()
+
+    const connFSM = switchA.dialFSM(switchB._peerInfo, protocol, (err) => {
+      expect(err).to.not.exist()
+    })
+
+    connFSM.once('muxed', () => {
+      const peer = switchA._peerBook.get(switchB._peerInfo)
+      const protocols = Array.from(peer.protocols.values())
+      expect(protocols).to.eql([
+        multiplex.multicodec,
+        identify.multicodec,
+        protocol
+      ])
+      connFSM.close()
+    })
+    connFSM.once('close', done)
+  })
+
   it('should close when the receiver closes', (done) => {
     const peerIdA = switchA._peerInfo.id.toB58String()
+    protocol = '/closed/1.0.0'
 
     // wait for the expects to happen
     expect(2).checks(() => {
       switchB.connection.getOne(peerIdA).close()
     })
 
-    switchB.handle('/closed/1.0.0', () => { })
+    switchB.handle(protocol, () => { })
     switchB.on('peer-mux-established', (peerInfo) => {
       if (peerInfo.id.toB58String() === peerIdA) {
         switchB.removeAllListeners('peer-mux-established')
@@ -126,7 +163,7 @@ describe('dialFSM', () => {
       }
     })
 
-    const connFSM = switchA.dialFSM(switchB._peerInfo, '/closed/1.0.0', (err) => {
+    const connFSM = switchA.dialFSM(switchB._peerInfo, protocol, (err) => {
       expect(err).to.not.exist().mark()
     })
     connFSM.once('close', () => {
@@ -137,9 +174,10 @@ describe('dialFSM', () => {
 
   it('parallel dials to one another should disconnect on hangup', function (done) {
     this.timeout(10e3)
+    protocol = '/parallel/1.0.0'
 
-    switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
-    switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
+    switchA.handle(protocol, (_, conn) => { pull(conn, conn) })
+    switchB.handle(protocol, (_, conn) => { pull(conn, conn) })
 
     // 4 close checks and 1 hangup check
     expect(5).checks(() => {
@@ -155,7 +193,7 @@ describe('dialFSM', () => {
       expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
     })
 
-    const conn = switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', () => {
+    const conn = switchA.dialFSM(switchB._peerInfo, protocol, () => {
       // Hangup and verify the connections are closed
       switchA.hangUp(switchB._peerInfo, (err) => {
         expect(err).to.not.exist().mark()
@@ -165,15 +203,16 @@ describe('dialFSM', () => {
     // Hold the dial from A, until switch B is done dialing to ensure
     // we have both incoming and outgoing connections
     conn._state.on('DIALING:enter', (cb) => {
-      switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', () => {
+      switchB.dialFSM(switchA._peerInfo, protocol, () => {
         cb()
       })
     })
   })
 
   it('parallel dials to one another should disconnect on stop', (done) => {
-    switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
-    switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
+    protocol = '/parallel/1.0.0'
+    switchA.handle(protocol, (_, conn) => { pull(conn, conn) })
+    switchB.handle(protocol, (_, conn) => { pull(conn, conn) })
 
     // 4 close checks and 1 hangup check
     expect(5).checks(() => {
@@ -189,7 +228,7 @@ describe('dialFSM', () => {
       expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
     })
 
-    const conn = switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', () => {
+    const conn = switchA.dialFSM(switchB._peerInfo, protocol, () => {
       // Hangup and verify the connections are closed
       switchA.stop((err) => {
         expect(err).to.not.exist().mark()
@@ -199,7 +238,7 @@ describe('dialFSM', () => {
     // Hold the dial from A, until switch B is done dialing to ensure
     // we have both incoming and outgoing connections
     conn._state.on('DIALING:enter', (cb) => {
-      switchB.dialFSM(switchA._peerInfo, '/parallel/1.0.0', () => {
+      switchB.dialFSM(switchA._peerInfo, protocol, () => {
         cb()
       })
     })
