@@ -53,7 +53,7 @@ function dial (_switch, returnFSM) {
     const peerInfo = getPeerInfo(peer, _switch._peerBook)
     const b58Id = peerInfo.id.toB58String()
 
-    log(`dialing to ${b58Id.slice(0, 8)} with protocol ${protocol || 'unknown'}`)
+    log('dialing to %s with protocol %s', b58Id, protocol || 'unknown')
 
     let connection = _switch.connection.getOne(b58Id)
 
