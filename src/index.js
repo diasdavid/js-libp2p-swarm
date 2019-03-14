@@ -65,11 +65,6 @@ class Switch extends EventEmitter {
     this.stats = Stats(this.observer, this._options.stats)
     this.protocolMuxer = ProtocolMuxer(this.protocols, this.observer)
 
-    // higher level (public) API
-    const dialer = getDialer(this)
-    this.dial = dialer.dial
-    this.dialFSM = dialer.dialFSM
-
     // All purpose connection handler for managing incoming connections
     this._connectionHandler = connectionHandler(this)
 
@@ -112,6 +107,11 @@ class Switch extends EventEmitter {
       log.error(err)
       this.emit('error', err)
     })
+
+    // higher level (public) API
+    const dialer = getDialer(this)
+    this.dial = dialer.dial
+    this.dialFSM = dialer.dialFSM
   }
 
   /**

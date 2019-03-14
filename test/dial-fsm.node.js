@@ -62,9 +62,9 @@ describe('dialFSM', () => {
     switchC.connection.reuse()
 
     parallel([
-      (cb) => switchA.transport.listen('tcp', {}, null, cb),
-      (cb) => switchB.transport.listen('tcp', {}, null, cb),
-      (cb) => switchC.transport.listen('ws', {}, null, cb)
+      (cb) => switchA.start(cb),
+      (cb) => switchB.start(cb),
+      (cb) => switchC.start(cb)
     ], done)
   }))
 
@@ -140,6 +140,20 @@ describe('dialFSM', () => {
     })
   })
 
+  it('parallel dials to the same peer should not create new connections', (done) => {
+    switchB.handle('/parallel/2.0.0', (_, conn) => { pull(conn, conn) })
+
+    parallel([
+      (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/2.0.0', cb),
+      (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/2.0.0', cb)
+    ], (err, results) => {
+      expect(err).to.not.exist()
+      expect(results).to.have.length(2)
+      expect(switchA.connection.getAllById(peerBId)).to.have.length(1)
+      switchA.hangUp(switchB._peerInfo, done)
+    })
+  })
+
   it('parallel dials to one another should disconnect on hangup', function (done) {
     switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
     switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
@@ -186,7 +200,7 @@ describe('dialFSM', () => {
     expect(5).checks(() => {
       switchA.removeAllListeners('peer-mux-closed')
       switchB.removeAllListeners('peer-mux-closed')
-      done()
+      switchA.start(done)
     })
 
     switchA.on('peer-mux-closed', (peerInfo) => {
@@ -216,17 +230,22 @@ describe('dialFSM', () => {
     })
   })
 
-  it('parallel dials to the same peer should not create new connections', (done) => {
-    switchB.handle('/parallel/2.0.0', (_, conn) => { pull(conn, conn) })
+  it('queued dials should be aborted on node stop', (done) => {
+    switchB.handle('/abort-queue/1.0.0', (_, conn) => { pull(conn, conn) })
 
-    parallel([
-      (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', cb),
-      (cb) => switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', cb)
-    ], (err, results) => {
+    switchA.dialFSM(switchB._peerInfo, '/abort-queue/1.0.0', (err, connFSM) => {
       expect(err).to.not.exist()
-      expect(results).to.have.length(2)
-      expect(switchA.connection.getAllById(peerBId)).to.have.length(1)
-      done()
+      connFSM._state.on('UPGRADING:enter', (cb) => {
+        expect(2).checks(done)
+        switchA.dialFSM(switchB._peerInfo, '/abort-queue/1.0.0', (err) => {
+          expect(err).to.exist().mark()
+        })
+        switchA.dialFSM(switchB._peerInfo, '/abort-queue/1.0.0', (err) => {
+          expect(err).to.exist().mark()
+        })
+
+        switchA.stop(cb)
+      })
     })
   })
 })

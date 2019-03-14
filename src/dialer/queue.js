@@ -52,6 +52,22 @@ class DialerQueue {
   }
 
   /**
+   * Iterates over all items in the DialerQueue
+   * and executes there callback with an error.
+   *
+   * This causes the entire DialerQueue to be drained
+   */
+  abort () {
+    const queues = Object.values(this._queue)
+    queues.forEach(queue => {
+      while (queue.size() > 0) {
+        let dial = queue.shift()
+        dial.callback(new Error('DIAL_ABORTED'))
+      }
+    })
+  }
+
+  /**
    * Adds the dial to the queue and ensures the queue is running
    *
    * @param {object} queueItem
@@ -137,6 +153,11 @@ class DialerQueue {
     let isNew
     [connectionFSM, isNew] = this.getOrCreateConnection(peerInfo)
 
+    // If the dial expects a ConnectionFSM, we can provide that back now
+    if (queuedDial.useFSM) {
+      queuedDial.callback(null, connectionFSM)
+    }
+
     // If we can handshake protocols, get a new stream and call run again
     if (DialerQueue.canShake(connectionFSM)) {
       queuedDial.connection = connectionFSM
@@ -168,10 +189,6 @@ class DialerQueue {
       DialerQueue.getStreamForProtocol(queuedDial)
       next()
     })
-
-    if (queuedDial.useFSM) {
-      queuedDial.callback(null, connectionFSM)
-    }
 
     // If we have a new connection, start dialing
     if (isNew) {
