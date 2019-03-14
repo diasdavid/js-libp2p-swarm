@@ -8,7 +8,7 @@ const series = require('async/series')
 const TransportManager = require('./transport')
 const ConnectionManager = require('./connection/manager')
 const getPeerInfo = require('./get-peer-info')
-const dial = require('./dialer')
+const getDialer = require('./dialer')
 const connectionHandler = require('./connection/handler')
 const ProtocolMuxer = require('./protocol-muxer')
 const plaintext = require('./plaintext')
@@ -66,8 +66,9 @@ class Switch extends EventEmitter {
     this.protocolMuxer = ProtocolMuxer(this.protocols, this.observer)
 
     // higher level (public) API
-    this.dial = dial(this)
-    this.dialFSM = dial(this, true)
+    const dialer = getDialer(this)
+    this.dial = dialer.dial
+    this.dialFSM = dialer.dialFSM
 
     // All purpose connection handler for managing incoming connections
     this._connectionHandler = connectionHandler(this)

@@ -42,20 +42,25 @@ function Queue () {
 }
 
 class DialerQueue {
-  constructor (_switch, useFSM) {
+  /**
+   * @constructor
+   * @param {Switch} _switch
+   */
+  constructor (_switch) {
     this._queue = {}
     this.switch = _switch
-    this.useFSM = useFSM || false
   }
 
   /**
    * Adds the dial to the queue and ensures the queue is running
    *
-   * @param {PeerInfo} peerInfo
-   * @param {string} protocol
-   * @param {function(Error, Connection)} callback
+   * @param {object} queueItem
+   * @param {PeerInfo} queueItem.peerInfo
+   * @param {string} queueItem.protocol
+   * @param {boolean} queueItem.useFSM
+   * @param {function(Error, Connection)} queueItem.callback
    */
-  add (peerInfo, protocol, callback) {
+  add ({ peerInfo, protocol, useFSM, callback }) {
     const id = peerInfo.id.toB58String()
     const proxyConnection = new Connection()
     proxyConnection.setPeerInfo(peerInfo)
@@ -63,7 +68,7 @@ class DialerQueue {
     callback = once(callback || noop)
 
     let queue = this._queue[id] = this._queue[id] || new Queue()
-    queue.push({ protocol, proxyConnection, callback })
+    queue.push({ protocol, proxyConnection, useFSM, callback })
 
     if (!queue.isRunning()) {
       queue.start()
@@ -147,7 +152,9 @@ class DialerQueue {
       queuedDial.callback(err)
     })
 
-    connectionFSM.once('close', () => next())
+    connectionFSM.once('close', () => {
+      next()
+    })
 
     // If we're not muxed yet, add listeners
     connectionFSM.once('muxed', () => {
@@ -162,7 +169,7 @@ class DialerQueue {
       next()
     })
 
-    if (this.useFSM) {
+    if (queuedDial.useFSM) {
       queuedDial.callback(null, connectionFSM)
     }
 
@@ -172,10 +179,35 @@ class DialerQueue {
     }
   }
 
+  /**
+   * Checks to see if the provided `connection` is capable of
+   * performing a handshake with an application level protocol,
+   * such as: /echo/1.0.0, /ipfs/kad/1.0.0, etc.
+   *
+   * @private
+   * @static
+   * @param {ConnectionFSM} connection
+   * @returns {Boolean}
+   */
   static canShake (connection) {
     return connection && (connection.getState() === 'MUXED' || connection.getState() === 'CONNECTED')
   }
 
+  /**
+   * Attempts to create a new connection or stream (when muxed),
+   * via negotiation of the given `protocol`. If no `protocol` is
+   * provided, no action will be taken and `callback` will be called
+   * immediately with no error or values.
+   *
+   * @private
+   * @static
+   * @param {object} options
+   * @param {string} options.protocol
+   * @param {Connection} options.proxyConnection
+   * @param {ConnectionFSM} options.connection
+   * @param {function(Error, Connection)} options.callback
+   * @returns {void}
+   */
   static getStreamForProtocol ({ protocol, proxyConnection, connection, callback }) {
     if (!protocol) {
       return callback()

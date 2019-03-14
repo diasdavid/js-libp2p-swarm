@@ -22,6 +22,7 @@ describe('dialFSM', () => {
   let switchA
   let switchB
   let switchC
+  let peerAId
   let peerBId
 
   before((done) => createInfos(3, (err, infos) => {
@@ -31,6 +32,7 @@ describe('dialFSM', () => {
     const peerB = infos[1]
     const peerC = infos[2]
 
+    peerAId = peerA.id.toB58String()
     peerBId = peerB.id.toB58String()
 
     peerA.multiaddrs.add('/ip4/0.0.0.0/tcp/0')
@@ -105,10 +107,10 @@ describe('dialFSM', () => {
 
     switchA.dialFSM(switchB._peerInfo, '/closed/1.0.0', (err, connFSM) => {
       expect(err).to.not.exist()
-      expect(switchA.connection.getAllById(switchB._peerInfo.id.toB58String())).to.have.length(1)
+      expect(switchA.connection.getAllById(peerBId)).to.have.length(1)
 
       connFSM.once('close', () => {
-        expect(switchA.connection.getAllById(switchB._peerInfo.id.toB58String())).to.have.length(0)
+        expect(switchA.connection.getAllById(peerBId)).to.have.length(0)
         done()
       })
 
@@ -117,17 +119,15 @@ describe('dialFSM', () => {
   })
 
   it('should close when the receiver closes', (done) => {
-    const peerIdA = switchA._peerInfo.id.toB58String()
-
     // wait for the expects to happen
     expect(2).checks(done)
 
     switchB.handle('/closed/1.0.0', () => { })
     switchB.on('peer-mux-established', (peerInfo) => {
-      if (peerInfo.id.toB58String() === peerIdA) {
+      if (peerInfo.id.toB58String() === peerAId) {
         switchB.removeAllListeners('peer-mux-established')
-        expect(switchB.connection.getAllById(peerIdA)).to.have.length(1).mark()
-        switchB.connection.getOne(peerIdA).close()
+        expect(switchB.connection.getAllById(peerAId)).to.have.length(1).mark()
+        switchB.connection.getOne(peerAId).close()
       }
     })
 
@@ -135,7 +135,7 @@ describe('dialFSM', () => {
       expect(err).to.not.exist()
 
       connFSM.once('close', () => {
-        expect(switchA.connection.getAllById(switchB._peerInfo.id.toB58String())).to.have.length(0).mark()
+        expect(switchA.connection.getAllById(peerBId)).to.have.length(0).mark()
       })
     })
   })
@@ -152,10 +152,10 @@ describe('dialFSM', () => {
     })
 
     switchA.on('peer-mux-closed', (peerInfo) => {
-      expect(peerInfo.id.toB58String()).to.eql(switchB._peerInfo.id.toB58String()).mark()
+      expect(peerInfo.id.toB58String()).to.eql(peerBId).mark()
     })
     switchB.on('peer-mux-closed', (peerInfo) => {
-      expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
+      expect(peerInfo.id.toB58String()).to.eql(peerAId).mark()
     })
 
     switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', (err, connFSM) => {
@@ -190,10 +190,10 @@ describe('dialFSM', () => {
     })
 
     switchA.on('peer-mux-closed', (peerInfo) => {
-      expect(peerInfo.id.toB58String()).to.eql(switchB._peerInfo.id.toB58String()).mark()
+      expect(peerInfo.id.toB58String()).to.eql(peerBId).mark()
     })
     switchB.on('peer-mux-closed', (peerInfo) => {
-      expect(peerInfo.id.toB58String()).to.eql(switchA._peerInfo.id.toB58String()).mark()
+      expect(peerInfo.id.toB58String()).to.eql(peerAId).mark()
     })
 
     switchA.dialFSM(switchB._peerInfo, '/parallel/1.0.0', (err, connFSM) => {
