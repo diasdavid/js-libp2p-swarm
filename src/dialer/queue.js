@@ -1,6 +1,7 @@
 'use strict'
 
 const ConnectionFSM = require('../connection')
+const { DIAL_ABORTED } = require('../errors')
 const Connection = require('interface-connection').Connection
 const once = require('once')
 const debug = require('debug')
@@ -71,7 +72,7 @@ class DialerQueue {
     queues.forEach(queue => {
       while (queue.size() > 0) {
         let dial = queue.shift()
-        dial.callback(new Error('DIAL_ABORTED'))
+        dial.callback(DIAL_ABORTED())
       }
     })
   }
