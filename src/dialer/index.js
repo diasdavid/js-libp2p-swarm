@@ -9,11 +9,7 @@ module.exports = function (_switch) {
   _switch.state.on('STOPPING:enter', abort)
 
   /**
-   * @param {object} options
-   * @param {PeerInfo} options.peerInfo
-   * @param {string} options.protocol
-   * @param {boolean} options.useFSM If `callback` should return a ConnectionFSM
-   * @param {function(Error, Connection)} options.callback
+   * @param {DialRequest} dialRequest
    * @returns {void}
    */
   function _dial ({ peerInfo, protocol, useFSM, callback }) {

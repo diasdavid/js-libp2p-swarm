@@ -10,6 +10,15 @@ log.error = debug('libp2p:switch:dial:error')
 const noop = () => {}
 
 /**
+ * Components required to execute a dial
+ * @typedef {Object} DialRequest
+ * @property {PeerInfo} peerInfo - The peer to dial to
+ * @property {string} [protocol] - The protocol to create a stream for
+ * @property {boolean} useFSM - If `callback` should return a ConnectionFSM
+ * @property {function(Error, Connection|ConnectionFSM)} callback
+ */
+
+/**
  * A convenience array wrapper for controlling
  * a per peer queue
  *
@@ -68,13 +77,9 @@ class DialerQueue {
   }
 
   /**
-   * Adds the dial to the queue and ensures the queue is running
+   * Adds the `dialRequest` to the queue and ensures the queue is running
    *
-   * @param {object} queueItem
-   * @param {PeerInfo} queueItem.peerInfo
-   * @param {string} queueItem.protocol
-   * @param {boolean} queueItem.useFSM
-   * @param {function(Error, Connection)} queueItem.callback
+   * @param {DialRequest} dialRequest
    */
   add ({ peerInfo, protocol, useFSM, callback }) {
     const id = peerInfo.id.toB58String()
@@ -88,7 +93,7 @@ class DialerQueue {
 
     if (!queue.isRunning()) {
       queue.start()
-      this.run(peerInfo)
+      this._run(peerInfo)
     }
   }
 
@@ -104,7 +109,7 @@ class DialerQueue {
    * @param {PeerInfo} peerInfo
    * @returns {[ConnectionFSM, Boolean]}
    */
-  getOrCreateConnection (peerInfo) {
+  _getOrCreateConnection (peerInfo) {
     const id = peerInfo.id.toB58String()
     let connectionFSM = this.switch.connection.getOne(id)
     let didCreate = false
@@ -136,7 +141,7 @@ class DialerQueue {
    * @param {PeerInfo} peerInfo
    * @returns {void}
    */
-  run (peerInfo) {
+  _run (peerInfo) {
     const id = peerInfo.id.toB58String()
 
     // If we have no items in the queue, exit
@@ -145,13 +150,13 @@ class DialerQueue {
     }
 
     const next = once(() => {
-      this.run(peerInfo)
+      this._run(peerInfo)
     })
 
     let queuedDial = this._queue[id].shift()
     let connectionFSM
     let isNew
-    [connectionFSM, isNew] = this.getOrCreateConnection(peerInfo)
+    [connectionFSM, isNew] = this._getOrCreateConnection(peerInfo)
 
     // If the dial expects a ConnectionFSM, we can provide that back now
     if (queuedDial.useFSM) {
@@ -162,7 +167,7 @@ class DialerQueue {
     if (DialerQueue.canShake(connectionFSM)) {
       queuedDial.connection = connectionFSM
       DialerQueue.getStreamForProtocol(queuedDial)
-      this.run(peerInfo)
+      this._run(peerInfo)
       return
     }
 

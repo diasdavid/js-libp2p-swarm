@@ -33,7 +33,7 @@ const {
  */
 class ConnectionFSM extends BaseConnection {
   /**
-   * @param {ConnectionOptions} param0
+   * @param {ConnectionOptions} connectionOptions
    * @constructor
    */
   constructor ({ _switch, peerInfo, muxer, conn, type = 'out' }) {
