@@ -20,6 +20,17 @@ class ConnectionManager {
   constructor (_switch) {
     this.switch = _switch
     this.connections = {}
+
+    if (log.enabled) {
+      setInterval(() => {
+        const peers = this.switch._peerBook.getAllArray()
+        const connectedPeers = peers.filter(p => Boolean(p.isConnected()))
+        log('There are %s muxed peers.', Object.keys(this.connections).length)
+        log('There are %s muxed connections.', this.getAll().length)
+        log('There are %s peers', peers.length)
+        log('There are %s connected peers', connectedPeers.length)
+      }, 5e3)
+    }
   }
 
   /**
@@ -61,8 +72,12 @@ class ConnectionManager {
    */
   getOne (peerId) {
     if (this.connections[peerId]) {
-      // TODO: Maybe select the best?
-      return this.connections[peerId][0]
+      // Only return muxed connections
+      for (var i = 0; i < this.connections[peerId].length; i++) {
+        if (this.connections[peerId][i].getState() === 'MUXED') {
+          return this.connections[peerId][i]
+        }
+      }
     }
     return null
   }

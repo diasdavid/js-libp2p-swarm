@@ -261,7 +261,7 @@ class ConnectionFSM extends BaseConnection {
    * @returns {void}
    */
   _onDisconnecting () {
-    this.log('disconnecting from %s', this.theirB58Id)
+    this.log('disconnecting from %s', this.theirB58Id, Boolean(this.muxer))
 
     // Issue disconnects on both Peers
     if (this.theirPeerInfo) {

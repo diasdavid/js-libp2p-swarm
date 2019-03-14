@@ -168,15 +168,15 @@ describe('Switch (everything all together)', () => {
         })
       })
 
-      it('dial from tcp to tcp+ws (returned conn)', (done) => {
+      it('dial from tcp to tcp+ws', (done) => {
         switchB.handle('/grapes/1.0.0', (protocol, conn) => pull(conn, conn))
 
-        const conn = switchA.dial(switchB._peerInfo, '/grapes/1.0.0', (err, conn) => {
+        switchA.dial(switchB._peerInfo, '/grapes/1.0.0', (err, conn) => {
           expect(err).to.not.exist()
           expect(switchA.connection.getAll()).to.have.length(1)
-        })
 
-        tryEcho(conn, done)
+          tryEcho(conn, done)
+        })
       })
 
       it('dial from tcp+ws to tcp+ws', (done) => {
