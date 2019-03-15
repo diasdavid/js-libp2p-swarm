@@ -3,6 +3,7 @@
 const ConnectionFSM = require('../connection')
 const { DIAL_ABORTED } = require('../errors')
 const Connection = require('interface-connection').Connection
+const nextTick = require('async/nextTick')
 const once = require('once')
 const debug = require('debug')
 const log = debug('libp2p:switch:dial')
@@ -93,6 +94,7 @@ class DialerQueue {
     queue.push({ protocol, proxyConnection, useFSM, callback })
 
     if (!queue.isRunning()) {
+      log('starting dial queue to %s', id)
       queue.start()
       this._run(peerInfo)
     }
@@ -147,10 +149,12 @@ class DialerQueue {
 
     // If we have no items in the queue, exit
     if (this._queue[id].size() < 1) {
+      log('stopping the queue for %s', id)
       return this._queue[id].stop()
     }
 
     const next = once(() => {
+      log('starting next dial to %s', id)
       this._run(peerInfo)
     })
 
@@ -161,14 +165,14 @@ class DialerQueue {
 
     // If the dial expects a ConnectionFSM, we can provide that back now
     if (queuedDial.useFSM) {
-      queuedDial.callback(null, connectionFSM)
+      nextTick(queuedDial.callback, null, connectionFSM)
     }
 
     // If we can handshake protocols, get a new stream and call run again
     if (DialerQueue.canShake(connectionFSM)) {
       queuedDial.connection = connectionFSM
       DialerQueue.getStreamForProtocol(queuedDial)
-      this._run(peerInfo)
+      next()
       return
     }
 

@@ -150,7 +150,11 @@ describe('dialFSM', () => {
       expect(err).to.not.exist()
       expect(results).to.have.length(2)
       expect(switchA.connection.getAllById(peerBId)).to.have.length(1)
-      switchA.hangUp(switchB._peerInfo, done)
+
+      switchA.hangUp(switchB._peerInfo, () => {
+        expect(switchA.connection.getAllById(peerBId)).to.have.length(0)
+        done()
+      })
     })
   })
 
@@ -158,7 +162,9 @@ describe('dialFSM', () => {
     switchA.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
     switchB.handle('/parallel/1.0.0', (_, conn) => { pull(conn, conn) })
 
-    // 4 close checks and 1 hangup check
+    expect(switchA.connection.getAllById(peerBId)).to.have.length(0)
+
+    // 4 close checks (1 inc and 1 out for each node) and 1 hangup check
     expect(5).checks(() => {
       switchA.removeAllListeners('peer-mux-closed')
       switchB.removeAllListeners('peer-mux-closed')
@@ -200,6 +206,7 @@ describe('dialFSM', () => {
     expect(5).checks(() => {
       switchA.removeAllListeners('peer-mux-closed')
       switchB.removeAllListeners('peer-mux-closed')
+      // restart the node for subsequent tests
       switchA.start(done)
     })
 
