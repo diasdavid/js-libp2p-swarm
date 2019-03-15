@@ -272,22 +272,35 @@ class ConnectionFSM extends BaseConnection {
 
     delete this.switch.conns[this.theirB58Id]
 
+    let tasks = []
+
     // Clean up stored connections
     if (this.muxer) {
-      this.muxer.end()
-      delete this.muxer
-      this.switch.emit('peer-mux-closed', this.theirPeerInfo)
+      tasks.push(new Promise(resolve => {
+        this.muxer.end(() => {
+          delete this.muxer
+          this.switch.emit('peer-mux-closed', this.theirPeerInfo)
+          resolve()
+        })
+      }))
     }
 
     // If we have the base connection, abort it
+    // Ignore abort errors, since we're closing
     if (this.conn) {
-      this.conn.source(true, () => {
-        this._state('done')
-        delete this.conn
-      })
-    } else {
-      this._state('done')
+      tasks.push(
+        new Promise(resolve => {
+          this.conn.source.abort()
+          delete this.conn
+          resolve()
+        }).catch(() => { })
+      )
     }
+
+    Promise.all(tasks)
+      .then(() => {
+        this._state('done')
+      })
   }
 
   /**

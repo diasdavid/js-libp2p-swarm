@@ -10,7 +10,8 @@ chai.use(dirtyChai)
 const parallel = require('async/parallel')
 const TCP = require('libp2p-tcp')
 const WebSockets = require('libp2p-websockets')
-const mplex = require('pull-mplex')
+const mplex = require('libp2p-mplex')
+const pMplex = require('pull-mplex')
 const spdy = require('libp2p-spdy')
 const pull = require('pull-stream')
 const PeerBook = require('peer-book')
@@ -21,7 +22,7 @@ const tryEcho = utils.tryEcho
 const Switch = require('../src')
 
 describe('Switch (everything all together)', () => {
-  [mplex, spdy].forEach(muxer => {
+  [pMplex, spdy, mplex].forEach(muxer => {
     describe(muxer.multicodec, () => {
       let switchA // tcp
       let switchB // tcp+ws
@@ -48,8 +49,6 @@ describe('Switch (everything all together)', () => {
       }))
 
       after(function (done) {
-        this.timeout(3 * 1000)
-
         parallel([
           (cb) => switchA.stop(cb),
           (cb) => switchB.stop(cb),
