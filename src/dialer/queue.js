@@ -125,8 +125,6 @@ class DialerQueue {
         conn: null
       })
 
-      this.switch.connection.add(connectionFSM)
-
       // Add control events and start the dialer
       connectionFSM.once('connected', () => connectionFSM.protect())
       connectionFSM.once('private', () => connectionFSM.encrypt())
@@ -189,6 +187,7 @@ class DialerQueue {
 
     // If we're not muxed yet, add listeners
     connectionFSM.once('muxed', () => {
+      this.switch.connection.add(connectionFSM)
       queuedDial.connection = connectionFSM
       DialerQueue.getStreamForProtocol(queuedDial)
       next()
