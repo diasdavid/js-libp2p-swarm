@@ -107,14 +107,16 @@ describe('dialFSM', () => {
 
     switchA.dialFSM(switchB._peerInfo, '/closed/1.0.0', (err, connFSM) => {
       expect(err).to.not.exist()
-      expect(switchA.connection.getAllById(peerBId)).to.have.length(1)
 
       connFSM.once('close', () => {
         expect(switchA.connection.getAllById(peerBId)).to.have.length(0)
         done()
       })
 
-      connFSM.once('muxed', () => connFSM.close())
+      connFSM.once('muxed', () => {
+        expect(switchA.connection.getAllById(peerBId)).to.have.length(1)
+        connFSM.close()
+      })
     })
   })
 
