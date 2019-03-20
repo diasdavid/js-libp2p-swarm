@@ -9,8 +9,6 @@ const debug = require('debug')
 const log = debug('libp2p:switch:dial')
 log.error = debug('libp2p:switch:dial:error')
 
-const noop = () => {}
-
 /**
  * Components required to execute a dial
  * @typedef {Object} DialRequest
@@ -21,82 +19,100 @@ const noop = () => {}
  */
 
 /**
+ * @typedef {Object} NewConnection
+ * @property {ConnectionFSM} connectionFSM
+ * @property {boolean} didCreate
+ */
+
+/**
+ * Attempts to create a new connection or stream (when muxed),
+ * via negotiation of the given `protocol`. If no `protocol` is
+ * provided, no action will be taken and `callback` will be called
+ * immediately with no error or values.
+ *
+ * @param {object} options
+ * @param {string} options.protocol
+ * @param {ConnectionFSM} options.connection
+ * @param {function(Error, Connection)} options.callback
+ * @returns {void}
+ */
+function createConnectionWithProtocol ({ protocol, connection, callback }) {
+  if (!protocol) {
+    return callback()
+  }
+  connection.shake(protocol, (err, conn) => {
+    if (!conn) {
+      return callback(err)
+    }
+
+    const proxyConnection = new Connection()
+    proxyConnection.setPeerInfo(connection.theirPeerInfo)
+    proxyConnection.setInnerConn(conn)
+    callback(null, proxyConnection)
+  })
+}
+
+/**
  * A convenience array wrapper for controlling
  * a per peer queue
  *
  * @returns {Queue}
  */
-function Queue () {
-  let queue = []
-  let isRunning = false
-
-  return {
-    push: function (item) {
-      queue.push(item)
-    },
-    shift: function () {
-      return queue.shift()
-    },
-    isRunning: function () {
-      return isRunning
-    },
-    size: function () {
-      return queue.length
-    },
-    start: function () {
-      isRunning = true
-    },
-    stop: function () {
-      isRunning = false
-    }
-  }
-}
-
-class DialerQueue {
+class Queue {
   /**
    * @constructor
+   * @param {PeerInfo} peerInfo
    * @param {Switch} _switch
    */
-  constructor (_switch) {
-    this._queue = {}
+  constructor (peerInfo, _switch) {
+    this.peerInfo = peerInfo
+    this.id = peerInfo.id.toB58String()
     this.switch = _switch
+    this._queue = []
+    this.isRunning = false
+  }
+  get length () {
+    return this._queue.length
   }
 
   /**
-   * Iterates over all items in the DialerQueue
-   * and executes there callback with an error.
-   *
-   * This causes the entire DialerQueue to be drained
+   * Adds the dial request to the queue and starts the
+   * queue if it is stopped
+   * @param {string} protocol
+   * @param {boolean} useFSM If callback should use a ConnectionFSM instead
+   * @param {function(Error, Connection)} callback
+   */
+  add (protocol, useFSM, callback) {
+    this._queue.push({ protocol, useFSM, callback })
+    if (!this.isRunning) {
+      log('starting dial queue to %s', this.id)
+      this.start()
+    }
+  }
+
+  /**
+   * Starts the queue
+   */
+  start () {
+    this.isRunning = true
+    this._run()
+  }
+
+  /**
+   * Stops the queue
+   */
+  stop () {
+    this.isRunning = false
+  }
+
+  /**
+   * Stops the queue and errors the callback for each dial request
    */
   abort () {
-    const queues = Object.values(this._queue)
-    queues.forEach(queue => {
-      while (queue.size() > 0) {
-        let dial = queue.shift()
-        dial.callback(DIAL_ABORTED())
-      }
-    })
-  }
-
-  /**
-   * Adds the `dialRequest` to the queue and ensures the queue is running
-   *
-   * @param {DialRequest} dialRequest
-   */
-  add ({ peerInfo, protocol, useFSM, callback }) {
-    const id = peerInfo.id.toB58String()
-    const proxyConnection = new Connection()
-    proxyConnection.setPeerInfo(peerInfo)
-
-    callback = once(callback || noop)
-
-    let queue = this._queue[id] = this._queue[id] || new Queue()
-    queue.push({ protocol, proxyConnection, useFSM, callback })
-
-    if (!queue.isRunning()) {
-      log('starting dial queue to %s', id)
-      queue.start()
-      this._run(peerInfo)
+    this.stop()
+    while (this.length > 0) {
+      let dial = this._queue.shift()
+      dial.callback(DIAL_ABORTED())
     }
   }
 
@@ -110,11 +126,10 @@ class DialerQueue {
    *
    * @private
    * @param {PeerInfo} peerInfo
-   * @returns {[ConnectionFSM, Boolean]}
+   * @returns {NewConnection}
    */
   _getOrCreateConnection (peerInfo) {
-    const id = peerInfo.id.toB58String()
-    let connectionFSM = this.switch.connection.getOne(id)
+    let connectionFSM = this.switch.connection.getOne(this.id)
     let didCreate = false
 
     if (!connectionFSM) {
@@ -133,33 +148,28 @@ class DialerQueue {
       didCreate = true
     }
 
-    return [connectionFSM, didCreate]
+    return { connectionFSM, didCreate }
   }
 
   /**
    * Executes the next dial in the queue for the given peer
    * @private
-   * @param {PeerInfo} peerInfo
    * @returns {void}
    */
-  _run (peerInfo) {
-    const id = peerInfo.id.toB58String()
-
-    // If we have no items in the queue, exit
-    if (this._queue[id].size() < 1) {
-      log('stopping the queue for %s', id)
-      return this._queue[id].stop()
+  _run () {
+    // If we have no items in the queue or we're stopped, exit
+    if (this.length < 1 || !this.isRunning) {
+      log('stopping the queue for %s', this.id)
+      return this.stop()
     }
 
     const next = once(() => {
-      log('starting next dial to %s', id)
-      this._run(peerInfo)
+      log('starting next dial to %s', this.id)
+      this._run()
     })
 
-    let queuedDial = this._queue[id].shift()
-    let connectionFSM
-    let isNew
-    [connectionFSM, isNew] = this._getOrCreateConnection(peerInfo)
+    let queuedDial = this._queue.shift()
+    let { connectionFSM, didCreate } = this._getOrCreateConnection(this.peerInfo)
 
     // If the dial expects a ConnectionFSM, we can provide that back now
     if (queuedDial.useFSM) {
@@ -167,9 +177,9 @@ class DialerQueue {
     }
 
     // If we can handshake protocols, get a new stream and call run again
-    if (DialerQueue.canShake(connectionFSM)) {
+    if (['MUXED', 'CONNECTED'].includes(connectionFSM.getState())) {
       queuedDial.connection = connectionFSM
-      DialerQueue.getStreamForProtocol(queuedDial)
+      createConnectionWithProtocol(queuedDial)
       next()
       return
     }
@@ -189,65 +199,21 @@ class DialerQueue {
     connectionFSM.once('muxed', () => {
       this.switch.connection.add(connectionFSM)
       queuedDial.connection = connectionFSM
-      DialerQueue.getStreamForProtocol(queuedDial)
+      createConnectionWithProtocol(queuedDial)
       next()
     })
 
     connectionFSM.once('unmuxed', () => {
       queuedDial.connection = connectionFSM
-      DialerQueue.getStreamForProtocol(queuedDial)
+      createConnectionWithProtocol(queuedDial)
       next()
     })
 
     // If we have a new connection, start dialing
-    if (isNew) {
+    if (didCreate) {
       connectionFSM.dial()
     }
   }
-
-  /**
-   * Checks to see if the provided `connection` is capable of
-   * performing a handshake with an application level protocol,
-   * such as: /echo/1.0.0, /ipfs/kad/1.0.0, etc.
-   *
-   * @private
-   * @static
-   * @param {ConnectionFSM} connection
-   * @returns {Boolean}
-   */
-  static canShake (connection) {
-    return connection && (connection.getState() === 'MUXED' || connection.getState() === 'CONNECTED')
-  }
-
-  /**
-   * Attempts to create a new connection or stream (when muxed),
-   * via negotiation of the given `protocol`. If no `protocol` is
-   * provided, no action will be taken and `callback` will be called
-   * immediately with no error or values.
-   *
-   * @private
-   * @static
-   * @param {object} options
-   * @param {string} options.protocol
-   * @param {Connection} options.proxyConnection
-   * @param {ConnectionFSM} options.connection
-   * @param {function(Error, Connection)} options.callback
-   * @returns {void}
-   */
-  static getStreamForProtocol ({ protocol, proxyConnection, connection, callback }) {
-    if (!protocol) {
-      return callback()
-    }
-    connection.shake(protocol, (err, conn) => {
-      if (!conn) {
-        return callback(err)
-      }
-
-      proxyConnection.setPeerInfo(connection.theirPeerInfo)
-      proxyConnection.setInnerConn(conn)
-      callback(null, proxyConnection)
-    })
-  }
 }
 
-module.exports = DialerQueue
+module.exports = Queue

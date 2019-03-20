@@ -1,10 +1,10 @@
 'use strict'
 
-const DialerQueue = require('./queue')
+const DialQueueManager = require('./queueManager')
 const getPeerInfo = require('../get-peer-info')
 
 module.exports = function (_switch) {
-  const dialerQueue = new DialerQueue(_switch)
+  const dialQueueManager = new DialQueueManager(_switch)
 
   _switch.state.on('STOPPING:enter', abort)
 
@@ -25,7 +25,7 @@ module.exports = function (_switch) {
     }
 
     // Add it to the queue, it will automatically get executed
-    dialerQueue.add({ peerInfo, protocol, useFSM, callback })
+    dialQueueManager.add({ peerInfo, protocol, useFSM, callback })
   }
 
   /**
@@ -35,7 +35,7 @@ module.exports = function (_switch) {
    * @param {function} callback
    */
   function abort (callback) {
-    dialerQueue.abort()
+    dialQueueManager.abort()
     callback()
   }
 

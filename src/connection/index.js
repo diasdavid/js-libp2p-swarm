@@ -5,6 +5,7 @@ const Circuit = require('libp2p-circuit')
 const multistream = require('multistream-select')
 const withIs = require('class-is')
 const BaseConnection = require('./base')
+const parallel = require('async/parallel')
 
 const observeConnection = require('../observe-connection')
 const {
@@ -276,31 +277,27 @@ class ConnectionFSM extends BaseConnection {
 
     // Clean up stored connections
     if (this.muxer) {
-      tasks.push(new Promise(resolve => {
+      tasks.push((cb) => {
         this.muxer.end(() => {
           delete this.muxer
           this.switch.emit('peer-mux-closed', this.theirPeerInfo)
-          resolve()
+          cb()
         })
-      }))
+      })
     }
 
     // If we have the base connection, abort it
     // Ignore abort errors, since we're closing
     if (this.conn) {
-      tasks.push(
-        new Promise(resolve => {
-          this.conn.source.abort()
-          delete this.conn
-          resolve()
-        }).catch(() => { })
-      )
+      try {
+        this.conn.source.abort()
+      } catch (_) { }
+      delete this.conn
     }
 
-    Promise.all(tasks)
-      .then(() => {
-        this._state('done')
-      })
+    parallel(tasks, () => {
+      this._state('done')
+    })
   }
 
   /**
