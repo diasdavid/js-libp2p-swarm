@@ -61,11 +61,11 @@ function createConnectionWithProtocol ({ protocol, connection, callback }) {
 class Queue {
   /**
    * @constructor
-   * @param {PeerInfo} peerInfo
+   * @param {string} peerId
    * @param {Switch} _switch
    */
-  constructor (peerInfo, _switch) {
-    this.id = peerInfo.id.toB58String()
+  constructor (peerId, _switch) {
+    this.id = peerId
     this.switch = _switch
     this._queue = []
     this.isRunning = false
