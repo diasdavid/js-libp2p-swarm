@@ -65,7 +65,6 @@ class Queue {
    * @param {Switch} _switch
    */
   constructor (peerInfo, _switch) {
-    this.peerInfo = peerInfo
     this.id = peerInfo.id.toB58String()
     this.switch = _switch
     this._queue = []
@@ -168,8 +167,9 @@ class Queue {
       this._run()
     })
 
+    const peerInfo = this.switch._peerBook.get(this.id)
     let queuedDial = this._queue.shift()
-    let { connectionFSM, didCreate } = this._getOrCreateConnection(this.peerInfo)
+    let { connectionFSM, didCreate } = this._getOrCreateConnection(peerInfo)
 
     // If the dial expects a ConnectionFSM, we can provide that back now
     if (queuedDial.useFSM) {
