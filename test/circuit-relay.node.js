@@ -61,6 +61,7 @@ describe(`circuit`, function () {
       expect(err).to.exist()
       expect(err).to.match(/Circuit not enabled and all transports failed to dial peer/)
       expect(conn).to.not.exist()
+      swarmA.dialer.clearBlacklist(swarmC._peerInfo)
       done()
     })
   })

@@ -64,14 +64,26 @@ class DialQueueManager {
     if (this.dials < MAX_PARALLEL_DIALS && this._queue.length > 0) {
       let { peerInfo, protocol, useFSM, callback } = this._queue.shift()
       let dialQueue = this.getQueue(peerInfo)
-      if (!dialQueue.isRunning) {
+      if (dialQueue.add(protocol, useFSM, callback)) {
         this.dials++
       }
-      dialQueue.add(protocol, useFSM, callback)
     }
   }
 
-  onQueueStopped () {
+  /**
+   * Will remove the `peerInfo` from the dial blacklist
+   * @param {PeerInfo} peerInfo
+   */
+  clearBlacklist (peerInfo) {
+    this.getQueue(peerInfo).blackListed = null
+  }
+
+  /**
+   * A handler for when dialing queues stop. This will trigger
+   * `run()` in order to keep the queue processing.
+   * @private
+   */
+  _onQueueStopped () {
     this.dials--
     this.run()
   }
@@ -84,7 +96,7 @@ class DialQueueManager {
   getQueue (peerInfo) {
     const id = peerInfo.id.toB58String()
 
-    this._queues[id] = this._queues[id] || new Queue(id, this.switch, this.onQueueStopped.bind(this))
+    this._queues[id] = this._queues[id] || new Queue(id, this.switch, this._onQueueStopped.bind(this))
     return this._queues[id]
   }
 }

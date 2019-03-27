@@ -40,6 +40,14 @@ module.exports = function (_switch) {
   }
 
   /**
+   * Clears the blacklist for a given peer
+   * @param {PeerInfo} peerInfo
+   */
+  function clearBlacklist (peerInfo) {
+    dialQueueManager.clearBlacklist(peerInfo)
+  }
+
+  /**
    * Adds the dial request to the queue for the given `peerInfo`
    * @param {PeerInfo} peerInfo
    * @param {string} protocol
@@ -63,6 +71,7 @@ module.exports = function (_switch) {
   return {
     dial,
     dialFSM,
-    abort
+    abort,
+    clearBlacklist
   }
 }
