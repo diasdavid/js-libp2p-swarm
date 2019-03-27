@@ -230,8 +230,8 @@ class Queue {
     // In the future, it may be desired to error the other queued dials,
     // depending on the error.
     connectionFSM.once('error', (err) => {
-      this.blacklist()
       queuedDial.callback(err)
+      this.blacklist()
     })
 
     connectionFSM.once('close', () => {
