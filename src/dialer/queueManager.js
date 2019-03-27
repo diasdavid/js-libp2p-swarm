@@ -3,10 +3,11 @@
 const once = require('once')
 const Queue = require('./queue')
 const { DIAL_ABORTED } = require('../errors')
-
+const debug = require('debug')
+const log = debug('libp2p:switch:dialer')
 const noop = () => {}
 
-const MAX_PARALLEL_DIALS = 25
+const { MAX_PARALLEL_DIALS } = require('../constants')
 
 class DialQueueManager {
   /**
@@ -18,10 +19,10 @@ class DialQueueManager {
     this._queues = {}
     this.switch = _switch
     this.dials = 0
-    this._interval = setInterval(() => {
-      console.log('%s dial queues are running', this.dials)
-      console.log('%s peer dial queues created', Object.keys(this._queues).length)
-      console.log('%s dial requests are queued', this._queue.length)
+    this._interval = log.enabled && setInterval(() => {
+      log('%s dial queues are running', this.dials)
+      log('%s peer dial queues created', Object.keys(this._queues).length)
+      log('%s dial requests are queued', this._queue.length)
     }, 2000)
   }
 
@@ -49,9 +50,19 @@ class DialQueueManager {
    * Adds the `dialRequest` to the queue and ensures the queue is running
    *
    * @param {DialRequest} dialRequest
+   * @returns {void}
    */
   add ({ peerInfo, protocol, useFSM, callback }) {
     callback = callback ? once(callback) : noop
+
+    // If the target queue is currently running, just add the dial
+    // directly to it. This acts as a crude priority lane for multiple
+    // calls to a peer.
+    const targetQueue = this.getQueue(peerInfo)
+    if (targetQueue.isRunning) {
+      targetQueue.add(protocol, useFSM, callback)
+      return
+    }
 
     this._queue.push({ peerInfo, protocol, useFSM, callback })
     this.run()

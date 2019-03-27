@@ -94,7 +94,6 @@ describe('dialFSM', () => {
       connFSM.once('error:connection_attempt_failed', (errors) => {
         expect(errors).to.be.an('array')
         expect(errors).to.have.length(1)
-        switchA.dialer.clearBlacklist(switchC._peerInfo)
         done()
       })
     })
@@ -104,6 +103,7 @@ describe('dialFSM', () => {
     protocol = '/error/1.0.0'
     switchC.handle(protocol, () => { })
 
+    switchA.dialer.clearBlacklist(switchC._peerInfo)
     switchA.dialFSM(switchC._peerInfo, protocol, (err, connFSM) => {
       expect(err).to.not.exist()
       connFSM.once('error', (err) => {

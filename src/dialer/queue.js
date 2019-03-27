@@ -8,8 +8,7 @@ const once = require('once')
 const debug = require('debug')
 const log = debug('libp2p:switch:dial')
 log.error = debug('libp2p:switch:dial:error')
-
-const BLACK_LIST_TTL = 60e3
+const { BLACK_LIST_TTL } = require('../constants')
 
 /**
  * Components required to execute a dial
@@ -151,6 +150,15 @@ class Queue {
   }
 
   /**
+   * Marks the queue as blacklisted. The queue will be immediately aborted.
+   */
+  blacklist () {
+    log('blacklisting queue for %s', this.id)
+    this.blackListed = Date.now()
+    this.abort()
+  }
+
+  /**
    * Attempts to find a muxed connection for the given peer. If one
    * isn't found, a new one will be created.
    *
@@ -223,8 +231,7 @@ class Queue {
     // In the future, it may be desired to error the other queued dials,
     // depending on the error.
     connectionFSM.once('error', (err) => {
-      this.blackListed = Date.now()
-      this.abort()
+      this.blacklist()
       queuedDial.callback(err)
     })
 
