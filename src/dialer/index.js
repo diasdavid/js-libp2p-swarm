@@ -2,6 +2,7 @@
 
 const DialQueueManager = require('./queueManager')
 const getPeerInfo = require('../get-peer-info')
+const { MAX_PARALLEL_DIALS, BLACK_LIST_TTL } = require('../constants')
 
 module.exports = function (_switch) {
   const dialQueueManager = new DialQueueManager(_switch)
@@ -72,6 +73,8 @@ module.exports = function (_switch) {
     dial,
     dialFSM,
     abort,
-    clearBlacklist
+    clearBlacklist,
+    BLACK_LIST_TTL: _switch._options.blacklistTTL || BLACK_LIST_TTL,
+    MAX_PARALLEL_DIALS: _switch._options.maxParallelDials || MAX_PARALLEL_DIALS
   }
 }

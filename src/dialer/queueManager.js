@@ -5,8 +5,6 @@ const Queue = require('./queue')
 const { DIAL_ABORTED } = require('../errors')
 const noop = () => {}
 
-const { MAX_PARALLEL_DIALS } = require('../constants')
-
 class DialQueueManager {
   /**
    * @constructor
@@ -65,7 +63,7 @@ class DialQueueManager {
    * Will execute up to `MAX_PARALLEL_DIALS` dials
    */
   run () {
-    if (this.dials < MAX_PARALLEL_DIALS && this._queue.length > 0) {
+    if (this.dials < this.switch.dialer.MAX_PARALLEL_DIALS && this._queue.length > 0) {
       let { peerInfo, protocol, useFSM, callback } = this._queue.shift()
       let dialQueue = this.getQueue(peerInfo)
       if (dialQueue.add(protocol, useFSM, callback)) {

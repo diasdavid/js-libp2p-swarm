@@ -8,7 +8,6 @@ const once = require('once')
 const debug = require('debug')
 const log = debug('libp2p:switch:dial')
 log.error = debug('libp2p:switch:dial:error')
-const { BLACK_LIST_TTL } = require('../constants')
 
 /**
  * Components required to execute a dial
@@ -102,7 +101,7 @@ class Queue {
   isDialAllowed () {
     if (this.blackListed) {
       // If the blacklist ttl has passed, reset it
-      if (Date.now() - this.blackListed > BLACK_LIST_TTL) {
+      if (Date.now() - this.blackListed > this.switch.dialer.BLACK_LIST_TTL) {
         this.blackListed = null
         return true
       }
