@@ -3,8 +3,6 @@
 const once = require('once')
 const Queue = require('./queue')
 const { DIAL_ABORTED } = require('../errors')
-const debug = require('debug')
-const log = debug('libp2p:switch:dialer')
 const noop = () => {}
 
 const { MAX_PARALLEL_DIALS } = require('../constants')
@@ -19,11 +17,6 @@ class DialQueueManager {
     this._queues = {}
     this.switch = _switch
     this.dials = 0
-    this._interval = log.enabled && setInterval(() => {
-      log('%s dial queues are running', this.dials)
-      log('%s peer dial queues created', Object.keys(this._queues).length)
-      log('%s dial requests are queued', this._queue.length)
-    }, 2000)
   }
 
   /**
