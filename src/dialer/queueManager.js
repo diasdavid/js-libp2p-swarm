@@ -2,10 +2,11 @@
 
 const once = require('once')
 const Queue = require('./queue')
+const { DIAL_ABORTED } = require('../errors')
 
 const noop = () => {}
 
-const MAX_PARALLEL_DIALS = 10
+const MAX_PARALLEL_DIALS = 25
 
 class DialQueueManager {
   /**
@@ -17,6 +18,11 @@ class DialQueueManager {
     this._queues = {}
     this.switch = _switch
     this.dials = 0
+    this._interval = setInterval(() => {
+      console.log('%s dial queues are running', this.dials)
+      console.log('%s peer dial queues created', Object.keys(this._queues).length)
+      console.log('%s dial requests are queued', this._queue.length)
+    }, 2000)
   }
 
   /**
@@ -26,6 +32,13 @@ class DialQueueManager {
    * This causes the entire DialerQueue to be drained
    */
   abort () {
+    // Abort items in the general queue
+    while (this._queue.length > 0) {
+      let dial = this._queue.shift()
+      dial.callback(DIAL_ABORTED())
+    }
+
+    // Abort the individual peer queues
     const queues = Object.values(this._queues)
     queues.forEach(dialQueue => {
       dialQueue.abort()

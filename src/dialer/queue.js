@@ -63,6 +63,7 @@ class Queue {
    * @constructor
    * @param {string} peerId
    * @param {Switch} _switch
+   * @param {function} onStopped Called when the queue stops
    */
   constructor (peerId, _switch, onStopped) {
     this.id = peerId
@@ -94,15 +95,20 @@ class Queue {
    * Starts the queue
    */
   start () {
-    this.isRunning = true
-    this._run()
+    if (!this.isRunning) {
+      this.isRunning = true
+      this._run()
+    }
   }
 
   /**
    * Stops the queue
    */
   stop () {
-    this.isRunning = false
+    if (this.isRunning) {
+      this.isRunning = false
+      this.onStopped()
+    }
   }
 
   /**
