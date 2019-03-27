@@ -64,11 +64,12 @@ class Queue {
    * @param {string} peerId
    * @param {Switch} _switch
    */
-  constructor (peerId, _switch) {
+  constructor (peerId, _switch, onStopped) {
     this.id = peerId
     this.switch = _switch
     this._queue = []
     this.isRunning = false
+    this.onStopped = onStopped
   }
   get length () {
     return this._queue.length
