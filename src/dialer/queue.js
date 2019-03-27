@@ -143,11 +143,11 @@ class Queue {
    * Stops the queue and errors the callback for each dial request
    */
   abort () {
-    this.stop()
     while (this.length > 0) {
       let dial = this._queue.shift()
       dial.callback(DIAL_ABORTED())
     }
+    this.stop()
   }
 
   /**
@@ -224,7 +224,7 @@ class Queue {
     // depending on the error.
     connectionFSM.once('error', (err) => {
       this.blackListed = Date.now()
-      this.stop()
+      this.abort()
       queuedDial.callback(err)
     })
 
