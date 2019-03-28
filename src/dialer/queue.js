@@ -78,20 +78,16 @@ class Queue {
   }
 
   /**
-   * Adds the dial request to the queue and starts the
-   * queue if it is stopped
+   * Adds the dial request to the queue. The queue is not automatically started
    * @param {string} protocol
    * @param {boolean} useFSM If callback should use a ConnectionFSM instead
    * @param {function(Error, Connection)} callback
-   * @returns {boolean} whether or not the queue has been started
    */
   add (protocol, useFSM, callback) {
     if (!this.isDialAllowed()) {
       nextTick(callback, ERR_BLACKLISTED())
-      return false
     }
     this._queue.push({ protocol, useFSM, callback })
-    return this.start()
   }
 
   /**

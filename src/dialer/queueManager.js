@@ -2,7 +2,6 @@
 
 const once = require('once')
 const Queue = require('./queue')
-const { DIAL_ABORTED } = require('../errors')
 const noop = () => {}
 
 class DialQueueManager {
@@ -11,7 +10,7 @@ class DialQueueManager {
    * @param {Switch} _switch
    */
   constructor (_switch) {
-    this._queue = []
+    this._queue = new Set()
     this._queues = {}
     this.switch = _switch
     this.dials = 0
@@ -24,11 +23,8 @@ class DialQueueManager {
    * This causes the entire DialerQueue to be drained
    */
   abort () {
-    // Abort items in the general queue
-    while (this._queue.length > 0) {
-      let dial = this._queue.shift()
-      dial.callback(DIAL_ABORTED())
-    }
+    // Clear the general queue
+    this._queue.clear()
 
     // Abort the individual peer queues
     const queues = Object.values(this._queues)
@@ -46,16 +42,15 @@ class DialQueueManager {
   add ({ peerInfo, protocol, useFSM, callback }) {
     callback = callback ? once(callback) : noop
 
-    // If the target queue is currently running, just add the dial
-    // directly to it. This acts as a crude priority lane for multiple
-    // calls to a peer.
+    // Add the dial to its respective queue
     const targetQueue = this.getQueue(peerInfo)
-    if (targetQueue.isRunning) {
-      targetQueue.add(protocol, useFSM, callback)
-      return
+    targetQueue.add(protocol, useFSM, callback)
+
+    // Add the id to the general queue set if the queue isn't running
+    if (!targetQueue.isRunning) {
+      this._queue.add(targetQueue.id)
     }
 
-    this._queue.push({ peerInfo, protocol, useFSM, callback })
     this.run()
   }
 
@@ -63,10 +58,13 @@ class DialQueueManager {
    * Will execute up to `MAX_PARALLEL_DIALS` dials
    */
   run () {
-    if (this.dials < this.switch.dialer.MAX_PARALLEL_DIALS && this._queue.length > 0) {
-      let { peerInfo, protocol, useFSM, callback } = this._queue.shift()
-      let dialQueue = this.getQueue(peerInfo)
-      if (dialQueue.add(protocol, useFSM, callback)) {
+    if (this.dials < this.switch.dialer.MAX_PARALLEL_DIALS && this._queue.size > 0) {
+      let nextQueue = this._queue.values().next()
+      if (nextQueue.done) return
+
+      this._queue.delete(nextQueue.value)
+      let targetQueue = this._queues[nextQueue.value]
+      if (targetQueue.start()) {
         this.dials++
       }
     }
