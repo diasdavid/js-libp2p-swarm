@@ -74,7 +74,7 @@ module.exports = function (_switch) {
     dialFSM,
     abort,
     clearBlacklist,
-    BLACK_LIST_TTL: _switch._options.blacklistTTL || BLACK_LIST_TTL,
-    MAX_PARALLEL_DIALS: _switch._options.maxParallelDials || MAX_PARALLEL_DIALS
+    BLACK_LIST_TTL: isNaN(_switch._options.blacklistTTL) ? BLACK_LIST_TTL : _switch._options.blacklistTTL,
+    MAX_PARALLEL_DIALS: isNaN(_switch._options.maxParallelDials) ? MAX_PARALLEL_DIALS : _switch._options.maxParallelDials
   }
 }
