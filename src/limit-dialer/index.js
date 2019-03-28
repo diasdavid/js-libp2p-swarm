@@ -1,6 +1,6 @@
 'use strict'
 
-const tryEach = require('async/tryEach')
+const parallel = require('async/parallel')
 const debug = require('debug')
 const once = require('once')
 
@@ -41,20 +41,27 @@ class LimitDialer {
     callback = once(callback) // only call callback once
 
     let errors = []
+    let successfulDial = null
     const tasks = addrs.map((m) => {
-      return (cb) => this.dialSingle(peer, transport, m, token, (err, result) => {
+      return (cb) => this.dialSingle(peer, transport, m, token, (err, res) => {
         if (err) {
           errors.push(err)
-          return cb(err)
+          return cb()
         }
-        return cb(null, result)
+
+        // There should only ever be 1 result
+        if (res && !successfulDial) {
+          successfulDial = res
+        }
+
+        cb()
       })
     })
 
-    tryEach(tasks, (_, result) => {
-      if (result && result.conn) {
+    parallel(tasks, (_) => {
+      if (successfulDial) {
         log('dialMany:success')
-        return callback(null, result)
+        return callback(null, successfulDial)
       }
 
       log('dialMany:error')
