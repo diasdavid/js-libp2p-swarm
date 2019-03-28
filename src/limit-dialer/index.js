@@ -1,12 +1,13 @@
 'use strict'
 
-const parallel = require('async/parallel')
+const race = require('async/race')
 const debug = require('debug')
 const once = require('once')
 
 const log = debug('libp2p:switch:dialer')
 
 const DialQueue = require('./queue')
+const { CONNECTION_FAILED } = require('../errors')
 
 /**
  * Track dials per peer and limited them.
@@ -41,24 +42,19 @@ class LimitDialer {
     callback = once(callback) // only call callback once
 
     let errors = []
-    let successfulDial = null
     const tasks = addrs.map((m) => {
       return (cb) => this.dialSingle(peer, transport, m, token, (err, res) => {
-        if (err) {
-          errors.push(err)
-          return cb()
-        }
+        if (res) return cb(null, res)
 
-        // There should only ever be 1 result
-        if (res && !successfulDial) {
-          successfulDial = res
-        }
+        errors.push(err || CONNECTION_FAILED())
 
-        cb()
+        if (errors.length === tasks.length) {
+          cb(errors)
+        }
       })
     })
 
-    parallel(tasks, (_) => {
+    race(tasks, (_, successfulDial) => {
       if (successfulDial) {
         log('dialMany:success')
         return callback(null, successfulDial)
