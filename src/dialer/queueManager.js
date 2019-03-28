@@ -11,9 +11,9 @@ class DialQueueManager {
    */
   constructor (_switch) {
     this._queue = new Set()
+    this._dialingQueues = new Set()
     this._queues = {}
     this.switch = _switch
-    this.dials = 0
   }
 
   /**
@@ -46,7 +46,7 @@ class DialQueueManager {
     const targetQueue = this.getQueue(peerInfo)
     targetQueue.add(protocol, useFSM, callback)
 
-    // If we're already connected to the peer, start the queue now.
+    // If we're already connected to the peer, start the queue now
     // While it might cause queues to go over the max parallel amount,
     // it avoids blocking peers we're already connected to
     if (peerInfo.isConnected()) {
@@ -55,7 +55,8 @@ class DialQueueManager {
     }
 
     // Add the id to the general queue set if the queue isn't running
-    if (!targetQueue.isRunning) {
+    // and if the queue is allowed to dial
+    if (!targetQueue.isRunning && targetQueue.isDialAllowed()) {
       this._queue.add(targetQueue.id)
     }
 
@@ -66,15 +67,14 @@ class DialQueueManager {
    * Will execute up to `MAX_PARALLEL_DIALS` dials
    */
   run () {
-    if (this.dials < this.switch.dialer.MAX_PARALLEL_DIALS && this._queue.size > 0) {
+    if (this._dialingQueues.size < this.switch.dialer.MAX_PARALLEL_DIALS && this._queue.size > 0) {
       let nextQueue = this._queue.values().next()
       if (nextQueue.done) return
 
       this._queue.delete(nextQueue.value)
       let targetQueue = this._queues[nextQueue.value]
-      if (targetQueue.start()) {
-        this.dials++
-      }
+      this._dialingQueues.add(targetQueue.id)
+      targetQueue.start()
     }
   }
 
@@ -90,9 +90,10 @@ class DialQueueManager {
    * A handler for when dialing queues stop. This will trigger
    * `run()` in order to keep the queue processing.
    * @private
+   * @param {string} id peer id of the queue that stopped
    */
-  _onQueueStopped () {
-    this.dials--
+  _onQueueStopped (id) {
+    this._dialingQueues.delete(id)
     this.run()
   }
 

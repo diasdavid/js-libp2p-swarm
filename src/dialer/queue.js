@@ -63,7 +63,7 @@ class Queue {
    * @constructor
    * @param {string} peerId
    * @param {Switch} _switch
-   * @param {function} onStopped Called when the queue stops
+   * @param {function(string)} onStopped Called when the queue stops
    */
   constructor (peerId, _switch, onStopped) {
     this.id = peerId
@@ -129,7 +129,7 @@ class Queue {
     if (this.isRunning) {
       log('stopping dial queue to %s', this.id)
       this.isRunning = false
-      this.onStopped()
+      this.onStopped(this.id)
     }
   }
 
