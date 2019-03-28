@@ -46,6 +46,14 @@ class DialQueueManager {
     const targetQueue = this.getQueue(peerInfo)
     targetQueue.add(protocol, useFSM, callback)
 
+    // If we're already connected to the peer, start the queue now.
+    // While it might cause queues to go over the max parallel amount,
+    // it avoids blocking peers we're already connected to
+    if (peerInfo.isConnected()) {
+      targetQueue.start()
+      return
+    }
+
     // Add the id to the general queue set if the queue isn't running
     if (!targetQueue.isRunning) {
       this._queue.add(targetQueue.id)
