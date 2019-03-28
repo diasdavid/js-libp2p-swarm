@@ -13,7 +13,6 @@ const LimitDialer = require('./limit-dialer')
 const defaultPerPeerRateLimit = 8
 
 // the amount of time a single dial has to succeed
-// TODO this should be exposed as a option
 const dialTimeout = 30 * 1000
 
 /**
@@ -23,7 +22,7 @@ const dialTimeout = 30 * 1000
 class TransportManager {
   constructor (_switch) {
     this.switch = _switch
-    this.dialer = new LimitDialer(defaultPerPeerRateLimit, dialTimeout)
+    this.dialer = new LimitDialer(defaultPerPeerRateLimit, this.switch._options.dialTimeout || dialTimeout)
   }
 
   /**
