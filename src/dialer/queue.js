@@ -70,6 +70,7 @@ class Queue {
     this.switch = _switch
     this._queue = []
     this.blackListed = null
+    this.blackListCount = 0
     this.isRunning = false
     this.onStopped = onStopped
   }
@@ -97,7 +98,7 @@ class Queue {
   isDialAllowed () {
     if (this.blackListed) {
       // If the blacklist ttl has passed, reset it
-      if (Date.now() - this.blackListed > this.switch.dialer.BLACK_LIST_TTL) {
+      if (Date.now() > this.blackListed) {
         this.blackListed = null
         return true
       }
@@ -146,10 +147,17 @@ class Queue {
 
   /**
    * Marks the queue as blacklisted. The queue will be immediately aborted.
+   * @returns {void}
    */
   blacklist () {
-    log('blacklisting queue for %s', this.id)
-    this.blackListed = Date.now()
+    this.blackListCount++
+
+    if (this.blackListCount >= 5) {
+      this.blackListed = Infinity
+      return
+    }
+
+    this.blackListed = Date.now() + (this.switch.dialer.BLACK_LIST_TTL * Math.pow(this.blackListCount, 2))
     this.abort()
   }
 

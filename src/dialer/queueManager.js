@@ -2,6 +2,8 @@
 
 const once = require('once')
 const Queue = require('./queue')
+const { DIAL_ABORTED } = require('../errors')
+const nextTick = require('async/nextTick')
 const noop = () => {}
 
 class DialQueueManager {
@@ -11,6 +13,7 @@ class DialQueueManager {
    */
   constructor (_switch) {
     this._queue = new Set()
+    this._coldCallQueue = new Set()
     this._dialingQueues = new Set()
     this._queues = {}
     this.switch = _switch
@@ -44,6 +47,11 @@ class DialQueueManager {
 
     // Add the dial to its respective queue
     const targetQueue = this.getQueue(peerInfo)
+    // If we have too many cold calls, abort the dial immediately
+    if (this._coldCallQueue.size >= this.switch.MAX_COLD_CALL_QUEUE && !protocol) {
+      return nextTick(callback, DIAL_ABORTED())
+    }
+
     targetQueue.add(protocol, useFSM, callback)
 
     // If we're already connected to the peer, start the queue now
@@ -54,10 +62,18 @@ class DialQueueManager {
       return
     }
 
-    // Add the id to the general queue set if the queue isn't running
-    // and if the queue is allowed to dial
-    if (!targetQueue.isRunning && targetQueue.isDialAllowed()) {
-      this._queue.add(targetQueue.id)
+    // If dialing is not allowed, abort
+    if (!targetQueue.isDialAllowed()) {
+      return
+    }
+
+    // Add the id to its respective queue set if the queue isn't running
+    if (!targetQueue.isRunning) {
+      if (protocol) {
+        this._queue.add(targetQueue.id)
+      } else {
+        this._coldCallQueue.add(targetQueue.id)
+      }
     }
 
     this.run()
@@ -67,11 +83,21 @@ class DialQueueManager {
    * Will execute up to `MAX_PARALLEL_DIALS` dials
    */
   run () {
-    if (this._dialingQueues.size < this.switch.dialer.MAX_PARALLEL_DIALS && this._queue.size > 0) {
-      let nextQueue = this._queue.values().next()
-      if (nextQueue.done) return
+    if (this._dialingQueues.size < this.switch.dialer.MAX_PARALLEL_DIALS) {
+      let nextQueue = { done: true }
+      // Check the queue first and fall back to the cold call queue
+      if (this._queue.size > 0) {
+        nextQueue = this._queue.values().next()
+        this._queue.delete(nextQueue.value)
+      } else if (this._coldCallQueue.size > 0) {
+        nextQueue = this._coldCallQueue.values().next()
+        this._coldCallQueue.delete(nextQueue.value)
+      }
 
-      this._queue.delete(nextQueue.value)
+      if (nextQueue.done) {
+        return
+      }
+
       let targetQueue = this._queues[nextQueue.value]
       this._dialingQueues.add(targetQueue.id)
       targetQueue.start()

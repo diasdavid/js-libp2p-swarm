@@ -34,6 +34,7 @@ class Switch extends EventEmitter {
 
     this._peerInfo = peerInfo
     this._peerBook = peerBook
+    this._peerStore = {}
     this._options = options || {}
 
     this.setMaxListeners(Infinity)
