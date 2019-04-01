@@ -37,7 +37,7 @@ class DialQueueManager {
   }
 
   /**
-   * Adds the `dialRequest` to the qMAX_COLD_CALLSe queue is running
+   * Adds the `dialRequest` to the queue and ensures queue is running
    *
    * @param {DialRequest} dialRequest
    * @returns {void}
