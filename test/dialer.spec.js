@@ -135,5 +135,19 @@ describe('dialer', () => {
 
       queueManager.add(dialRequest)
     })
+
+    it('should remove a queue that has reached max blacklist', () => {
+      const queue = new Queue('QmA', switchA)
+      queue.blackListed = Infinity
+
+      const abortSpy = sinon.spy(queue, 'abort')
+      const queueManager = new QueueManager(switchA)
+      queueManager._queues[queue.id] = queue
+
+      queueManager._clean()
+
+      expect(abortSpy.called).to.eql(true)
+      expect(queueManager._queues).to.eql({})
+    })
   })
 })

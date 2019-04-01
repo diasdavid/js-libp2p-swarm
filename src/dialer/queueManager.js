@@ -4,6 +4,8 @@ const once = require('once')
 const Queue = require('./queue')
 const { DIAL_ABORTED } = require('../errors')
 const nextTick = require('async/nextTick')
+const retimer = require('retimer')
+const { ONE_HOUR } = require('../constants')
 const noop = () => {}
 
 class DialQueueManager {
@@ -17,6 +19,24 @@ class DialQueueManager {
     this._dialingQueues = new Set()
     this._queues = {}
     this.switch = _switch
+    this._cleanInterval = retimer(this._clean.bind(this), ONE_HOUR)
+  }
+
+  /**
+   * Runs through all queues, aborts and removes them if they
+   * are no longer valid. A queue that is blacklisted indefinitely,
+   * is considered no longer valid.
+   * @private
+   */
+  _clean () {
+    const queues = Object.values(this._queues)
+    queues.forEach(dialQueue => {
+      if (dialQueue.blackListed === Infinity) {
+        dialQueue.abort()
+        delete this._queues[dialQueue.id]
+      }
+    })
+    this._cleanInterval.reschedule(ONE_HOUR)
   }
 
   /**
@@ -29,10 +49,13 @@ class DialQueueManager {
     // Clear the general queue
     this._queue.clear()
 
+    this._cleanInterval.clear()
+
     // Abort the individual peer queues
     const queues = Object.values(this._queues)
     queues.forEach(dialQueue => {
       dialQueue.abort()
+      delete this._queues[dialQueue.id]
     })
   }
 

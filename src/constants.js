@@ -5,5 +5,6 @@ module.exports = {
   BLACK_LIST_ATTEMPTS: 5, // Num of unsuccessful dials before a peer is permanently blacklisted
   DIAL_TIMEOUT: 30e3, // How long in ms a dial attempt is allowed to take
   MAX_COLD_CALLS: 50, // How many dials w/o protocols that can be queued
-  MAX_PARALLEL_DIALS: 100 // Maximum allowed concurrent dials
+  MAX_PARALLEL_DIALS: 100, // Maximum allowed concurrent dials
+  ONE_HOUR: 1 * 60 * 60e3
 }
