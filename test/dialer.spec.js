@@ -81,12 +81,15 @@ describe('dialer', () => {
 
       const runSpy = sinon.stub(queueManager, 'run')
       const addSpy = sinon.stub(queueManager._queue, 'add')
+      const deleteSpy = sinon.stub(queueManager._coldCallQueue, 'delete')
 
       queueManager.add(dialRequest)
 
       expect(runSpy.called).to.eql(true)
       expect(addSpy.called).to.eql(true)
       expect(addSpy.getCall(0).args[0]).to.eql('QmA')
+      expect(deleteSpy.called).to.eql(true)
+      expect(deleteSpy.getCall(0).args[0]).to.eql('QmA')
     })
 
     it('should add a cold call to the cold call queue', () => {
