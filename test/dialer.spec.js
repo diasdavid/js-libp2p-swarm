@@ -67,5 +67,70 @@ describe('dialer', () => {
 
       queueManager.add(dialRequest)
     })
+
+    it('should add a protocol dial to the normal queue', () => {
+      const dialRequest = {
+        peerInfo: {
+          id: { toB58String: () => 'QmA' },
+          isConnected: () => null
+        },
+        protocol: '/echo/1.0.0',
+        useFSM: true,
+        callback: () => {}
+      }
+
+      const runSpy = sinon.stub(queueManager, 'run')
+      const addSpy = sinon.stub(queueManager._queue, 'add')
+
+      queueManager.add(dialRequest)
+
+      expect(runSpy.called).to.eql(true)
+      expect(addSpy.called).to.eql(true)
+      expect(addSpy.getCall(0).args[0]).to.eql('QmA')
+    })
+
+    it('should add a cold call to the cold call queue', () => {
+      const dialRequest = {
+        peerInfo: {
+          id: { toB58String: () => 'QmA' },
+          isConnected: () => null
+        },
+        protocol: null,
+        useFSM: true,
+        callback: () => {}
+      }
+
+      const runSpy = sinon.stub(queueManager, 'run')
+      const addSpy = sinon.stub(queueManager._coldCallQueue, 'add')
+
+      queueManager.add(dialRequest)
+
+      expect(runSpy.called).to.eql(true)
+      expect(addSpy.called).to.eql(true)
+      expect(addSpy.getCall(0).args[0]).to.eql('QmA')
+    })
+
+    it('should abort a cold call if it\'s in the normal queue', (done) => {
+      const dialRequest = {
+        peerInfo: {
+          id: { toB58String: () => 'QmA' },
+          isConnected: () => null
+        },
+        protocol: null,
+        useFSM: true,
+        callback: (err) => {
+          expect(runSpy.called).to.eql(false)
+          expect(hasSpy.called).to.eql(true)
+          expect(hasSpy.getCall(0).args[0]).to.eql('QmA')
+          expect(err.code).to.eql('DIAL_ABORTED')
+          done()
+        }
+      }
+
+      const runSpy = sinon.stub(queueManager, 'run')
+      const hasSpy = sinon.stub(queueManager._queue, 'has').returns(true)
+
+      queueManager.add(dialRequest)
+    })
   })
 })

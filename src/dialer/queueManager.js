@@ -71,8 +71,13 @@ class DialQueueManager {
     if (!targetQueue.isRunning) {
       if (protocol) {
         this._queue.add(targetQueue.id)
-      } else {
+        this._coldCallQueue.delete(targetQueue.id)
+      // Only add it to the cold queue if it's not in the normal queue
+      } else if (!this._queue.has(targetQueue.id)) {
         this._coldCallQueue.add(targetQueue.id)
+      // The peer is already in the normal queue, abort the cold call
+      } else {
+        return nextTick(callback, DIAL_ABORTED())
       }
     }
 
