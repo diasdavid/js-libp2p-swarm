@@ -152,12 +152,19 @@ class Queue {
   blacklist () {
     this.blackListCount++
 
-    if (this.blackListCount >= 5) {
+    if (this.blackListCount >= this.switch.dialer.BLACK_LIST_ATTEMPTS) {
       this.blackListed = Infinity
       return
     }
 
-    this.blackListed = Date.now() + (this.switch.dialer.BLACK_LIST_TTL * Math.pow(this.blackListCount, 3))
+    let ttl = this.switch.dialer.BLACK_LIST_TTL * Math.pow(this.blackListCount, 3)
+    const minTTL = ttl * 0.9
+    const maxTTL = ttl * 1.1
+
+    // Add a random jitter of 20% to the ttl
+    ttl = Math.floor(Math.random() * (maxTTL - minTTL) + minTTL)
+
+    this.blackListed = Date.now() + ttl
     this.abort()
   }
 
@@ -253,6 +260,7 @@ class Queue {
 
     connectionFSM.once('unmuxed', () => {
       this.blackListCount = 0
+      this.switch.connection.add(connectionFSM)
       queuedDial.connection = connectionFSM
       createConnectionWithProtocol(queuedDial)
       next()
