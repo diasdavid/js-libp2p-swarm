@@ -3,7 +3,6 @@
 const once = require('once')
 const Queue = require('./queue')
 const { DIAL_ABORTED } = require('../errors')
-const { MAX_COLD_CALL_QUEUE } = require('../constants')
 const nextTick = require('async/nextTick')
 const noop = () => {}
 
@@ -38,7 +37,7 @@ class DialQueueManager {
   }
 
   /**
-   * Adds the `dialRequest` to the queue and ensures the queue is running
+   * Adds the `dialRequest` to the qMAX_COLD_CALLSe queue is running
    *
    * @param {DialRequest} dialRequest
    * @returns {void}
@@ -49,7 +48,7 @@ class DialQueueManager {
     // Add the dial to its respective queue
     const targetQueue = this.getQueue(peerInfo)
     // If we have too many cold calls, abort the dial immediately
-    if (this._coldCallQueue.size >= MAX_COLD_CALL_QUEUE && !protocol) {
+    if (this._coldCallQueue.size >= this.switch.dialer.MAX_COLD_CALLS && !protocol) {
       return nextTick(callback, DIAL_ABORTED())
     }
 
