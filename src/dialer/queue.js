@@ -244,6 +244,7 @@ class Queue {
 
     // If we're not muxed yet, add listeners
     connectionFSM.once('muxed', () => {
+      this.blackListCount = 0 // reset blacklisting on good connections
       this.switch.connection.add(connectionFSM)
       queuedDial.connection = connectionFSM
       createConnectionWithProtocol(queuedDial)
@@ -251,6 +252,7 @@ class Queue {
     })
 
     connectionFSM.once('unmuxed', () => {
+      this.blackListCount = 0
       queuedDial.connection = connectionFSM
       createConnectionWithProtocol(queuedDial)
       next()

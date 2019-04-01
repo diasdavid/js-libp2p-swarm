@@ -109,7 +109,9 @@ class DialQueueManager {
    * @param {PeerInfo} peerInfo
    */
   clearBlacklist (peerInfo) {
-    this.getQueue(peerInfo).blackListed = null
+    const queue = this.getQueue(peerInfo)
+    queue.blackListed = null
+    queue.blackListCount = 0
   }
 
   /**
