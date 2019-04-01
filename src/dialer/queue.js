@@ -157,7 +157,7 @@ class Queue {
       return
     }
 
-    this.blackListed = Date.now() + (this.switch.dialer.BLACK_LIST_TTL * Math.pow(this.blackListCount, 2))
+    this.blackListed = Date.now() + (this.switch.dialer.BLACK_LIST_TTL * Math.pow(this.blackListCount, 3))
     this.abort()
   }
 
