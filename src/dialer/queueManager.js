@@ -48,6 +48,8 @@ class DialQueueManager {
   abort () {
     // Clear the general queue
     this._queue.clear()
+    // Clear the cold call queue
+    this._coldCallQueue.clear()
 
     this._cleanInterval.clear()
 
