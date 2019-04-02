@@ -149,5 +149,59 @@ describe('dialer', () => {
       expect(abortSpy.called).to.eql(true)
       expect(queueManager._queues).to.eql({})
     })
+
+    it('should not remove a queue that is blacklisted below max', () => {
+      const queue = new Queue('QmA', switchA)
+      queue.blackListed = Date.now() + 10e3
+
+      const abortSpy = sinon.spy(queue, 'abort')
+      const queueManager = new QueueManager(switchA)
+      queueManager._queues[queue.id] = queue
+
+      queueManager._clean()
+
+      expect(abortSpy.called).to.eql(false)
+      expect(queueManager._queues).to.eql({
+        QmA: queue
+      })
+    })
+
+    it('should remove a queue that is not running and the peer is not connected', () => {
+      const disconnectedPeer = {
+        id: { toB58String: () => 'QmA' },
+        isConnected: () => null
+      }
+      const queue = new Queue(disconnectedPeer.id.toB58String(), switchA)
+
+      const abortSpy = sinon.spy(queue, 'abort')
+      const queueManager = new QueueManager(switchA)
+      queueManager._queues[queue.id] = queue
+
+      queueManager._clean()
+
+      expect(abortSpy.called).to.eql(true)
+      expect(queueManager._queues).to.eql({})
+    })
+
+    it('should not remove a queue that is not running but the peer is connected', () => {
+      const connectedPeer = {
+        id: { toB58String: () => 'QmA' },
+        isConnected: () => true
+      }
+      const queue = new Queue(connectedPeer.id.toB58String(), switchA)
+
+      switchA._peerBook.put(connectedPeer)
+
+      const abortSpy = sinon.spy(queue, 'abort')
+      const queueManager = new QueueManager(switchA)
+      queueManager._queues[queue.id] = queue
+
+      queueManager._clean()
+
+      expect(abortSpy.called).to.eql(false)
+      expect(queueManager._queues).to.eql({
+        QmA: queue
+      })
+    })
   })
 })

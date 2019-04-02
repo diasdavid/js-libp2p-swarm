@@ -5,7 +5,7 @@ const Queue = require('./queue')
 const { DIAL_ABORTED } = require('../errors')
 const nextTick = require('async/nextTick')
 const retimer = require('retimer')
-const { ONE_HOUR } = require('../constants')
+const { QUARTER_HOUR } = require('../constants')
 const noop = () => {}
 
 class DialQueueManager {
@@ -19,7 +19,7 @@ class DialQueueManager {
     this._dialingQueues = new Set()
     this._queues = {}
     this.switch = _switch
-    this._cleanInterval = retimer(this._clean.bind(this), ONE_HOUR)
+    this._cleanInterval = retimer(this._clean.bind(this), QUARTER_HOUR)
   }
 
   /**
@@ -31,12 +31,37 @@ class DialQueueManager {
   _clean () {
     const queues = Object.values(this._queues)
     queues.forEach(dialQueue => {
+      // Clear if the queue has reached max blacklist
       if (dialQueue.blackListed === Infinity) {
         dialQueue.abort()
         delete this._queues[dialQueue.id]
+        return
+      }
+
+      // Keep track of blacklisted queues
+      if (dialQueue.blackListed) return
+
+      // Clear if peer is no longer active
+      // To avoid reallocating memory, dont delete queues of
+      // connected peers, as these are highly likely to leverage the
+      // queues in the immediate term
+      if (!dialQueue.isRunning && dialQueue.length < 1) {
+        let isConnected = false
+        try {
+          const peerInfo = this.switch._peerBook.get(dialQueue.id)
+          isConnected = Boolean(peerInfo.isConnected())
+        } catch (_) {
+          // If we get an error, that means the peerbook doesnt have the peer
+        }
+
+        if (!isConnected) {
+          dialQueue.abort()
+          delete this._queues[dialQueue.id]
+        }
       }
     })
-    this._cleanInterval.reschedule(ONE_HOUR)
+
+    this._cleanInterval.reschedule(QUARTER_HOUR)
   }
 
   /**
