@@ -2,7 +2,6 @@
 
 const ConnectionFSM = require('../connection')
 const { DIAL_ABORTED, ERR_BLACKLISTED } = require('../errors')
-const Connection = require('interface-connection').Connection
 const nextTick = require('async/nextTick')
 const once = require('once')
 const debug = require('debug')
