@@ -6,7 +6,6 @@ const debug = require('debug')
 const log = debug('libp2p:switch:dialer')
 
 const DialQueue = require('./queue')
-const { CONNECTION_FAILED } = require('../errors')
 
 /**
  * Track dials per peer and limited them.
@@ -45,7 +44,7 @@ class LimitDialer {
 
     tryEach(tasks, (err, res) => {
       if (err) {
-        log('dialMany:error')
+        log('dialMany:error', err)
         return callback(err)
       }
       log('dialMany:success')
