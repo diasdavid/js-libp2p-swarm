@@ -38,17 +38,25 @@ class LimitDialer {
     // we use a token to track if we want to cancel following dials
     const token = { cancel: false }
 
+    let errors = []
     const tasks = addrs.map((m) => {
-      return (cb) => this.dialSingle(peer, transport, m, token, cb)
+      return (cb) => this.dialSingle(peer, transport, m, token, (err, result) => {
+        if (err) {
+          errors.push(err)
+          return cb(err)
+        }
+        return cb(null, result)
+      })
     })
 
-    tryEach(tasks, (err, res) => {
-      if (err) {
-        log('dialMany:error', err)
-        return callback(err)
+    tryEach(tasks, (_, result) => {
+      if (result && result.conn) {
+        log('dialMany:success')
+        return callback(null, result)
       }
-      log('dialMany:success')
-      callback(null, res)
+
+      log('dialMany:error')
+      callback(errors)
     })
   }
 
