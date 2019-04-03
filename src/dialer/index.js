@@ -12,8 +12,6 @@ const {
 module.exports = function (_switch) {
   const dialQueueManager = new DialQueueManager(_switch)
 
-  _switch.state.on('STOPPING:enter', abort)
-
   /**
    * @param {DialRequest} dialRequest
    * @returns {void}

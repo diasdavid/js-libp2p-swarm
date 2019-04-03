@@ -254,6 +254,7 @@ class Switch extends EventEmitter {
           }, cb)
         }, cb)
       },
+      (cb) => this.dialer.abort(cb),
       (cb) => each(this.connection.getAll(), (conn, cb) => {
         conn.once('close', cb)
         conn.close()
