@@ -158,7 +158,8 @@ class DialQueueManager {
       let targetQueue = this._queues[nextQueue.value]
 
       if (!targetQueue) {
-        return log('missing queue %s, maybe it was aborted?', nextQueue.value)
+        log('missing queue %s, maybe it was aborted?', nextQueue.value)
+        return
       }
 
       this._dialingQueues.add(targetQueue.id)
