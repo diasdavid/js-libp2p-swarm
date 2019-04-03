@@ -6,6 +6,8 @@ const { DIAL_ABORTED } = require('../errors')
 const nextTick = require('async/nextTick')
 const retimer = require('retimer')
 const { QUARTER_HOUR } = require('../constants')
+const debug = require('debug')
+const log = debug('libp2p:switch:dial:manager')
 const noop = () => {}
 
 class DialQueueManager {
@@ -154,6 +156,11 @@ class DialQueueManager {
       }
 
       let targetQueue = this._queues[nextQueue.value]
+
+      if (!targetQueue) {
+        return log('missing queue %s, maybe it was aborted?', nextQueue.value)
+      }
+
       this._dialingQueues.add(targetQueue.id)
       targetQueue.start()
     }
