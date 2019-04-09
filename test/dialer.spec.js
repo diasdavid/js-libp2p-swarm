@@ -58,7 +58,7 @@ describe('dialer', () => {
           id: { toB58String: () => 'QmA' }
         },
         protocol: null,
-        useFSM: true,
+        options: { useFSM: true, priority: 1 },
         callback: (err) => {
           expect(err.code).to.eql('DIAL_ABORTED')
           done()
@@ -75,7 +75,7 @@ describe('dialer', () => {
           isConnected: () => null
         },
         protocol: '/echo/1.0.0',
-        useFSM: true,
+        options: { useFSM: true, priority: 0 },
         callback: () => {}
       }
 
@@ -99,7 +99,7 @@ describe('dialer', () => {
           isConnected: () => null
         },
         protocol: null,
-        useFSM: true,
+        options: { useFSM: true, priority: 1 },
         callback: () => {}
       }
 
@@ -120,7 +120,7 @@ describe('dialer', () => {
           isConnected: () => null
         },
         protocol: null,
-        useFSM: true,
+        options: { useFSM: true, priority: 1 },
         callback: (err) => {
           expect(runSpy.called).to.eql(false)
           expect(hasSpy.called).to.eql(true)
