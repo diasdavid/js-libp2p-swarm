@@ -74,6 +74,10 @@ module.exports = function (_switch) {
    * @param {function(Error, Connection)} callback
    */
   function connect (peerInfo, options, callback) {
+    if (typeof options === 'function') {
+      callback = options
+      options = null
+    }
     options = { useFSM: false, priority: 1, ...options }
     _dial({ peerInfo, protocol: null, options, callback })
   }

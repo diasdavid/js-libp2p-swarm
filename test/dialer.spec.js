@@ -18,17 +18,39 @@ const createInfos = utils.createInfos
 
 describe('dialer', () => {
   let switchA
+  let switchB
 
-  before((done) => createInfos(1, (err, infos) => {
+  before((done) => createInfos(2, (err, infos) => {
     expect(err).to.not.exist()
 
     switchA = new Switch(infos[0], new PeerBook())
+    switchB = new Switch(infos[1], new PeerBook())
 
     done()
   }))
 
   afterEach(() => {
     sinon.restore()
+  })
+
+  describe('connect', () => {
+    afterEach(() => {
+      switchA.dialer.clearBlacklist(switchB._peerInfo)
+    })
+
+    it('should use default options', (done) => {
+      switchA.dialer.connect(switchB._peerInfo, (err) => {
+        expect(err).to.exist()
+        done()
+      })
+    })
+
+    it('should be able to use custom options', (done) => {
+      switchA.dialer.connect(switchB._peerInfo, { useFSM: true, priority: 0 }, (err) => {
+        expect(err).to.exist()
+        done()
+      })
+    })
   })
 
   describe('queue', () => {
