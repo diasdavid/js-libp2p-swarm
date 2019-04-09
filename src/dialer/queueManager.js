@@ -21,15 +21,6 @@ class DialQueueManager {
     this._dialingQueues = new Set()
     this._queues = {}
     this.switch = _switch
-
-    setInterval(() => {
-      console.log('Cold queue has %s items', this._coldCallQueue.size)
-      console.log('Normal queue has %s items', this._queue.size)
-      console.log('Currently dialing to %s queues', this._dialingQueues.size)
-      console.log('%s items in the queue', Object.keys(this._dialingQueues.size).length)
-      console.log('%s connections', this.switch.connection.getAll().length)
-      console.log('%s known peers', Object.keys(this.switch._peerBook.getAll()).length)
-    }, 5e3)
     this._cleanInterval = retimer(this._clean.bind(this), QUARTER_HOUR)
     this.start()
   }
