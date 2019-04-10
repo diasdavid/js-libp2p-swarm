@@ -33,7 +33,8 @@ class ConnectionManager {
     // Only add it if it's not there
     if (!this.get(connection)) {
       this.connections[connection.theirB58Id].push(connection)
-      this.switch.emit('peer-mux-established', connection.theirPeerInfo)
+      this.switch.emit('connection:start', connection.theirPeerInfo)
+      connection.once('muxed', () => this.switch.emit('peer-mux-established', connection.theirPeerInfo))
     }
   }
 
@@ -99,6 +100,9 @@ class ConnectionManager {
       connection.theirPeerInfo.disconnect()
       this.switch.emit('peer-mux-closed', connection.theirPeerInfo)
     }
+
+    // A tracked connection was closed, let the world know
+    this.switch.emit('connection:end', connection.theirPeerInfo)
   }
 
   /**
