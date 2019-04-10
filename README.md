@@ -154,13 +154,11 @@ and to received the underlying connection that can be used to transfer data.
 
 ### `switch.dialer.connect(peer, options, callback)`
 
-a low priority dial to the provided peer. Calls to `dial` and `dialFSM` will take priority. This should be used when
-an application only wishes to establish connections to new peers, such as during peer discovery when there is a low
-peer count.
+a low priority dial to the provided peer. Calls to `dial` and `dialFSM` will take priority. This should be used when an application only wishes to establish connections to new peers, such as during peer discovery when there is a low peer count. Currently, anything greater than the HIGH_PRIORITY (10) will be placed into the cold call queue, and anything less than or equal to the HIGH_PRIORITY will be added to the normal queue.
 
 - `peer`: can be an instance of [PeerInfo][], [PeerId][] or [multiaddr][]
 - `options`: Optional
-- `options.priority`: Number of the priority of the dial, defaults to 1.
+- `options.priority`: Number of the priority of the dial, defaults to 20.
 - `options.useFSM`: Boolean of whether or not to callback with a [Connection State Machine](#connection-state-machine)
 - `callback`: Function with signature `function (err, connFSM) {}` where `connFSM` is a [Connection State Machine](#connection-state-machine)
 

@@ -5,7 +5,7 @@ const Queue = require('./queue')
 const { DIAL_ABORTED } = require('../errors')
 const nextTick = require('async/nextTick')
 const retimer = require('retimer')
-const { QUARTER_HOUR } = require('../constants')
+const { QUARTER_HOUR, PRIORITY_HIGH } = require('../constants')
 const debug = require('debug')
 const log = debug('libp2p:switch:dial:manager')
 const noop = () => {}
@@ -110,7 +110,7 @@ class DialQueueManager {
     const targetQueue = this.getQueue(peerInfo)
 
     // Cold Call
-    if (options.priority > 0) {
+    if (options.priority > PRIORITY_HIGH) {
       // If we have too many cold calls, abort the dial immediately
       if (this._coldCallQueue.size >= this.switch.dialer.MAX_COLD_CALLS) {
         return nextTick(callback, DIAL_ABORTED())
@@ -138,7 +138,7 @@ class DialQueueManager {
 
     // Add the id to its respective queue set if the queue isn't running
     if (!targetQueue.isRunning) {
-      if (options.priority === 0) {
+      if (options.priority <= PRIORITY_HIGH) {
         this._queue.add(targetQueue.id)
         this._coldCallQueue.delete(targetQueue.id)
       // Only add it to the cold queue if it's not in the normal queue

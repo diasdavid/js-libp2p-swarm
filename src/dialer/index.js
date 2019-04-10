@@ -72,7 +72,7 @@ module.exports = function (_switch) {
    * @param {PeerInfo} peerInfo
    * @param {object} options
    * @param {boolean} options.useFSM Whether or not to return a `ConnectionFSM`. Defaults to false.
-   * @param {number} options.priority Lowest priority goes first. Defaults to 1.
+   * @param {number} options.priority Lowest priority goes first. Defaults to 20.
    * @param {function(Error, Connection)} callback
    */
   function connect (peerInfo, options, callback) {
@@ -86,6 +86,7 @@ module.exports = function (_switch) {
 
   /**
    * Adds the dial request to the queue for the given `peerInfo`
+   * The request will be added with a high priority (10).
    * @param {PeerInfo} peerInfo
    * @param {string} protocol
    * @param {function(Error, Connection)} callback
