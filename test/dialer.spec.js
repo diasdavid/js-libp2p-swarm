@@ -12,6 +12,7 @@ const PeerBook = require('peer-book')
 const Queue = require('../src/dialer/queue')
 const QueueManager = require('../src/dialer/queueManager')
 const Switch = require('../src')
+const { PRIORITY_HIGH, PRIORITY_LOW } = require('../src/constants')
 
 const utils = require('./utils')
 const createInfos = utils.createInfos
@@ -46,7 +47,7 @@ describe('dialer', () => {
     })
 
     it('should be able to use custom options', (done) => {
-      switchA.dialer.connect(switchB._peerInfo, { useFSM: true, priority: 0 }, (err) => {
+      switchA.dialer.connect(switchB._peerInfo, { useFSM: true, priority: PRIORITY_HIGH }, (err) => {
         expect(err).to.exist()
         done()
       })
@@ -80,7 +81,7 @@ describe('dialer', () => {
           id: { toB58String: () => 'QmA' }
         },
         protocol: null,
-        options: { useFSM: true, priority: 1 },
+        options: { useFSM: true, priority: PRIORITY_LOW },
         callback: (err) => {
           expect(err.code).to.eql('DIAL_ABORTED')
           done()
@@ -97,7 +98,7 @@ describe('dialer', () => {
           isConnected: () => null
         },
         protocol: '/echo/1.0.0',
-        options: { useFSM: true, priority: 0 },
+        options: { useFSM: true, priority: PRIORITY_HIGH },
         callback: () => {}
       }
 
@@ -121,7 +122,7 @@ describe('dialer', () => {
           isConnected: () => null
         },
         protocol: null,
-        options: { useFSM: true, priority: 1 },
+        options: { useFSM: true, priority: PRIORITY_LOW },
         callback: () => {}
       }
 
@@ -142,7 +143,7 @@ describe('dialer', () => {
           isConnected: () => null
         },
         protocol: null,
-        options: { useFSM: true, priority: 1 },
+        options: { useFSM: true, priority: PRIORITY_LOW },
         callback: (err) => {
           expect(runSpy.called).to.eql(false)
           expect(hasSpy.called).to.eql(true)
