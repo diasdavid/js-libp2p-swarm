@@ -206,7 +206,7 @@ This will be triggered anytime a new connection, regardless of state, is added t
 - `peer`: is instance of [PeerInfo][] that has info of the peer we have just started a connection with.
 
 ### `switch.on('connection:end', (peer) => {})`
-This will be triggered anytime an existing connection, regardless of state, is removed from the switches internal connection tracking.
+This will be triggered anytime an existing connection, regardless of state, is removed from the switch's internal connection tracking.
 
 - `peer`: is instance of [PeerInfo][] that has info of the peer we have just closed a connection with.
 
