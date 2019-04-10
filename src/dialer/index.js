@@ -6,7 +6,9 @@ const {
   BLACK_LIST_ATTEMPTS,
   BLACK_LIST_TTL,
   MAX_COLD_CALLS,
-  MAX_PARALLEL_DIALS
+  MAX_PARALLEL_DIALS,
+  PRIORITY_HIGH,
+  PRIORITY_LOW
 } = require('../constants')
 
 module.exports = function (_switch) {
@@ -78,7 +80,7 @@ module.exports = function (_switch) {
       callback = options
       options = null
     }
-    options = { useFSM: false, priority: 1, ...options }
+    options = { useFSM: false, priority: PRIORITY_LOW, ...options }
     _dial({ peerInfo, protocol: null, options, callback })
   }
 
@@ -89,7 +91,7 @@ module.exports = function (_switch) {
    * @param {function(Error, Connection)} callback
    */
   function dial (peerInfo, protocol, callback) {
-    _dial({ peerInfo, protocol, options: { useFSM: false, priority: 0 }, callback })
+    _dial({ peerInfo, protocol, options: { useFSM: false, priority: PRIORITY_HIGH }, callback })
   }
 
   /**
@@ -100,7 +102,7 @@ module.exports = function (_switch) {
    * @param {function(Error, ConnectionFSM)} callback
    */
   function dialFSM (peerInfo, protocol, callback) {
-    _dial({ peerInfo, protocol, options: { useFSM: true, priority: 0 }, callback })
+    _dial({ peerInfo, protocol, options: { useFSM: true, priority: PRIORITY_HIGH }, callback })
   }
 
   return {
