@@ -201,7 +201,7 @@ Emitted when the switch encounters an error.
 - `peer`: is instance of [PeerInfo][] that has info of the peer we have just closed a muxed connection with.
 
 ### `switch.on('connection:start', (peer) => {})`
-This will be triggered anytime a new connection, regardless of state, is added to the switches internal connection tracking.
+This will be triggered anytime a new connection is created.
 
 - `peer`: is instance of [PeerInfo][] that has info of the peer we have just started a connection with.
 
