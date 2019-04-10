@@ -34,7 +34,11 @@ class ConnectionManager {
     if (!this.get(connection)) {
       this.connections[connection.theirB58Id].push(connection)
       this.switch.emit('connection:start', connection.theirPeerInfo)
-      connection.once('muxed', () => this.switch.emit('peer-mux-established', connection.theirPeerInfo))
+      if (connection.getState() === 'MUXED') {
+        this.switch.emit('peer-mux-established', connection.theirPeerInfo)
+      } else {
+        connection.once('muxed', () => this.switch.emit('peer-mux-established', connection.theirPeerInfo))
+      }
     }
   }
 
@@ -82,8 +86,10 @@ class ConnectionManager {
   remove (connection) {
     // No record of the peer, disconnect it
     if (!this.connections[connection.theirB58Id]) {
-      connection.theirPeerInfo.disconnect()
-      this.switch.emit('peer-mux-closed', connection.theirPeerInfo)
+      if (connection.theirPeerInfo) {
+        connection.theirPeerInfo.disconnect()
+        this.switch.emit('peer-mux-closed', connection.theirPeerInfo)
+      }
       return
     }
 
