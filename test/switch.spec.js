@@ -27,7 +27,11 @@ describe('Switch', () => {
         WebSocketStar: transport
       }
 
-      expect(switchA.availableTransports(mockPeerInfo)[2]).to.eql('Circuit')
+      expect(switchA.availableTransports(mockPeerInfo)).to.eql([
+        'TCP',
+        'WebSocketStar',
+        'Circuit'
+      ])
     })
   })
 })
