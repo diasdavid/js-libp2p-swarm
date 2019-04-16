@@ -49,22 +49,12 @@ module.exports.identifyDialer = (connection, cryptoPeerInfo) => {
 }
 
 /**
- * Copied (and modified) from `unique-by`, https://github.com/mlmorg/unique-by.
+ * Get unique values from `arr` using `getValue` to determine
+ * what is used for uniqueness
  * @param {Array} arr The array to get unique values for
  * @param {function(value)} getValue The function to determine what is compared
  * @returns {Array}
  */
 module.exports.uniqueBy = (arr, getValue) => {
-  let unique = []
-  let found = {}
-
-  arr.forEach((obj) => {
-    const value = getValue(obj)
-    if (!found[value]) {
-      found[value] = true
-      unique.push(obj)
-    }
-  })
-
-  return unique
+  return [...new Map(arr.map((i) => [getValue(i), i])).values()]
 }
