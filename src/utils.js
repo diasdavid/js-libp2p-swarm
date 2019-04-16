@@ -47,3 +47,31 @@ module.exports.identifyDialer = (connection, cryptoPeerInfo) => {
     })
   })
 }
+
+/**
+ * Copied from `unique-by`, https://github.com/mlmorg/unique-by.
+ * @param {Array} arr The array to get unique values for
+ * @param {function(value)} getValue The function to determine what is compared
+ * @returns {Array}
+ */
+module.exports.uniqueBy = function (arr, getValue) {
+  var unique = []
+  var found = {}
+
+  if (typeof getValue !== 'function') {
+    var key = getValue
+    getValue = function defaultGetValue (obj) {
+      return obj[key]
+    }
+  }
+
+  arr.forEach(function addUniques (obj) {
+    var value = getValue(obj)
+    if (!found[value]) {
+      found[value] = true
+      unique.push(obj)
+    }
+  })
+
+  return unique
+}
