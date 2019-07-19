@@ -122,11 +122,11 @@ describe('Identify', () => {
         const peerA = switchB._peerBook.get(switchA._peerInfo.id.toB58String())
         expect(Array.from(peerB.protocols)).to.eql([
           multiplex.multicodec,
-          identify.multicodec
+          ...Object.values(identify.multicodecs)
         ])
         expect(Array.from(peerA.protocols)).to.eql([
           multiplex.multicodec,
-          identify.multicodec,
+          ...Object.values(identify.multicodecs),
           '/id-test/1.0.0'
         ])
 
@@ -136,7 +136,7 @@ describe('Identify', () => {
   })
 
   it('should close connection when identify fails', (done) => {
-    const stub = sinon.stub(identify, 'listener').callsFake((conn) => {
+    const stub = sinon.stub(switchA.identifyService, 'handleMessage').callsFake((_protocol, conn) => {
       conn.getObservedAddrs((err, observedAddrs) => {
         if (err) { return }
         observedAddrs = observedAddrs[0]
@@ -144,7 +144,7 @@ describe('Identify', () => {
         // pretend to be another peer
         let publicKey = switchC._peerInfo.id.pubKey.bytes
 
-        const msgSend = identify.message.encode({
+        const msgSend = identify.Message.encode({
           protocolVersion: 'ipfs/0.1.0',
           agentVersion: 'na',
           publicKey: publicKey,

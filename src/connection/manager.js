@@ -1,12 +1,11 @@
+/* eslint max-nested-callbacks: ["error", 5] */
 'use strict'
 
-const identify = require('libp2p-identify')
-const multistream = require('multistream-select')
+const IdentifyService = require('libp2p-identify')
 const debug = require('debug')
 const log = debug('libp2p:switch:conn-manager')
-const once = require('once')
 const ConnectionFSM = require('../connection')
-const { msHandle, msSelect, identifyDialer } = require('../utils')
+const { newStream } = require('../utils')
 
 const Circuit = require('libp2p-circuit')
 
@@ -161,7 +160,7 @@ class ConnectionManager {
       //   1. overload getPeerInfo
       //   2. call getPeerInfo
       //   3. add this conn to the pool
-      if (this.switch.identify) {
+      if (this.switch.identifyService) {
         // Get the peer info from the crypto exchange
         conn.getPeerInfo((err, cryptoPI) => {
           if (err || !cryptoPI) {
@@ -169,35 +168,31 @@ class ConnectionManager {
           }
 
           // overload peerInfo to use Identify instead
-          conn.getPeerInfo = async (callback) => {
-            const conn = muxedConn.newStream()
-            const ms = new multistream.Dialer()
-            callback = once(callback)
+          conn.getPeerInfo = (callback) => {
+            log('running identify')
+            newStream(muxedConn.newStream(), IdentifyService.multicodecs.identify, (err, stream) => {
+              if (err) {
+                return muxedConn.end(() => callback(err))
+              }
 
-            let results
-            try {
-              await msHandle(ms, conn)
-              const msConn = await msSelect(ms, identify.multicodec)
-              results = await identifyDialer(msConn, cryptoPI)
-            } catch (err) {
-              return muxedConn.end(() => {
-                callback(err, null)
+              this.switch.identifyService.identify(stream, cryptoPI, (err, peerInfo, _observedAddr) => {
+                if (err) {
+                  return muxedConn.end(() => callback(err))
+                }
+
+                if (peerInfo) {
+                  conn.setPeerInfo(peerInfo)
+                }
+                callback(null, peerInfo)
               })
-            }
-
-            const { peerInfo } = results
-
-            if (peerInfo) {
-              conn.setPeerInfo(peerInfo)
-            }
-            callback(null, peerInfo)
+            })
           }
 
           conn.getPeerInfo((err, peerInfo) => {
-            /* eslint no-warning-comments: off */
             if (err) {
               return log('identify not successful')
             }
+
             const b58Str = peerInfo.id.toB58String()
             peerInfo = this.switch._peerBook.put(peerInfo)
 
@@ -279,10 +274,17 @@ class ConnectionManager {
    * @returns {void}
    */
   reuse () {
-    this.switch.identify = true
-    this.switch.handle(identify.multicodec, (protocol, conn) => {
-      identify.listener(conn, this.switch._peerInfo)
-    })
+    if (!this.switch.identify) {
+      this.switch.identify = true
+      this.switch.identifyService = new IdentifyService({ switch: this.switch })
+
+      // Setup all handlers for identify
+      Object.values(IdentifyService.multicodecs).forEach(protocol => {
+        this.switch.handle(protocol, (protocol, connection) => {
+          this.switch.identifyService.handleMessage(protocol, connection)
+        })
+      })
+    }
   }
 }
 

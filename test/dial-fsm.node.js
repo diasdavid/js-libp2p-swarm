@@ -218,13 +218,13 @@ describe('dialFSM', () => {
       // Verify the dialer knows the receiver's protocols
       expect(Array.from(peerB.protocols)).to.eql([
         multiplex.multicodec,
-        identify.multicodec,
+        ...Object.values(identify.multicodecs),
         protocol
       ]).mark()
       // Verify the receiver knows the dialer's protocols
       expect(Array.from(peerA.protocols)).to.eql([
         multiplex.multicodec,
-        identify.multicodec
+        ...Object.values(identify.multicodecs)
       ]).mark()
 
       switchA.hangUp(switchB._peerInfo)

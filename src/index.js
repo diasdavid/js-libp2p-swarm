@@ -54,6 +54,8 @@ class Switch extends EventEmitter {
     // is the Identify protocol enabled?
     this.identify = false
 
+    this.identifyService = null
+
     // Crypto details
     this.crypto = plaintext
 
@@ -113,6 +115,10 @@ class Switch extends EventEmitter {
     this.dialer = getDialer(this)
     this.dial = this.dialer.dial
     this.dialFSM = this.dialer.dialFSM
+  }
+
+  get peerInfo () {
+    return this._peerInfo
   }
 
   /**

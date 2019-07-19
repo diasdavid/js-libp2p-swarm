@@ -7,9 +7,9 @@ const withIs = require('class-is')
 const BaseConnection = require('./base')
 const parallel = require('async/parallel')
 const nextTick = require('async/nextTick')
-const identify = require('libp2p-identify')
 const errCode = require('err-code')
-const { msHandle, msSelect, identifyDialer } = require('../utils')
+const IdentifyService = require('libp2p-identify')
+const { newStream } = require('../utils')
 
 const observeConnection = require('../observe-connection')
 const {
@@ -391,8 +391,10 @@ class ConnectionFSM extends BaseConnection {
           if (this.switch.identify) {
             this._identify((err, results) => {
               if (err) {
+                this.log('identify errored, closing the connection', err)
                 return this.close(err)
               }
+              this.log('identify successful')
               this.theirPeerInfo = this.switch._peerBook.put(results.peerInfo)
             })
           }
@@ -413,18 +415,17 @@ class ConnectionFSM extends BaseConnection {
     if (!this.muxer) {
       return nextTick(callback, errCode('The connection was already closed', 'ERR_CONNECTION_CLOSED'))
     }
-    this.muxer.newStream(async (err, conn) => {
+
+    const stream = this.muxer.newStream()
+    newStream(stream, IdentifyService.multicodecs.identify, (err, conn) => {
       if (err) return callback(err)
-      const ms = new multistream.Dialer()
-      let results
-      try {
-        await msHandle(ms, conn)
-        const msConn = await msSelect(ms, identify.multicodec)
-        results = await identifyDialer(msConn, this.theirPeerInfo)
-      } catch (err) {
-        return callback(err)
-      }
-      callback(null, results)
+      this.switch.identifyService.identify(conn, this.theirPeerInfo, (err, peerInfo, observedAddr) => {
+        if (err) return callback(err)
+        callback(null, {
+          peerInfo,
+          observedAddr
+        })
+      })
     })
   }
 

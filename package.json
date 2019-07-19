@@ -69,7 +69,7 @@
     "hashlru": "^2.3.0",
     "interface-connection": "~0.3.3",
     "libp2p-circuit": "~0.3.6",
-    "libp2p-identify": "~0.7.6",
+    "libp2p-identify": "libp2p/js-libp2p-identify#feat/identify-push",
     "moving-average": "^1.0.0",
     "multiaddr": "^6.0.6",
     "multistream-select": "~0.14.4",

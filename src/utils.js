@@ -1,6 +1,6 @@
 'use strict'
 
-const Identify = require('libp2p-identify')
+const Multistream = require('multistream-select')
 
 /**
  * For a given multistream, registers to handle the given connection
@@ -33,17 +33,19 @@ module.exports.msSelect = (multistream, protocol) => {
 }
 
 /**
- * Runs identify for the given connection and verifies it against the
- * PeerInfo provided
- * @param {Connection} connection
- * @param {PeerInfo} cryptoPeerInfo The PeerInfo determined during crypto exchange
- * @returns {Promise} Resolves {peerInfo, observedAddrs}
+ * Takes a stream and handshakes on the given `protocol`.
+ * The stream for that protocol will be returned in the `callback`.
+ * @param {Connection} connection A connection to create a sub stream on
+ * @param {string} protocol The protocol to communicate on
+ * @param {function(Error, Stream)} callback
  */
-module.exports.identifyDialer = (connection, cryptoPeerInfo) => {
-  return new Promise((resolve, reject) => {
-    Identify.dialer(connection, cryptoPeerInfo, (err, peerInfo, observedAddrs) => {
-      if (err) return reject(err)
-      resolve({ peerInfo, observedAddrs })
+module.exports.newStream = (connection, protocol, callback) => {
+  const ms = new Multistream.Dialer()
+  ms.handle(connection, (err) => {
+    if (err) return callback(err)
+    ms.select(protocol, (err, stream) => {
+      if (err) return callback(err)
+      callback(null, stream)
     })
   })
 }

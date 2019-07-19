@@ -106,11 +106,33 @@ module.exports = function (_switch) {
     _dial({ peerInfo, protocol, options: { useFSM: true, priority: PRIORITY_HIGH }, callback })
   }
 
+  /**
+   * Creates a new stream to the given `peerInfo`. If a muxed connection
+   * does not exist to the peer, an error will be passed to the `callback`.
+   * @param {PeerInfo} peerInfo
+   * @param {String} protocol The protocol to handshake for the new stream
+   * @param {function(Error, Connection)} callback
+   * @returns {void}
+   */
+  function newStream (peerInfo, protocol, callback) {
+    if (!protocol) {
+      return callback(new Error('a protocol must be provided to create a new stream'))
+    }
+
+    const connection = _switch.connection.getOne(peerInfo.id.toB58String())
+    if (!connection) {
+      return callback(new Error('no muxed connection to create stream from'))
+    }
+
+    connection.shake(protocol, callback)
+  }
+
   return {
     connect,
     dial,
     dialFSM,
     clearBlacklist,
+    newStream,
     BLACK_LIST_ATTEMPTS: isNaN(_switch._options.blackListAttempts) ? BLACK_LIST_ATTEMPTS : _switch._options.blackListAttempts,
     BLACK_LIST_TTL: isNaN(_switch._options.blacklistTTL) ? BLACK_LIST_TTL : _switch._options.blacklistTTL,
     MAX_COLD_CALLS: isNaN(_switch._options.maxColdCalls) ? MAX_COLD_CALLS : _switch._options.maxColdCalls,

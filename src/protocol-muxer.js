@@ -31,7 +31,7 @@ module.exports = function protocolMuxer (protocols, observer) {
           const handlerFunc = protocol && protocol.handlerFunc
           if (handlerFunc) {
             const conn = observeConn(null, protocolName, _conn, observer)
-            handlerFunc(protocol, conn)
+            handlerFunc(protocolName, conn)
           }
         }
       }
