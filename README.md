@@ -1,3 +1,6 @@
+⛔️ DEPRECATED: libp2p-switch is now included in [js-libp2p](https://github.com/libp2p/js-libp2p)
+=====
+
 libp2p-switch JavaScript implementation
 ======================================
 
